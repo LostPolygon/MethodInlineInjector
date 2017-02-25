@@ -1,3 +1,3 @@
-# LostPolygon.AssemblyMethodInjector
+# LostPolygon.AssemblyMethodInlineInjector
 
 Under development
