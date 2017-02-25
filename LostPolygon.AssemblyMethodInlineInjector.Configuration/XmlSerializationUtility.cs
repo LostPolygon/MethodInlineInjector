@@ -4,7 +4,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace LostPolygon.AssemblyMethodInjector.Configuration {
+namespace LostPolygon.AssemblyMethodInlineInjector.Configuration {
     public static class XmlSerializationUtility {
         private static readonly XmlSerializerNamespaces kEmptyXmlSerializerNamespaces;
 

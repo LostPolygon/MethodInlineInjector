@@ -3,9 +3,9 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 
-using LostPolygon.AssemblyMethodInjector.Configuration;
+using LostPolygon.AssemblyMethodInlineInjector.Configuration;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal class Program {
         private static void Main(string[] args) {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
@@ -16,7 +16,7 @@ namespace LostPolygon.AssemblyMethodInjector {
             CompiledInjectionConfigurationBuilder compiledInjectionConfigurationBuilder = new CompiledInjectionConfigurationBuilder(injectionConfiguration);
             CompiledInjectionConfiguration compiledInjectionConfiguration = compiledInjectionConfigurationBuilder.Build();
 
-            AssemblyMethodInjector assemblyMethodInjector = new AssemblyMethodInjector(compiledInjectionConfiguration);
+            AssemblyMethodInlineInjector assemblyMethodInjector = new AssemblyMethodInlineInjector(compiledInjectionConfiguration);
             assemblyMethodInjector.Inject();
 
             foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in compiledInjectionConfiguration.InjecteeAssemblies) {

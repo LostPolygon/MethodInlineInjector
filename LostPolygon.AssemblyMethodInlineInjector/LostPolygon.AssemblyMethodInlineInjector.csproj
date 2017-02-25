@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{BF09E2F7-78EC-4AB3-8A14-E2E98729C196}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>AssemblyMethodInjector</RootNamespace>
-    <AssemblyName>AssemblyMethodInjector</AssemblyName>
+    <RootNamespace>AssemblyMethodInlineInjector</RootNamespace>
+    <AssemblyName>AssemblyMethodInlineInjector</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -70,8 +70,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyDefinitionData.cs" />
-    <Compile Include="AssemblyMethodInjector.cs" />
-    <Compile Include="AssemblyMethodInjectorException.cs" />
+    <Compile Include="AssemblyMethodInlineInjector.cs" />
+    <Compile Include="AssemblyMethodInlineInjectorException.cs" />
     <Compile Include="CecilExtensions.cs" />
     <Compile Include="CompiledInjectionConfiguration.cs" />
     <Compile Include="CompiledInjectionConfigurationBuilder.cs" />
@@ -83,9 +83,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LostPolygon.AssemblyMethodInjector.Configuration\LostPolygon.AssemblyMethodInjector.Configuration.csproj">
+    <ProjectReference Include="..\LostPolygon.AssemblyMethodInlineInjector.Configuration\LostPolygon.AssemblyMethodInlineInjector.Configuration.csproj">
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
-      <Name>LostPolygon.AssemblyMethodInjector.Configuration</Name>
+      <Name>LostPolygon.AssemblyMethodInlineInjector.Configuration</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -94,7 +94,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.AssemblyMethodInjector.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
-copy $(SolutionDir)\LostPolygon.AssemblyMethodInjector.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
+    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.AssemblyMethodInlineInjector.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
+copy $(SolutionDir)\LostPolygon.AssemblyMethodInlineInjector.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

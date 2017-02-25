@@ -7,8 +7,8 @@
     <ProjectGuid>{D207F1AF-1776-48BD-B4AB-ADF1217373BB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LostPolygon.AssemblyMethodInjector</RootNamespace>
-    <AssemblyName>LostPolygon.AssemblyMethodInjector.Configuration</AssemblyName>
+    <RootNamespace>LostPolygon.AssemblyMethodInlineInjector</RootNamespace>
+    <AssemblyName>LostPolygon.AssemblyMethodInlineInjector.Configuration</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />

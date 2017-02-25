@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     [XmlRoot("MemberReferenceWhitelist")]
     public class MemberReferenceWhitelistFilterInclude : SimpleXmlSerializable {
         public List<InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter> MemberReferenceWhitelist { get; set; } 

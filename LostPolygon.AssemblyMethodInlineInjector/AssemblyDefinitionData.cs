@@ -3,7 +3,7 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal class AssemblyDefinitionData {
         public AssemblyDefinition AssemblyDefinition { get; }
         public ReadOnlyCollection<TypeDefinition> AllTypes { get; }

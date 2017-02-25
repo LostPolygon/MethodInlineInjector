@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Mono.Collections.Generic;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal static class CecilExtensions {
         public static void InsertRangeToStart<TResult>(this Collection<TResult> collection, IEnumerable<TResult> source) {
             int inserted = 0;

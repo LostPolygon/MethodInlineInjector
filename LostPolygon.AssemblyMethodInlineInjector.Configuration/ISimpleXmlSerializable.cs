@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     public interface ISimpleXmlSerializable : IXmlSerializable  {
         void Serialize();
         void SerializeWithInheritedMode(SimpleXmlSerializable simpleXmlSerializable);

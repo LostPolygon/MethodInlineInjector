@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Xml;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal class XmlSerializationHelper {
         private readonly Action _serializeAction;
         private readonly Stack<String> _readStartedElementNamesStack = new Stack<string>();

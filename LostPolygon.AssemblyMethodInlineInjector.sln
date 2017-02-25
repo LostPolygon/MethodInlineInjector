@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInjector", "LostPolygon.AssemblyMethodInjector\LostPolygon.AssemblyMethodInjector.csproj", "{BF09E2F7-78EC-4AB3-8A14-E2E98729C196}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInlineInjector", "LostPolygon.AssemblyMethodInlineInjector\LostPolygon.AssemblyMethodInlineInjector.csproj", "{BF09E2F7-78EC-4AB3-8A14-E2E98729C196}"
 	ProjectSection(ProjectDependencies) = postProject
 		{46054333-8706-4412-980B-659DF83891F8} = {46054333-8706-4412-980B-659DF83891F8}
 		{91804157-8494-4288-930F-698FE3F0D7BE} = {91804157-8494-4288-930F-698FE3F0D7BE}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInjector.TestInjecteeLibrary", "LostPolygon.AssemblyMethodInjector.TestInjecteeLibrary\LostPolygon.AssemblyMethodInjector.TestInjecteeLibrary.csproj", "{91804157-8494-4288-930F-698FE3F0D7BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInlineInjector.TestInjecteeLibrary", "LostPolygon.AssemblyMethodInlineInjector.TestInjecteeLibrary\LostPolygon.AssemblyMethodInlineInjector.TestInjecteeLibrary.csproj", "{91804157-8494-4288-930F-698FE3F0D7BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInjector.Configuration", "LostPolygon.AssemblyMethodInjector.Configuration\LostPolygon.AssemblyMethodInjector.Configuration.csproj", "{D207F1AF-1776-48BD-B4AB-ADF1217373BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInlineInjector.Configuration", "LostPolygon.AssemblyMethodInlineInjector.Configuration\LostPolygon.AssemblyMethodInlineInjector.Configuration.csproj", "{D207F1AF-1776-48BD-B4AB-ADF1217373BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInjector.TestInjectedLibrary", "LostPolygon.AssemblyMethodInjector.TestInjectedLibrary\LostPolygon.AssemblyMethodInjector.TestInjectedLibrary.csproj", "{46054333-8706-4412-980B-659DF83891F8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.AssemblyMethodInlineInjector.TestInjectedLibrary", "LostPolygon.AssemblyMethodInlineInjector.TestInjectedLibrary\LostPolygon.AssemblyMethodInlineInjector.TestInjectedLibrary.csproj", "{46054333-8706-4412-980B-659DF83891F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

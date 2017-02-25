@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     [XmlRoot("Configuration")]
     public class InjectionConfiguration : SimpleXmlSerializable {
         public List<InjectedMethod> InjectedMethods { get; } = new List<InjectedMethod>();

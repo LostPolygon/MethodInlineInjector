@@ -8,11 +8,11 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
-namespace LostPolygon.AssemblyMethodInjector {
-    internal class AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
+    internal class AssemblyMethodInlineInjector {
         private readonly CompiledInjectionConfiguration _compiledInjectionConfiguration;
 
-        public AssemblyMethodInjector(CompiledInjectionConfiguration compiledInjectionConfiguration) {
+        public AssemblyMethodInlineInjector(CompiledInjectionConfiguration compiledInjectionConfiguration) {
             _compiledInjectionConfiguration = compiledInjectionConfiguration;
         }
 
@@ -159,7 +159,7 @@ namespace LostPolygon.AssemblyMethodInjector {
 
             private void ValidateTypeReference(TypeReference type) {
                 if (type.Scope == SourceMethod.Module)
-                    throw new AssemblyMethodInjectorException(
+                    throw new AssemblyMethodInlineInjectorException(
                         $"Type '{type.FullName}' was attempted to be imported from injected assembly " +
                         $"'{SourceMethod.Module.Assembly}' to the injectee assembly '{TargetMethod.Module.Assembly}'");
             }
@@ -270,7 +270,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 }
 
                 if (clonedInstruction == null)
-                    throw new AssemblyMethodInjectorException("Unknown operand type");
+                    throw new AssemblyMethodInlineInjectorException("Unknown operand type");
 
                 clonedInstruction.Offset = sourceInstruction.Offset;
                 return clonedInstruction;
@@ -323,7 +323,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 }
 
                 if (fieldDefinition == null)
-                    throw new AssemblyMethodInjectorException("The block can't be copied because some fields do not exist in the target method declaring type");
+                    throw new AssemblyMethodInlineInjectorException("The block can't be copied because some fields do not exist in the target method declaring type");
 
                 return Instruction.Create(sourceInstruction.OpCode, fieldDefinition);
             }

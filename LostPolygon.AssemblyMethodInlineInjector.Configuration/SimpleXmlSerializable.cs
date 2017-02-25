@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     public abstract class SimpleXmlSerializable : ISimpleXmlSerializable {
         private readonly XmlSerializationHelper _serializationHelper;
 

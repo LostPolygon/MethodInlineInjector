@@ -4,11 +4,11 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using devtm.Cecil.Extensions;
-using LostPolygon.AssemblyMethodInjector.Configuration;
+using LostPolygon.AssemblyMethodInlineInjector.Configuration;
 using Mono.Cecil;
 using UnityEngine;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal class CompiledInjectionConfigurationBuilder {
         private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap = new Dictionary<string, AssemblyDefinitionData>();
         private readonly InjectionConfiguration _injectionConfiguration;
@@ -61,7 +61,7 @@ namespace LostPolygon.AssemblyMethodInjector {
 
             foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
                 if (injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
-                    throw new AssemblyMethodInjectorException(
+                    throw new AssemblyMethodInlineInjectorException(
                         $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition}' " +
                         $"uses runtime version {injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime}, " +
                         $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
@@ -80,10 +80,10 @@ namespace LostPolygon.AssemblyMethodInjector {
                         .ToArray();
 
                 if (matchingMethodDefinitions.Length == 0)
-                    throw new AssemblyMethodInjectorException($"No matching methods found for {sourceInjectedMethod.MethodFullName}");
+                    throw new AssemblyMethodInlineInjectorException($"No matching methods found for {sourceInjectedMethod.MethodFullName}");
 
                 if (matchingMethodDefinitions.Length > 2)
-                    throw new AssemblyMethodInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
+                    throw new AssemblyMethodInlineInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
 
                 List<CompiledInjectionConfiguration.InjectedMethod> methodDefinitions;
                 if (!injectedAssemblyToMethodsMap.TryGetValue(assemblyDefinitionData.AssemblyDefinition, out methodDefinitions)) {

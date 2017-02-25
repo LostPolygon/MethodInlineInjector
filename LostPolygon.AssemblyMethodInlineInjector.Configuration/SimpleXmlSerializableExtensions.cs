@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 
-namespace LostPolygon.AssemblyMethodInjector {
+namespace LostPolygon.AssemblyMethodInlineInjector {
     internal static class SimpleXmlSerializableExtensions {
         public static void ProcessCollection<T>(this SimpleXmlSerializable simpleXmlSerializable, ICollection<T> collection, Func<T> createFunc = null) where T : class, ISimpleXmlSerializable {
             if (simpleXmlSerializable.SerializationHelper.IsXmlSerializationReading) {
