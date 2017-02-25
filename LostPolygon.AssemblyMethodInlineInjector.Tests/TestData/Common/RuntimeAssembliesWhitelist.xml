@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AssemblyWhitelist>
+  <Assembly Name="mscorlib" StrictCheck="false" />
+  <Assembly Name="System" StrictCheck="false" />
+  <Assembly Name="System.Core" StrictCheck="false" />
+</AssemblyWhitelist>

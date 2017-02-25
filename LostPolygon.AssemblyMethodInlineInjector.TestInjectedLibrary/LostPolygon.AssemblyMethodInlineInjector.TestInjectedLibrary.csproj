@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,4 +55,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetDir)\$(TargetFileName)" $(SolutionDir)\LostPolygon.AssemblyMethodInlineInjector.Tests\bin\$(ConfigurationName)\$(TargetFileName)</PostBuildEvent>
+  </PropertyGroup>
 </Project>

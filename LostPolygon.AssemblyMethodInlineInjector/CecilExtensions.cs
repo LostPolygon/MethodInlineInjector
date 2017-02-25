@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
@@ -35,6 +36,32 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             if (bodyInstruction.Operand == oldInstruction) {
                 bodyInstruction.Operand = newInstruction;
             }
+        }
+
+        public static TSource Last<TSource>(this Collection<TSource> source, Func<TSource, bool> predicate) {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
+
+            for (int i = source.Count - 1; i >= 0; i--) {
+                TSource item = source[i];
+                if (predicate(item))
+                    return item;
+            }
+
+            throw new InvalidOperationException("No matching element found");
+        }
+
+        public static TSource Last<TSource>(this Collection<TSource> source) {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            if (source.Count == 0)
+                throw new InvalidOperationException("Empty collection");
+
+            return source[source.Count - 1];
         }
     }
 }

@@ -64,6 +64,8 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
         }
 
         private static void InjectMethod(MethodDefinition injectedMethod, MethodDefinition injecteeMethod, InjectionConfiguration.InjectedMethod.MethodInjectionPosition injectionPosition) {
+            // Unroll short form instructions so they can be auto-fixed by Cecil
+            // automatically when new instructions are inserted
             injectedMethod.Body.SimplifyMacros();
             injecteeMethod.Body.SimplifyMacros();
 
@@ -75,25 +77,33 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart) {
                 // Inject variables to the beginning of the variable list
                 injecteeMethod.Body.Variables.InsertRangeToStart(injectedMethod.Body.Variables);
+
+                // First instruction of the injectee method. Instruction of the injected methods are inserted before it
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
                 Instruction injectedLastRetInstruction = injectedMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
 
+                // Insert injected method to the beginning
                 for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
                     Instruction injectedInstruction = injectedMethod.Body.Instructions[i];
                     injecteeIlProcessor.InsertBefore(injecteeFirstInstruction, injectedInstruction);
                 }
 
+                // Clone exception handlers
                 injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
 
-                injecteeFirstInstruction = Instruction.Create(OpCodes.Nop);
-                injecteeIlProcessor.ReplaceAndFixReferences(injectedLastRetInstruction, injecteeFirstInstruction, injecteeMethod);  
+                // Replace Ret from the end of the injected method with Nop, 
+                // so the execution could go to injectee code after the injected method end
+                Instruction injectedLastInstruction = Instruction.Create(OpCodes.Nop);
+                injecteeIlProcessor.ReplaceAndFixReferences(injectedLastRetInstruction, injectedLastInstruction, injecteeMethod);  
             } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
+                // Inject variables to the end of the variable list
                 injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
                 
-                // Replace Ret from the end of the injectee method with Nop, 
-                // so the execution could go to injected code after the injecteed method end
+                // Ret instruction at the end of the injectee method must be replace with Nop, 
+                // so the execution could go to the injected code after the injecteed method end
                 Instruction injecteeLastRetInstruction = injecteeMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
-                Instruction injecteeNewLastInstruction = Instruction.Create(OpCodes.Nop);
+
+                // Current last instruction of the injectee method
                 Instruction injecteeLastInstruction = injecteeMethod.Body.Instructions.Last();
 
                 // Append injected method to the end
@@ -102,8 +112,12 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                     injecteeIlProcessor.InsertAfter(injecteeLastInstruction, injectedInstruction);
                 }
 
+                // Clone exception handlers
                 injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
 
+                // Replace Ret from the end of the injectee method with Nop, 
+                // so the execution could go to injected code after the injectee method end
+                Instruction injecteeNewLastInstruction = Instruction.Create(OpCodes.Nop);
                 injecteeIlProcessor.ReplaceAndFixReferences(injecteeLastRetInstruction, injecteeNewLastInstruction, injecteeMethod);
             }
 

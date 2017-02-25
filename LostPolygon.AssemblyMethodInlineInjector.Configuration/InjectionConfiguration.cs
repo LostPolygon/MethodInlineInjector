@@ -203,6 +203,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             public string AssemblyPath { get; private set; }
             public string MethodFullName { get; private set; }
             public MethodInjectionPosition InjectionPosition { get; private set; } = MethodInjectionPosition.InjecteeMethodStart;
+            public MethodReturnBehaviour ReturnBehaviour { get; private set; } = MethodReturnBehaviour.ReturnFromSelf;
 
             public InjectedMethod() {
             }
@@ -222,6 +223,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                     SerializationHelper.ProcessAttributeString("AssemblyPath", s => AssemblyPath = s, () => AssemblyPath);
                     SerializationHelper.ProcessAttributeString("MethodFullName", s => MethodFullName = s, () => MethodFullName);
                     SerializationHelper.ProcessEnumAttribute("InjectionPosition", s => InjectionPosition = s, () => InjectionPosition);
+                    SerializationHelper.ProcessEnumAttribute("ReturnBehaviour", s => ReturnBehaviour = s, () => ReturnBehaviour);
                 }
                 SerializationHelper.ProcessAdvanceOnRead();
                 SerializationHelper.ProcessEndElement();
@@ -230,12 +232,20 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             #endregion
 
             public override string ToString() {
-                return $"Assembly Path: '{AssemblyPath}', Method Full Name: '{MethodFullName}', Injection Position: {InjectionPosition}";
+                return $"Assembly Path: '{AssemblyPath}', " +
+                       $"Method Full Name: '{MethodFullName}', " +
+                       $"Injection Position: {InjectionPosition}, " +
+                       $"Return Behaviour: {ReturnBehaviour}";
             }
 
             public enum MethodInjectionPosition {
                 InjecteeMethodStart,
                 InjecteeMethodReturn
+            }
+
+            public enum MethodReturnBehaviour {
+                ReturnFromSelf,
+                ReturnFromInjectee
             }
         }
 

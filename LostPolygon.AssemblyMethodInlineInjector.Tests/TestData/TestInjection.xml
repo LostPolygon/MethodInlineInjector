@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+
+  <InjecteeAssemblies>
+    <InjecteeAssembly AssemblyPath="TestInjecteeLibrary.dll">
+      <MemberReferenceWhitelist>
+        <Filter Filter="TestRegex" IsRegex="True" SkipTypes="False" SkipProperties="False" />
+        <Include Path="UnityPerfomanceWhitelist.xml" />
+      </MemberReferenceWhitelist>
+      <AssemblyWhitelist>
+        <Assembly Name="System.Lol" StrictCheck="false" />
+        <Include Path="RuntimeAssembliesWhitelist.xml" />
+      </AssemblyWhitelist>
+    </InjecteeAssembly>
+  </InjecteeAssemblies>
+  <InjectedMethods>
+<!--     <InjectedMethod InjectionPosition="InjecteeMethodReturn" AssemblyPath="TestInjectedLibrary.dll" MethodFullName="TestInjectedLibrary.TestInjectedMethods.InjectedMethod2" /> -->
+    <InjectedMethod InjectionPosition="InjecteeMethodReturn" AssemblyPath="TestInjectedLibrary.dll" MethodFullName="TestInjectedLibrary.TestInjectedMethods.InjectedMethod_TryCatch" />
+  </InjectedMethods>
+</Configuration>

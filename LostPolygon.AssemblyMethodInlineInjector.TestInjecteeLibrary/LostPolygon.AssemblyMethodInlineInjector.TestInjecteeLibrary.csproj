@@ -49,4 +49,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy "$(TargetDir)\$(TargetFileName)" $(SolutionDir)\LostPolygon.AssemblyMethodInlineInjector.Tests\bin\$(ConfigurationName)\$(TargetFileName)</PostBuildEvent>
+  </PropertyGroup>
 </Project>
