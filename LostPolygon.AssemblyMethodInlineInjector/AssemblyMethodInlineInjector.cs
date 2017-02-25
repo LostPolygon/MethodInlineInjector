@@ -83,26 +83,17 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                     injecteeIlProcessor.InsertBefore(injecteeFirstInstruction, injectedInstruction);
                 }
 
+                injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
+
                 injecteeFirstInstruction = Instruction.Create(OpCodes.Nop);
-                injecteeIlProcessor.Replace(injectedLastRetInstruction, injecteeFirstInstruction);
-                foreach (Instruction bodyInstruction in injecteeMethod.Body.Instructions) {
-                    if (bodyInstruction.Operand == injectedLastRetInstruction) {
-                        bodyInstruction.Operand = injecteeFirstInstruction;
-                    }
-                }
+                injecteeIlProcessor.ReplaceAndFixReferences(injectedLastRetInstruction, injecteeFirstInstruction, injecteeMethod);  
             } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
                 injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
-
-                // Remove Ret from the end of the injectee method, so the execution could go to injected code after the injecteed method end
+                
+                // Replace Ret from the end of the injectee method with Nop, 
+                // so the execution could go to injected code after the injecteed method end
                 Instruction injecteeLastRetInstruction = injecteeMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
                 Instruction injecteeNewLastInstruction = Instruction.Create(OpCodes.Nop);
-                injecteeIlProcessor.Replace(injecteeLastRetInstruction, injecteeNewLastInstruction);
-                foreach (Instruction bodyInstruction in injecteeMethod.Body.Instructions) {
-                    if (bodyInstruction.Operand == injecteeLastRetInstruction) {
-                        bodyInstruction.Operand = injecteeNewLastInstruction;
-                    }
-                }
-
                 Instruction injecteeLastInstruction = injecteeMethod.Body.Instructions.Last();
 
                 // Append injected method to the end
@@ -111,20 +102,22 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                     injecteeIlProcessor.InsertAfter(injecteeLastInstruction, injectedInstruction);
                 }
 
-                injecteeMethod.Body.OptimizeMacros();
+                injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
+
+                injecteeIlProcessor.ReplaceAndFixReferences(injecteeLastRetInstruction, injecteeNewLastInstruction, injecteeMethod);
             }
 
             injecteeMethod.Body.OptimizeMacros();
         }
 
-        public static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition declaredAssembly) {
-            TypeReference importedReturnTypeReference = declaredAssembly.MainModule.Import(sourceMethod.ReturnType);
-            MethodDefinition importedInjectedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference);
-            importedInjectedMethod.DeclaringType = declaredAssembly.MainModule.Types[0];
-            MethodCloner methodCloner = new MethodClonerValidated(sourceMethod, importedInjectedMethod, declaredAssembly.MainModule);
+        public static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition targetAssembly) {
+            TypeReference importedReturnTypeReference = targetAssembly.MainModule.Import(sourceMethod.ReturnType);
+            MethodDefinition clonedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference);
+            clonedMethod.DeclaringType = targetAssembly.MainModule.Types[0];
+            MethodCloner methodCloner = new MethodClonerValidated(sourceMethod, clonedMethod, targetAssembly.MainModule);
             methodCloner.Clone();
 
-            return importedInjectedMethod;
+            return clonedMethod;
         }
 
         private class MethodClonerValidated : MethodCloner {
@@ -151,11 +144,6 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                 return base.ImportMethodReference(operand);
             }
 
-            protected override TypeReference ImportVariableDefinition(VariableDefinition operand) {
-                ValidateTypeReference(operand.VariableType);
-                return base.ImportVariableDefinition(operand);
-            }
-
             private void ValidateTypeReference(TypeReference type) {
                 if (type.Scope == SourceMethod.Module)
                     throw new AssemblyMethodInlineInjectorException(
@@ -167,6 +155,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
         private class MethodCloner {
             private readonly Dictionary<VariableDefinition, VariableDefinition> _variableMap = new Dictionary<VariableDefinition, VariableDefinition>();
             private readonly int[] _instructionOperandMap;
+            private bool _executed;
 
             public MethodDefinition SourceMethod { get; }
             public MethodDefinition TargetMethod { get; }
@@ -184,24 +173,46 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             }
 
             public void Clone() {
+                if (_executed)
+                    throw new InvalidOperationException();
+
+                _executed = true;
+
+                // Clone local variables
                 foreach (VariableDefinition variable in SourceMethod.Body.Variables) {
-                    VariableDefinition variableDefinition = new VariableDefinition(variable.Name, ImportVariableDefinition(variable));
+                    VariableDefinition variableDefinition = new VariableDefinition(variable.Name, ImportTypeReference(variable.VariableType));
                     TargetMethod.Body.Variables.Add(variableDefinition);
                     _variableMap.Add(variable, variableDefinition);
                 }
 
-                foreach (Instruction instruction in SourceMethod.Body.Instructions) {
-                    Instruction clonedInstruction = CloneInstruction(instruction);
+                // Clone body instructions
+                for (int i = 0; i < SourceMethod.Body.Instructions.Count; i++) {
+                    Instruction instruction = SourceMethod.Body.Instructions[i];
+                    Instruction clonedInstruction = CloneInstruction(instruction, i);
 
                     instruction.SequencePoint?.CopyTo(clonedInstruction);
                     TargetMethod.Body.Instructions.Add(clonedInstruction);
                 }
 
+                // Map instructions that are operands of other instructions to newly created clones
                 for (int i = 0; i < _instructionOperandMap.Length; i++) {
                     if (_instructionOperandMap[i] < 0)
                         continue;
 
                     TargetMethod.Body.Instructions[i].Operand = TargetMethod.Body.Instructions[_instructionOperandMap[i]];
+                }
+
+                // Clone exception handlers
+                foreach (ExceptionHandler sourceExceptionHandler in SourceMethod.Body.ExceptionHandlers) {
+                    ExceptionHandler cloneExceptionHandler = new ExceptionHandler(sourceExceptionHandler.HandlerType);
+                    cloneExceptionHandler.CatchType = sourceExceptionHandler.CatchType != null ? ImportTypeReference(sourceExceptionHandler.CatchType) : null;
+                    cloneExceptionHandler.FilterStart = GetMatchingInstructionByIndex(sourceExceptionHandler.FilterStart);
+                    cloneExceptionHandler.HandlerStart = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerStart);
+                    cloneExceptionHandler.HandlerEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerEnd);
+                    cloneExceptionHandler.TryStart = GetMatchingInstructionByIndex(sourceExceptionHandler.TryStart);
+                    cloneExceptionHandler.TryEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.TryEnd);
+
+                    TargetMethod.Body.ExceptionHandlers.Add(cloneExceptionHandler);
                 }
             }
 
@@ -213,66 +224,43 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                 return TargetModule.Import(operand);
             }
 
-            protected virtual TypeReference ImportVariableDefinition(VariableDefinition operand) {
-                return TargetModule.Import(operand.VariableType);
-            }
-
-            protected virtual Instruction CloneInstruction(Instruction sourceInstruction) {
-                Instruction clonedInstruction = null;
-                object operand = sourceInstruction.Operand;
+            protected virtual Instruction CloneInstruction(Instruction instruction, int instructionIndex) {
+                Instruction cloneInstruction = null;
+                object operand = instruction.Operand;
                 if (operand == null) {
-                    clonedInstruction = CloneNoOperandInstruction(sourceInstruction);
-                } else if (operand is byte) {
-                    clonedInstruction = CloneByteOperandInstruction(sourceInstruction, (byte) operand);
-                } else if (operand is sbyte) {
-                    clonedInstruction = CloneSByteOperandInstruction(sourceInstruction, (sbyte) operand);
-                } else if (operand is int) {
-                    clonedInstruction = CloneIntOperandInstruction(sourceInstruction, (int) operand);
-                } else if (operand is long) {
-                    clonedInstruction = CloneLongOperandInstruction(sourceInstruction, (long) operand);
-                } else if (operand is float) {
-                    clonedInstruction = CloneFloatOperandInstruction(sourceInstruction, (float) operand);
-                } else if (operand is double) {
-                    clonedInstruction = CloneDoubleOperandInstruction(sourceInstruction, (double) operand);
-                } else if (operand is string) {
-                    clonedInstruction = CloneStringOperandInstruction(sourceInstruction, (string) operand);
-                }
-
-                TypeReference typeReferenceOperand = operand as TypeReference;
-                if (typeReferenceOperand != null) {
-                    clonedInstruction = CloneTypeReferenceOperandInstruction(sourceInstruction, typeReferenceOperand);
-                }
-
-                FieldReference fieldReferenceOperand = operand as FieldReference;
-                if (fieldReferenceOperand != null) {
-                    clonedInstruction = CloneFieldReferenceOperandInstruction(sourceInstruction, fieldReferenceOperand);
-                }
-
-                MethodReference methodReferenceOperand = operand as MethodReference;
-                if (methodReferenceOperand != null) {
-                    clonedInstruction = CloneMethodReferenceOperandInstruction(sourceInstruction, methodReferenceOperand);
-                }
-
-                ParameterDefinition parameterDefinitionOperand = operand as ParameterDefinition;
-                if (parameterDefinitionOperand != null) {
-                    clonedInstruction = CloneParameterDefinitionOperandInstruction(sourceInstruction, parameterDefinitionOperand);
-                }
-
-                VariableDefinition variableDefinitionOperand = operand as VariableDefinition;
-                if (variableDefinitionOperand != null) {
-                    clonedInstruction = CloneVariableDefinitionOperandInstruction(sourceInstruction, variableDefinitionOperand);
-                }
-
-                Instruction instructionOperand = operand as Instruction;
-                if (instructionOperand != null) {
-                    clonedInstruction = CloneInstructionOperandInstruction(sourceInstruction, instructionOperand);
-                }
-
-                if (clonedInstruction == null)
+                    cloneInstruction = CloneNoOperandInstruction(instruction);
+                } else if (operand is byte byteOperand) {
+                    cloneInstruction = CloneByteOperandInstruction(instruction, byteOperand);
+                } else if (operand is sbyte sbyteOperand) {
+                    cloneInstruction = CloneSByteOperandInstruction(instruction, sbyteOperand);
+                } else if (operand is int intOperand) {
+                    cloneInstruction = CloneIntOperandInstruction(instruction, intOperand);
+                } else if (operand is long longOperand) {
+                    cloneInstruction = CloneLongOperandInstruction(instruction, longOperand);
+                } else if (operand is float floatOperand) {
+                    cloneInstruction = CloneFloatOperandInstruction(instruction, floatOperand);
+                } else if (operand is double doubleOperand) {
+                    cloneInstruction = CloneDoubleOperandInstruction(instruction, doubleOperand);
+                } else if (operand is string stringOperand) {
+                    cloneInstruction = CloneStringOperandInstruction(instruction, stringOperand);
+                } else if (operand is TypeReference typeReferenceOperand) {
+                    cloneInstruction = CloneTypeReferenceOperandInstruction(instruction, typeReferenceOperand);
+                } else if (operand is FieldReference fieldReferenceOperand) {
+                    cloneInstruction = CloneFieldReferenceOperandInstruction(instruction, fieldReferenceOperand);
+                } else if (operand is MethodReference methodReferenceOperand) {
+                    cloneInstruction = CloneMethodReferenceOperandInstruction(instruction, methodReferenceOperand);
+                } else if (operand is ParameterDefinition parameterDefinitionOperand) {
+                    cloneInstruction = CloneParameterDefinitionOperandInstruction(instruction, parameterDefinitionOperand);
+                } else if (operand is VariableDefinition variableDefinitionOperand) {
+                    cloneInstruction = CloneVariableDefinitionOperandInstruction(instruction, variableDefinitionOperand);
+                } else if (operand is Instruction instructionOperand) {
+                    cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand, instructionIndex);
+                } else {
                     throw new AssemblyMethodInlineInjectorException("Unknown operand type");
+                }
 
-                clonedInstruction.Offset = sourceInstruction.Offset;
-                return clonedInstruction;
+                cloneInstruction.Offset = instruction.Offset;
+                return cloneInstruction;
             }
 
             protected virtual Instruction CloneNoOperandInstruction(Instruction sourceInstruction) {
@@ -339,9 +327,20 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                 return Instruction.Create(sourceInstruction.OpCode, _variableMap[operand]);
             }
 
-            protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand) {
-                _instructionOperandMap[SourceMethod.Body.Instructions.IndexOf(sourceInstruction)] = SourceMethod.Body.Instructions.IndexOf(operand);
-                return Instruction.Create(sourceInstruction.OpCode, CloneInstruction(operand));
+            protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand, int instructionIndex) {
+                _instructionOperandMap[instructionIndex] = SourceMethod.Body.Instructions.IndexOf(operand);
+                return Instruction.Create(sourceInstruction.OpCode, Instruction.Create(OpCodes.Nop));
+            }
+
+            private Instruction GetMatchingInstructionByIndex(Instruction sourceInstruction) {
+                if (sourceInstruction == null)
+                    return null;
+
+                int sourceIndex = SourceMethod.Body.Instructions.IndexOf(sourceInstruction);
+                if (sourceIndex == -1)
+                    throw new AssemblyMethodInlineInjectorException("Matching instruction not found in source method");
+
+                return TargetMethod.Body.Instructions[sourceIndex];
             }
         }
     }

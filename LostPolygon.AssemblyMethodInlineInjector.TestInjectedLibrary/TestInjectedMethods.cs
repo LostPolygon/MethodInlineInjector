@@ -1,5 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace TestInjectedLibrary {
     public class TestInjectedMethods {
@@ -46,6 +48,20 @@ namespace TestInjectedLibrary {
             }
 
             Debug.Log("Lucky!");
+        }
+
+        public static void InjectedMethod_TryCatch() {
+            Debug.Log("Start InjectedMethod_TryCatch");
+            try {
+                Debug.Log("Try InjectedMethod_TryCatch");
+            } catch (Exception e) {
+                Debug.Log("Catch InjectedMethod_TryCatch: " + e);
+                throw;
+            } finally {
+                Debug.Log("Finally InjectedMethod_TryCatch");
+            }
+            
+            Debug.Log("End InjectedMethod_TryCatch");
         }
     }
 }

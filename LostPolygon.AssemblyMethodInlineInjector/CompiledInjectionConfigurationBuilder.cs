@@ -77,6 +77,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                         .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
                         .ToArray();
 
+                // TODO: add supports for overloads
                 if (matchingMethodDefinitions.Length == 0)
                     throw new AssemblyMethodInlineInjectorException($"No matching methods found for {sourceInjectedMethod.MethodFullName}");
 
@@ -98,8 +99,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
         private AssemblyDefinitionData GetAssemblyDefinitionData(string assemblyPath) {
             assemblyPath = Path.GetFullPath(assemblyPath);
-            AssemblyDefinitionData assemblyDefinitionData;
-            if (!_assemblyPathToAssemblyDefinitionMap.TryGetValue(assemblyPath, out assemblyDefinitionData)) {
+            if (!_assemblyPathToAssemblyDefinitionMap.TryGetValue(assemblyPath, out AssemblyDefinitionData assemblyDefinitionData)) {
                 AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath);
                 assemblyDefinitionData = new AssemblyDefinitionData(assemblyDefinition);
                 _assemblyPathToAssemblyDefinitionMap.Add(assemblyPath, assemblyDefinitionData);
@@ -121,14 +121,12 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
         private CompiledInjectionConfiguration.InjecteeAssembly GetInjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly) {
             var memberReferenceWhitelistFilters = new List<InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter>();
             foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceWhitelistItem memberReferenceWhitelistItem in sourceInjecteeAssembly.MemberReferenceWhitelist) {
-                var memberReferenceWhitelistFilter = memberReferenceWhitelistItem as InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter;
-                if (memberReferenceWhitelistFilter != null) {
+                if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter memberReferenceWhitelistFilter) {
                     memberReferenceWhitelistFilters.Add(memberReferenceWhitelistFilter);
                     continue;
                 }
 
-                var memberReferenceWhitelistFilterInclude = memberReferenceWhitelistItem as InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilterInclude;
-                if (memberReferenceWhitelistFilterInclude != null) {
+                if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterInclude) {
                     string whiteListIncludeXml = File.ReadAllText(memberReferenceWhitelistFilterInclude.Path);
                     MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterIncludedList = XmlSerializationUtility.XmlDeserializeFromString<MemberReferenceWhitelistFilterInclude>(whiteListIncludeXml);
                     memberReferenceWhitelistFilters.AddRange(memberReferenceWhitelistFilterIncludedList.MemberReferenceWhitelist);
@@ -137,6 +135,8 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
             AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
             List<MethodDefinition> injecteeMethodDefinitions = new List<MethodDefinition>();
+
+            // TODO: implement whitelist filtering
             injecteeMethodDefinitions.AddRange(assemblyDefinitionData.AllMethods);
 
             CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly = 
