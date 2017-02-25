@@ -18,10 +18,10 @@ namespace LostPolygon.AssemblyMethodInjector {
         }
 
         public CompiledInjectionConfiguration Build() {
-            Dictionary<AssemblyDefinition, List<MethodDefinition>> injectedAssemblyToMethodsMap = GetInjectedMethods();
+            Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
             
             List<CompiledInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods = new List<CompiledInjectionConfiguration.InjectedAssemblyMethods>();
-            foreach (KeyValuePair<AssemblyDefinition, List<MethodDefinition>> pair in injectedAssemblyToMethodsMap) {
+            foreach (KeyValuePair<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> pair in injectedAssemblyToMethodsMap) {
                 injectedAssemblyMethods.Add(new CompiledInjectionConfiguration.InjectedAssemblyMethods(pair.Key, pair.Value.AsReadOnly()));
             }
 
@@ -70,8 +70,8 @@ namespace LostPolygon.AssemblyMethodInjector {
             }
         }
 
-        private Dictionary<AssemblyDefinition, List<MethodDefinition>> GetInjectedMethods() {
-            var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<MethodDefinition>>();
+        private Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> GetInjectedMethods() {
+            var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>>();
             foreach (InjectionConfiguration.InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
                 AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
                 MethodDefinition[] matchingMethodDefinitions =
@@ -85,14 +85,14 @@ namespace LostPolygon.AssemblyMethodInjector {
                 if (matchingMethodDefinitions.Length > 2)
                     throw new AssemblyMethodInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
 
-                List<MethodDefinition> methodDefinitions;
+                List<CompiledInjectionConfiguration.InjectedMethod> methodDefinitions;
                 if (!injectedAssemblyToMethodsMap.TryGetValue(assemblyDefinitionData.AssemblyDefinition, out methodDefinitions)) {
-                    methodDefinitions = new List<MethodDefinition>();
+                    methodDefinitions = new List<CompiledInjectionConfiguration.InjectedMethod>();
                     injectedAssemblyToMethodsMap.Add(assemblyDefinitionData.AssemblyDefinition, methodDefinitions);
                 }
 
                 MethodDefinition matchedMethodDefinition = matchingMethodDefinitions[0];
-                methodDefinitions.Add(matchedMethodDefinition);
+                methodDefinitions.Add(new CompiledInjectionConfiguration.InjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
             }
 
             return injectedAssemblyToMethodsMap;

@@ -13,7 +13,7 @@ namespace LostPolygon.AssemblyMethodInjector {
             // Skip root element when reading
             SerializationHelper.ProcessAdvanceOnRead();
 
-            ProcessCollection(MemberReferenceWhitelist);
+            this.ProcessCollection(MemberReferenceWhitelist);
         }
     }
 }

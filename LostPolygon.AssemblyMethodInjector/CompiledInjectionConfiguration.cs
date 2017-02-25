@@ -14,11 +14,21 @@ namespace LostPolygon.AssemblyMethodInjector {
 
         public class InjectedAssemblyMethods {
             public AssemblyDefinition AssemblyDefinition { get; }
-            public ReadOnlyCollection<MethodDefinition> MethodDefinitions { get; }
+            public ReadOnlyCollection<InjectedMethod> Methods { get; }
 
-            public InjectedAssemblyMethods(AssemblyDefinition assemblyDefinition, ReadOnlyCollection<MethodDefinition> methodDefinitions) {
+            public InjectedAssemblyMethods(AssemblyDefinition assemblyDefinition, ReadOnlyCollection<InjectedMethod> methods) {
                 AssemblyDefinition = assemblyDefinition;
-                MethodDefinitions = methodDefinitions;
+                Methods = methods;
+            }
+        }
+
+        public class InjectedMethod {
+            public InjectionConfiguration.InjectedMethod SourceInjectedMethod { get; }
+            public MethodDefinition MethodDefinition { get; }
+
+            public InjectedMethod(InjectionConfiguration.InjectedMethod sourceInjectedMethod, MethodDefinition methodDefinition) {
+                SourceInjectedMethod = sourceInjectedMethod;
+                MethodDefinition = methodDefinition;
             }
         }
 

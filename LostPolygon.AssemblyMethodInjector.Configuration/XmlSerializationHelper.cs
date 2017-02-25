@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Xml;
 
 namespace LostPolygon.AssemblyMethodInjector {
@@ -112,6 +114,69 @@ namespace LostPolygon.AssemblyMethodInjector {
         public void ProcessAdvanceOnRead() {
             if (IsXmlSerializationReading) {
                 XmlSerializationReader.Read();
+            }
+        }
+
+        public bool ProcessEnumAttribute<T>(string name, Action<T> readAction, Func<T> writeFunc)
+            where T : struct, IConvertible {
+            Type enumType = typeof(T);
+            if (!enumType.IsEnum)
+                throw new SerializationException("value must be an Enum");
+
+            if (IsXmlSerializationReading) {
+                string stringEnumValue = null;
+                if (!ProcessAttributeString(name, s => stringEnumValue = s, null))
+                    return false;
+
+                T parsedEnumValue = (T) Enum.Parse(enumType, stringEnumValue, true);
+                readAction(parsedEnumValue);
+            } else {
+                T enumValue = writeFunc();
+                ProcessAttributeString(name, null, () => Enum.GetName(enumType, enumValue));
+            }
+
+            return true;
+        }
+
+        public void ProcessFlagsEnumAttributes<T>(T defaultValue, Action<T> readAction, Func<T> writeFunc)
+            where T : struct, IConvertible {
+            Type enumType = typeof(T);
+            if (!enumType.IsEnum)
+                throw new SerializationException("value must be an Enum");
+
+            long defaultValueLong = defaultValue.ToInt64(null);
+            T[] enumValues = (T[]) Enum.GetValues(enumType);
+            string[] enumNames = Enum.GetNames(enumType);
+            
+            if (IsXmlSerializationReading) {
+                long resultEnumValue = defaultValueLong;
+                for (int i = 0; i < enumNames.Length; i++) {
+                    string flagName = enumNames[i];
+                    long flagValue = enumValues[i].ToInt64(null);
+
+                    bool currentFlagValue = false;
+                    if (ProcessAttributeString(flagName, s => currentFlagValue = Convert.ToBoolean(s), null)) {
+                        if (currentFlagValue) {
+                            resultEnumValue |= flagValue;
+                        } else {
+                            resultEnumValue &= ~flagValue;
+                        }
+                    }
+                }
+
+                T enumValue = (T) Enum.ToObject(enumType, resultEnumValue);
+                readAction(enumValue);
+            } else {
+                long currentEnumValue = writeFunc().ToInt64(null);
+                for (int i = 0; i < enumNames.Length; i++) {
+                    string flagName = enumNames[i];
+                    long flagValue = enumValues[i].ToInt64(null);
+
+                    long currentFlag = currentEnumValue & flagValue;
+                    if (currentFlag != (defaultValueLong & currentEnumValue)) {
+                        ProcessAttributeString(flagName, null, () => Convert.ToString(currentFlag != 0));
+                    }
+                }
             }
         }
 

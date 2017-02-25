@@ -19,10 +19,6 @@ namespace LostPolygon.AssemblyMethodInjector {
         public void Inject() {
             foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in _compiledInjectionConfiguration.InjecteeAssemblies) {
                 foreach (CompiledInjectionConfiguration.InjectedAssemblyMethods injectedAssemblyMethodsTuple in _compiledInjectionConfiguration.InjectedMethods) {
-                    List<AssemblyNameReference> injectedAssemblyNameReferences =
-                        injectedAssemblyMethodsTuple.AssemblyDefinition.MainModule.AssemblyReferences
-                            .ToList();
-
                     List<AssemblyNameReference> injecteeAssemblyNameReferences =
                         injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences
                             .ToList();
@@ -36,6 +32,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                         AssemblyNameReference matchingAssemblyNameReference =
                             GetMatchingAssemblyNameReference(injectedTypeReference.Scope, injecteeAssemblyNameReferences);
 
+                        // TODO: implement whitelist of assemblies that can be added
                         if (matchingAssemblyNameReference == null) {
                             Console.WriteLine(
                                 $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
@@ -48,9 +45,9 @@ namespace LostPolygon.AssemblyMethodInjector {
                     }
 
                     foreach (MethodDefinition injecteeMethod in injecteeAssembly.InjecteeMethodsDefinitions) {
-                        foreach (MethodDefinition injectedMethod in injectedAssemblyMethodsTuple.MethodDefinitions) {
-                            MethodDefinition importedInjectedMethod = CloneAndImportMethod(injectedMethod, injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition);
-                            InjectMethod(importedInjectedMethod, injecteeMethod);
+                        foreach (CompiledInjectionConfiguration.InjectedMethod injectedMethod in injectedAssemblyMethodsTuple.Methods) {
+                            MethodDefinition importedInjectedMethod = CloneAndImportMethod(injectedMethod.MethodDefinition, injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition);
+                            InjectMethod(importedInjectedMethod, injecteeMethod, injectedMethod.SourceInjectedMethod.InjectionPosition);
                         }
                     }
                 }
@@ -67,157 +64,58 @@ namespace LostPolygon.AssemblyMethodInjector {
             return null;
         }
 
-        private static void InjectMethod(MethodDefinition injectedMethod, MethodDefinition injecteeMethod) {
-            injecteeMethod.Body.Variables.InsertRangeToStart(injectedMethod.Body.Variables);
+        private static void InjectMethod(MethodDefinition injectedMethod, MethodDefinition injecteeMethod, InjectionConfiguration.InjectedMethod.MethodInjectionPosition injectionPosition) {
+            injectedMethod.Body.SimplifyMacros();
+            injecteeMethod.Body.SimplifyMacros();
 
             if (injectedMethod.Body.Variables.Count > 0) {
                 injecteeMethod.Body.InitLocals = true;
             }
 
-            ILProcessor ilProcessor = injecteeMethod.Body.GetILProcessor();
-            Instruction firstInstruction = injecteeMethod.Body.Instructions[0];
-            Instruction lastRetInstruction = injectedMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
+            ILProcessor injecteeIlProcessor = injecteeMethod.Body.GetILProcessor();
+            if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart) {
+                // Inject variables to the beginning of the variable list
+                injecteeMethod.Body.Variables.InsertRangeToStart(injectedMethod.Body.Variables);
+                Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
+                Instruction injectedLastRetInstruction = injectedMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
 
-            for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
-                Instruction injectedInstruction = injectedMethod.Body.Instructions[i];
-                ilProcessor.InsertBefore(firstInstruction, injectedInstruction);
+                for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
+                    Instruction injectedInstruction = injectedMethod.Body.Instructions[i];
+                    injecteeIlProcessor.InsertBefore(injecteeFirstInstruction, injectedInstruction);
+                }
+
+                injecteeFirstInstruction = Instruction.Create(OpCodes.Nop);
+                injecteeIlProcessor.Replace(injectedLastRetInstruction, injecteeFirstInstruction);
+                foreach (Instruction bodyInstruction in injecteeMethod.Body.Instructions) {
+                    if (bodyInstruction.Operand == injectedLastRetInstruction) {
+                        bodyInstruction.Operand = injecteeFirstInstruction;
+                    }
+                }
+            } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
+                injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
+
+                // Remove Ret from the end of the injectee method, so the execution could go to injected code after the injecteed method end
+                Instruction injecteeLastRetInstruction = injecteeMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
+                Instruction injecteeNewLastInstruction = Instruction.Create(OpCodes.Nop);
+                injecteeIlProcessor.Replace(injecteeLastRetInstruction, injecteeNewLastInstruction);
+                foreach (Instruction bodyInstruction in injecteeMethod.Body.Instructions) {
+                    if (bodyInstruction.Operand == injecteeLastRetInstruction) {
+                        bodyInstruction.Operand = injecteeNewLastInstruction;
+                    }
+                }
+
+                Instruction injecteeLastInstruction = injecteeMethod.Body.Instructions.Last();
+
+                // Append injected method to the end
+                for (int i = injectedMethod.Body.Instructions.Count - 1; i >= 0 ; i--) {
+                    Instruction injectedInstruction = injectedMethod.Body.Instructions[i];
+                    injecteeIlProcessor.InsertAfter(injecteeLastInstruction, injectedInstruction);
+                }
+
+                injecteeMethod.Body.OptimizeMacros();
             }
 
-            ilProcessor.Replace(lastRetInstruction, Instruction.Create(OpCodes.Nop));
-
-            ShiftLocalVariables(ilProcessor, firstInstruction, injectedMethod.Body.Variables.Count);
-            //ShiftOffset(ilProcessor, firstInstruction, injectedVariables);
-        }
-
-        private static void ShiftLocalVariables(ILProcessor ilProcessor, Instruction startInstruction, int shift) {
-            if (shift == 0)
-                return;
-
-            Instruction instruction = startInstruction;
-            do {
-                /*
-                 * Opcodes with VariableDefinition operands are shifted by 
-                 * Cecil automatically when instructions are inserted
-                 */
-                switch (instruction.OpCode.Code) {
-                    case Code.Stloc_0:
-                    case Code.Stloc_1:
-                    case Code.Stloc_2:
-                    case Code.Stloc_3:
-                        ShiftConstStlocInstruction(ilProcessor, instruction, shift);
-                        break;
-                    case Code.Ldloc_0:
-                    case Code.Ldloc_1:
-                    case Code.Ldloc_2:
-                    case Code.Ldloc_3:
-                        ShiftConstLdlocInstruction(ilProcessor, instruction, shift);
-                        break;
-                }
-
-                instruction = instruction.Next;
-            } while (instruction != null);
-        }
-
-        private static void ShiftConstStlocInstruction(ILProcessor ilProcessor, Instruction instruction, int shift) {
-            int localVariableIndex;
-            switch (instruction.OpCode.Code) {
-                case Code.Stloc_0:
-                    localVariableIndex = 0;
-                    break;
-                case Code.Stloc_1:
-                    localVariableIndex = 1;
-                    break;
-                case Code.Stloc_2:
-                    localVariableIndex = 2;
-                    break;
-                case Code.Stloc_3:
-                    localVariableIndex = 3;
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException();
-            }
-
-            localVariableIndex += shift;
-            switch (localVariableIndex) {
-                case 0: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Stloc_0);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 1: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Stloc_1);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 2: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Stloc_2);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 3: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Stloc_3);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                default: {
-                    Instruction newInstruction =
-                        ilProcessor.Create(localVariableIndex <= 255 ? OpCodes.Stloc_S : OpCodes.Stloc, (byte) localVariableIndex);
-                    instruction.OpCode = newInstruction.OpCode;
-                    instruction.Operand = newInstruction.Operand;
-                    break;
-                }
-            }
-        }
-
-        private static void ShiftConstLdlocInstruction(ILProcessor ilProcessor, Instruction instruction, int shift) {
-            int localVariableIndex;
-            switch (instruction.OpCode.Code) {
-                case Code.Ldloc_0:
-                    localVariableIndex = 0;
-                    break;
-                case Code.Ldloc_1:
-                    localVariableIndex = 1;
-                    break;
-                case Code.Ldloc_2:
-                    localVariableIndex = 2;
-                    break;
-                case Code.Ldloc_3:
-                    localVariableIndex = 3;
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException();
-            }
-
-            localVariableIndex += shift;
-            switch (localVariableIndex) {
-                case 0: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Ldloc_0);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 1: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Ldloc_1);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 2: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Ldloc_2);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                case 3: {
-                    Instruction newInstruction = ilProcessor.Create(OpCodes.Ldloc_3);
-                    instruction.OpCode = newInstruction.OpCode;
-                    break;
-                }
-                default: {
-                    Instruction newInstruction =
-                        ilProcessor.Create(localVariableIndex <= 255 ? OpCodes.Ldloc_S : OpCodes.Ldloc, (byte) localVariableIndex);
-                    instruction.OpCode = newInstruction.OpCode;
-                    instruction.Operand = newInstruction.Operand;
-                    break;
-                }
-            }
+            injecteeMethod.Body.OptimizeMacros();
         }
 
         public static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition declaredAssembly) {
@@ -269,6 +167,7 @@ namespace LostPolygon.AssemblyMethodInjector {
 
         private class MethodCloner {
             private readonly Dictionary<VariableDefinition, VariableDefinition> _variableMap = new Dictionary<VariableDefinition, VariableDefinition>();
+            private readonly int[] _instructionOperandMap;
 
             public MethodDefinition SourceMethod { get; }
             public MethodDefinition TargetMethod { get; }
@@ -278,6 +177,11 @@ namespace LostPolygon.AssemblyMethodInjector {
                 SourceMethod = sourceMethod;
                 TargetMethod = targetMethod;
                 TargetModule = targetModule;
+
+                _instructionOperandMap = new int[SourceMethod.Body.Instructions.Count];
+                for (int i = 0; i < _instructionOperandMap.Length; i++) {
+                    _instructionOperandMap[i] = -2;
+                }
             }
 
             public void Clone() {
@@ -292,6 +196,13 @@ namespace LostPolygon.AssemblyMethodInjector {
 
                     instruction.SequencePoint?.CopyTo(clonedInstruction);
                     TargetMethod.Body.Instructions.Add(clonedInstruction);
+                }
+
+                for (int i = 0; i < _instructionOperandMap.Length; i++) {
+                    if (_instructionOperandMap[i] < 0)
+                        continue;
+
+                    TargetMethod.Body.Instructions[i].Operand = TargetMethod.Body.Instructions[_instructionOperandMap[i]];
                 }
             }
 
@@ -430,9 +341,8 @@ namespace LostPolygon.AssemblyMethodInjector {
             }
 
             protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand) {
-                Instruction operandInstruction = operand;
-                operandInstruction = CloneInstruction(operandInstruction);
-                return Instruction.Create(sourceInstruction.OpCode, operandInstruction);
+                _instructionOperandMap[SourceMethod.Body.Instructions.IndexOf(sourceInstruction)] = SourceMethod.Body.Instructions.IndexOf(operand);
+                return Instruction.Create(sourceInstruction.OpCode, CloneInstruction(operand));
             }
         }
     }

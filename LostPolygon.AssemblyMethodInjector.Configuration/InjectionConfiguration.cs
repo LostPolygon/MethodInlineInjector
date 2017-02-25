@@ -21,7 +21,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 if (SerializationHelper.ProcessStartElement("InjectedMethods")) {
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        ProcessCollection(InjectedMethods);
+                        this.ProcessCollection(InjectedMethods);
                     }
                     SerializationHelper.ProcessEndElement();
                 }
@@ -29,7 +29,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 if (SerializationHelper.ProcessStartElement("InjecteeAssemblies")) {
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        ProcessCollection(InjecteeAssemblies);
+                        this.ProcessCollection(InjecteeAssemblies);
                     }
                     SerializationHelper.ProcessEndElement();
                 }
@@ -63,7 +63,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                     SerializationHelper.ProcessStartElement("MemberReferenceWhitelist");
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        ProcessCollection(MemberReferenceWhitelist, () => {
+                        this.ProcessCollection(MemberReferenceWhitelist, () => {
                             switch (SerializationHelper.XmlSerializationReader.Name) {
                                 case "Filter":
                                     return new MemberReferenceWhitelistFilter();
@@ -79,7 +79,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                     SerializationHelper.ProcessStartElement("AssemblyWhitelist");
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        ProcessCollection(AssemblyWhitelist, () => {
+                        this.ProcessCollection(AssemblyWhitelist, () => {
                             switch (SerializationHelper.XmlSerializationReader.Name) {
                                 case "Assembly":
                                     return new AssemblyWhitelistFilter();
@@ -111,15 +111,15 @@ namespace LostPolygon.AssemblyMethodInjector {
                     FilterTypeFlags.SkipMethods |
                     FilterTypeFlags.SkipProperties;
 
-                public FilterTypeFlags FilterFlags { get; private set; } = kDefaultFilterTypeFlags;
+                public FilterTypeFlags FilterType { get; private set; } = kDefaultFilterTypeFlags;
                 public string Filter { get; private set; }
                 public bool IsRegex { get; private set; }
 
                 public MemberReferenceWhitelistFilter() {
                 }
 
-                public MemberReferenceWhitelistFilter(FilterTypeFlags filterFlags, string filter, bool isRegex) {
-                    FilterFlags = filterFlags;
+                public MemberReferenceWhitelistFilter(FilterTypeFlags filterType, string filter, bool isRegex) {
+                    FilterType = filterType;
                     Filter = filter;
                     IsRegex = isRegex;
                 }
@@ -133,36 +133,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                     {
                         SerializationHelper.ProcessAttributeString("Filter", s => Filter = s, () => Filter);
                         SerializationHelper.ProcessAttributeString("IsRegex", s => IsRegex = Convert.ToBoolean(s), () => Convert.ToString(IsRegex));
-                        FilterTypeFlags[] filterTypeFlagsValues = (FilterTypeFlags[]) Enum.GetValues(typeof(FilterTypeFlags));
-                        string[] filterTypeFlagsNames = Enum.GetNames(typeof(FilterTypeFlags));
-                        
-                        if (SerializationHelper.IsXmlSerializationReading) {
-                            FilterTypeFlags resultFlags = kDefaultFilterTypeFlags;
-                            for (int i = 0; i < filterTypeFlagsNames.Length; i++) {
-                                string filterTypeFlagsName = filterTypeFlagsNames[i];
-                                FilterTypeFlags filterTypeFlagsValue = filterTypeFlagsValues[i];
-
-                                bool currentFlagValue = false;
-                                if (SerializationHelper.ProcessAttributeString(filterTypeFlagsName, s => currentFlagValue = Convert.ToBoolean(s), null)) {
-                                    if (currentFlagValue) {
-                                        resultFlags |= filterTypeFlagsValue;
-                                    } else {
-                                        resultFlags &= ~filterTypeFlagsValue;
-                                    }
-                                }
-                            }
-                            FilterFlags = resultFlags;
-                        } else {
-                            for (int i = 0; i < filterTypeFlagsNames.Length; i++) {
-                                string filterTypeFlagsName = filterTypeFlagsNames[i];
-                                FilterTypeFlags filterTypeFlagsValue = filterTypeFlagsValues[i];
-
-                                FilterTypeFlags currentFlag = FilterFlags & filterTypeFlagsValue;
-                                if (currentFlag != (kDefaultFilterTypeFlags & filterTypeFlagsValue)) {
-                                    SerializationHelper.ProcessAttributeString(filterTypeFlagsName, null, () => Convert.ToString(currentFlag != 0));
-                                }
-                            }
-                        }
+                        SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterTypeFlags, l => FilterType = l, () => FilterType);
                     }
                     SerializationHelper.ProcessAdvanceOnRead();
                     SerializationHelper.ProcessEndElement();
@@ -171,7 +142,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 #endregion
 
                 public override string ToString() {
-                    return $"Filter: '{Filter}', Is Regex: {IsRegex}, Filter Type: {FilterFlags}";
+                    return $"Filter: '{Filter}', Is Regex: {IsRegex}, Filter Type: {FilterType}";
                 }
 
                 [Flags]
@@ -231,6 +202,7 @@ namespace LostPolygon.AssemblyMethodInjector {
         public class InjectedMethod : SimpleXmlSerializable {
             public string AssemblyPath { get; private set; }
             public string MethodFullName { get; private set; }
+            public MethodInjectionPosition InjectionPosition { get; private set; } = MethodInjectionPosition.InjecteeMethodStart;
 
             public InjectedMethod() {
             }
@@ -249,6 +221,7 @@ namespace LostPolygon.AssemblyMethodInjector {
                 {
                     SerializationHelper.ProcessAttributeString("AssemblyPath", s => AssemblyPath = s, () => AssemblyPath);
                     SerializationHelper.ProcessAttributeString("MethodFullName", s => MethodFullName = s, () => MethodFullName);
+                    SerializationHelper.ProcessEnumAttribute("InjectionPosition", s => InjectionPosition = s, () => InjectionPosition);
                 }
                 SerializationHelper.ProcessAdvanceOnRead();
                 SerializationHelper.ProcessEndElement();
@@ -256,9 +229,13 @@ namespace LostPolygon.AssemblyMethodInjector {
 
             #endregion
 
+            public override string ToString() {
+                return $"Assembly Path: '{AssemblyPath}', Method Full Name: '{MethodFullName}', Injection Position: {InjectionPosition}";
+            }
+
             public enum MethodInjectionPosition {
-                AtMethodStart,
-                
+                InjecteeMethodStart,
+                InjecteeMethodReturn
             }
         }
 
