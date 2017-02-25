@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using Mono.Cecil;
 using devtm.Cecil.Extensions;
 using LostPolygon.AssemblyMethodInlineInjector.Configuration;
-using Mono.Cecil;
-using UnityEngine;
 
 namespace LostPolygon.AssemblyMethodInlineInjector {
     internal class CompiledInjectionConfigurationBuilder {

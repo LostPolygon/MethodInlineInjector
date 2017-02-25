@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.IO;
 using System.Threading;
-
 using LostPolygon.AssemblyMethodInlineInjector.Configuration;
 
 namespace LostPolygon.AssemblyMethodInlineInjector {
