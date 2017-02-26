@@ -63,5 +63,9 @@ namespace TestInjectedLibrary {
             
             Debug.Log("End InjectedMethod_TryCatch");
         }
+
+        public static void InjectedMethod_Jmp() {
+            Console.WriteLine();
+        }
     }
 }

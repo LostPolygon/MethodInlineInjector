@@ -14,7 +14,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             }
         }
 
-        public static void ReplaceAndFixReferences(this ILProcessor processor, Instruction oldInstruction, Instruction newInstruction, MethodDefinition methodDefinition) {
+        public static Instruction ReplaceAndFixReferences(this ILProcessor processor, Instruction oldInstruction, Instruction newInstruction, MethodDefinition methodDefinition) {
             processor.Replace(oldInstruction, newInstruction);
             foreach (Instruction bodyInstruction in methodDefinition.Body.Instructions) {
                 ReplaceOperandInstruction(bodyInstruction, oldInstruction, newInstruction);
@@ -27,6 +27,8 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                 ReplaceOperandInstruction(exceptionHandler.TryStart, oldInstruction, newInstruction);
                 ReplaceOperandInstruction(exceptionHandler.TryEnd, oldInstruction, newInstruction);
             }
+
+            return newInstruction;
         }
 
         private static void ReplaceOperandInstruction(Instruction bodyInstruction, Instruction oldInstruction, Instruction newInstruction) {

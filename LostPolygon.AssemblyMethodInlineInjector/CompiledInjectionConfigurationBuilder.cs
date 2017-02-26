@@ -57,6 +57,9 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
                 }
             }
 
+            if (maxInjectedTargetRuntimeAssemblyDefinition == null)
+                throw new InvalidOperationException(nameof(maxInjectedTargetRuntimeAssemblyDefinition) + " == null");
+
             foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
                 if (injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
                     throw new AssemblyMethodInlineInjectorException(
@@ -136,13 +139,30 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
             List<MethodDefinition> injecteeMethodDefinitions = new List<MethodDefinition>();
 
+            // Skip non-injectable methods
+            List<MethodDefinition> filteredMethods = 
+                assemblyDefinitionData
+                .AllMethods
+                .Where(IsInjectableMethod)
+                .ToList();
+
             // TODO: implement whitelist filtering
-            injecteeMethodDefinitions.AddRange(assemblyDefinitionData.AllMethods);
+            injecteeMethodDefinitions.AddRange(filteredMethods);
 
             CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly = 
                 new CompiledInjectionConfiguration.InjecteeAssembly(sourceInjecteeAssembly, assemblyDefinitionData, injecteeMethodDefinitions);
 
             return injecteeAssembly;
+        }
+
+        private static bool IsInjectableMethod(MethodDefinition method) {
+            bool isNonInjectable =
+                !method.HasBody ||
+                // TODO: allow injection into methods with return value (issue #1)
+                method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void
+                ;
+
+            return !isNonInjectable;
         }
     }
 }

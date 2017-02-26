@@ -12,11 +12,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
         public XmlWriter XmlSerializationWriter { get; private set; }
 
-        public bool IsXmlSerializationReading {
-            get {
-                return XmlSerializationReader != null;
-            }
-        }
+        public bool IsXmlSerializationReading => XmlSerializationReader != null;
 
         public XmlSerializationHelper(Action serializeAction) {
             _serializeAction = serializeAction;

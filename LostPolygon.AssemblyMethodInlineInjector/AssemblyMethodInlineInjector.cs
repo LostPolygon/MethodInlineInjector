@@ -69,9 +69,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
             injectedMethod.Body.SimplifyMacros();
             injecteeMethod.Body.SimplifyMacros();
 
-            if (injectedMethod.Body.Variables.Count > 0) {
-                injecteeMethod.Body.InitLocals = true;
-            }
+            injecteeMethod.Body.InitLocals |= injectedMethod.Body.InitLocals;
 
             ILProcessor injecteeIlProcessor = injecteeMethod.Body.GetILProcessor();
             if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart) {
@@ -80,7 +78,7 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
                 // First instruction of the injectee method. Instruction of the injected methods are inserted before it
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
-                Instruction injectedLastRetInstruction = injectedMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
+                Instruction injectedLastInstruction = injectedMethod.Body.Instructions.Last();
 
                 // Insert injected method to the beginning
                 for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
@@ -93,17 +91,13 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
                 // Replace Ret from the end of the injected method with Nop, 
                 // so the execution could go to injectee code after the injected method end
-                Instruction injectedLastInstruction = Instruction.Create(OpCodes.Nop);
-                injecteeIlProcessor.ReplaceAndFixReferences(injectedLastRetInstruction, injectedLastInstruction, injecteeMethod);  
+                injectedLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injectedLastInstruction, Instruction.Create(OpCodes.Nop), injecteeMethod);  
             } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
                 // Inject variables to the end of the variable list
                 injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
                 
                 // Ret instruction at the end of the injectee method must be replace with Nop, 
                 // so the execution could go to the injected code after the injecteed method end
-                Instruction injecteeLastRetInstruction = injecteeMethod.Body.Instructions.Last(instruction => instruction.OpCode == OpCodes.Ret);
-
-                // Current last instruction of the injectee method
                 Instruction injecteeLastInstruction = injecteeMethod.Body.Instructions.Last();
 
                 // Append injected method to the end
@@ -117,14 +111,13 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
                 // Replace Ret from the end of the injectee method with Nop, 
                 // so the execution could go to injected code after the injectee method end
-                Instruction injecteeNewLastInstruction = Instruction.Create(OpCodes.Nop);
-                injecteeIlProcessor.ReplaceAndFixReferences(injecteeLastRetInstruction, injecteeNewLastInstruction, injecteeMethod);
+                injecteeLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injecteeLastInstruction, Instruction.Create(OpCodes.Nop), injecteeMethod);
             }
 
             injecteeMethod.Body.OptimizeMacros();
         }
 
-        public static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition targetAssembly) {
+        private static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition targetAssembly) {
             TypeReference importedReturnTypeReference = targetAssembly.MainModule.Import(sourceMethod.ReturnType);
             MethodDefinition clonedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference);
             clonedMethod.DeclaringType = targetAssembly.MainModule.Types[0];
@@ -218,13 +211,14 @@ namespace LostPolygon.AssemblyMethodInlineInjector {
 
                 // Clone exception handlers
                 foreach (ExceptionHandler sourceExceptionHandler in SourceMethod.Body.ExceptionHandlers) {
-                    ExceptionHandler cloneExceptionHandler = new ExceptionHandler(sourceExceptionHandler.HandlerType);
-                    cloneExceptionHandler.CatchType = sourceExceptionHandler.CatchType != null ? ImportTypeReference(sourceExceptionHandler.CatchType) : null;
-                    cloneExceptionHandler.FilterStart = GetMatchingInstructionByIndex(sourceExceptionHandler.FilterStart);
-                    cloneExceptionHandler.HandlerStart = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerStart);
-                    cloneExceptionHandler.HandlerEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerEnd);
-                    cloneExceptionHandler.TryStart = GetMatchingInstructionByIndex(sourceExceptionHandler.TryStart);
-                    cloneExceptionHandler.TryEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.TryEnd);
+                    ExceptionHandler cloneExceptionHandler = new ExceptionHandler(sourceExceptionHandler.HandlerType) {
+                        CatchType = sourceExceptionHandler.CatchType != null ? ImportTypeReference(sourceExceptionHandler.CatchType) : null,
+                        FilterStart = GetMatchingInstructionByIndex(sourceExceptionHandler.FilterStart),
+                        HandlerStart = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerStart),
+                        HandlerEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerEnd),
+                        TryStart = GetMatchingInstructionByIndex(sourceExceptionHandler.TryStart),
+                        TryEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.TryEnd)
+                    };
 
                     TargetMethod.Body.ExceptionHandlers.Add(cloneExceptionHandler);
                 }

@@ -21,10 +21,8 @@ namespace LostPolygon.AssemblyMethodInlineInjector.Configuration {
             XmlSerializer serializer = new XmlSerializer(objectInstance.GetType());
             StringBuilder sb = new StringBuilder();
 
-            using (MemoryStream stream = new MemoryStream()) {
-                using (XmlWriter writer = new XmlTextWriter(stream, encoding)) {
-                    serializer.Serialize(writer, objectInstance, kEmptyXmlSerializerNamespaces);
-                }
+            using (XmlWriter writer = new XmlTextWriter(new MemoryStream(), encoding)) {
+                serializer.Serialize(writer, objectInstance, kEmptyXmlSerializerNamespaces);
             }
 
             return sb.ToString();
