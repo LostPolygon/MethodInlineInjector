@@ -88,7 +88,7 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.MethodInlineInjector.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
-copy $(SolutionDir)\LostPolygon.MethodInlineInjector.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
+    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
+copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

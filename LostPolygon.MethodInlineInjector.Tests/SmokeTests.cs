@@ -33,7 +33,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public void SetUp() {
             string injectedLibraryPath = Path.Combine(
                 TestEnvironmentConfig.SolutionDir, 
-                "LostPolygon.MethodInlineInjector.TestInjectedLibrary",
+                "LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary",
                 "bin",
                 TestEnvironmentConfig.ConfigurationName,
                 kInjectedLibraryName);
@@ -42,7 +42,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
             string injecteeLibraryPath = Path.Combine(
                 TestEnvironmentConfig.SolutionDir, 
-                "LostPolygon.MethodInlineInjector.TestInjecteeLibrary",
+                "LostPolygon.MethodInlineInjector.Tests.TestInjecteeLibrary",
                 "bin",
                 TestEnvironmentConfig.ConfigurationName,
                 kInjecteeLibraryName);
