@@ -10,11 +10,12 @@ namespace LostPolygon.MethodInlineInjector {
         public static void Main(string[] args) {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
 
+            // TODO: args validation, stdin config input
             string serializedInjectorConfiguration = File.ReadAllText(args[0]);
             InjectionConfiguration injectionConfiguration = XmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
             
-            CompiledInjectionConfigurationBuilder compiledInjectionConfigurationBuilder = new CompiledInjectionConfigurationBuilder(injectionConfiguration);
-            CompiledInjectionConfiguration compiledInjectionConfiguration = compiledInjectionConfigurationBuilder.Build();
+            CompiledInjectionConfigurationFactory compiledInjectionConfigurationFactory = new CompiledInjectionConfigurationFactory(injectionConfiguration);
+            CompiledInjectionConfiguration compiledInjectionConfiguration = compiledInjectionConfigurationFactory.Build();
 
             MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(compiledInjectionConfiguration);
 

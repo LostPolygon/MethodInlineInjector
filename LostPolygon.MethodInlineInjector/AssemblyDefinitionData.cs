@@ -4,7 +4,7 @@ using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
 namespace LostPolygon.MethodInlineInjector {
-    internal class AssemblyDefinitionData {
+    public class AssemblyDefinitionData {
         public AssemblyDefinition AssemblyDefinition { get; }
         public ReadOnlyCollection<TypeDefinition> AllTypes { get; }
         public ReadOnlyCollection<MethodDefinition> AllMethods { get; }

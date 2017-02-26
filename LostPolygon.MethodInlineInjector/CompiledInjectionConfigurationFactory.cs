@@ -7,11 +7,11 @@ using devtm.Cecil.Extensions;
 using LostPolygon.MethodInlineInjector.Configuration;
 
 namespace LostPolygon.MethodInlineInjector {
-    internal class CompiledInjectionConfigurationBuilder {
+    public class CompiledInjectionConfigurationFactory {
         private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap = new Dictionary<string, AssemblyDefinitionData>();
         private readonly InjectionConfiguration _injectionConfiguration;
 
-        public CompiledInjectionConfigurationBuilder(InjectionConfiguration injectionConfiguration) {
+        public CompiledInjectionConfigurationFactory(InjectionConfiguration injectionConfiguration) {
             _injectionConfiguration = injectionConfiguration;
         }
 

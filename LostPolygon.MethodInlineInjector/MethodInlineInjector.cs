@@ -8,7 +8,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
 namespace LostPolygon.MethodInlineInjector {
-    internal class MethodInlineInjector {
+    public class MethodInlineInjector {
         private readonly CompiledInjectionConfiguration _compiledInjectionConfiguration;
 
         public MethodInlineInjector(CompiledInjectionConfiguration compiledInjectionConfiguration) {

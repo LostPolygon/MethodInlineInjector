@@ -45,12 +45,6 @@
     <Reference Include="INIFileParser, Version=2.4.0.0, Culture=neutral, PublicKeyToken=79af7b307b65cf3c, processorArchitecture=MSIL">
       <HintPath>..\packages\ini-parser.2.4.0\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\MSTest.TestFramework.1.1.11\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\MSTest.TestFramework.1.1.11\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
-    </Reference>
     <Reference Include="nunit.framework, Version=3.6.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.6.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
@@ -71,6 +65,10 @@
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Configuration\LostPolygon.MethodInlineInjector.Configuration.csproj">
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Console\LostPolygon.MethodInlineInjector.Console.csproj">
+      <Project>{7870a46d-285e-49cf-8a96-7da7fb05cbd1}</Project>
+      <Name>LostPolygon.MethodInlineInjector.Console</Name>
     </ProjectReference>
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.csproj">
       <Project>{bf09e2f7-78ec-4ab3-8a14-e2e98729c196}</Project>

@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using Mono.Cecil;
 
 namespace LostPolygon.MethodInlineInjector {
-    internal class CompiledInjectionConfiguration {
+    public class CompiledInjectionConfiguration {
         public ReadOnlyCollection<InjectedAssemblyMethods> InjectedMethods { get; }
         public ReadOnlyCollection<InjecteeAssembly>  InjecteeAssemblies { get; }
 

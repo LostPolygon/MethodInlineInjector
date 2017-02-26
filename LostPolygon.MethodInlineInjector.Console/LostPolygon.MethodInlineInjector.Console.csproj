@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BF09E2F7-78EC-4AB3-8A14-E2E98729C196}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>MethodInlineInjector</RootNamespace>
-    <AssemblyName>MethodInlineInjector</AssemblyName>
+    <ProjectGuid>{7870A46D-285E-49CF-8A96-7DA7FB05CBD1}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>LostPolygon.MethodInlineInjector.Console</RootNamespace>
+    <AssemblyName>LostPolygon.MethodInlineInjector.Console</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,16 +32,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="devtm.Cecil, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\devtm.Cecil.1.0.1\lib\net40\devtm.Cecil.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -53,9 +45,6 @@
     <Reference Include="Mono.Cecil.Rocks, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.6.4\lib\net45\Mono.Cecil.Rocks.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -66,12 +55,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyDefinitionData.cs" />
-    <Compile Include="MethodInlineInjector.cs" />
-    <Compile Include="MethodInlineInjectorException.cs" />
-    <Compile Include="CecilExtensions.cs" />
-    <Compile Include="CompiledInjectionConfiguration.cs" />
-    <Compile Include="CompiledInjectionConfigurationFactory.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -83,14 +67,14 @@
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.csproj">
+      <Project>{bf09e2f7-78ec-4ab3-8a14-e2e98729c196}</Project>
+      <Name>LostPolygon.MethodInlineInjector</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
+copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
   </PropertyGroup>
 </Project>

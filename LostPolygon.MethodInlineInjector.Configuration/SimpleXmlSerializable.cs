@@ -13,7 +13,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public XmlSchema GetSchema() { 
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public virtual void ReadXml(XmlReader reader) {

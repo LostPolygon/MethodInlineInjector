@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("LostPolygon.MethodInlineInjector.Configuration")]
+[assembly: AssemblyTitle("LostPolygon.MethodInlineInjector.Console")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("LostPolygon.MethodInlineInjector.Configuration")]
+[assembly: AssemblyProduct("LostPolygon.MethodInlineInjector.Console")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("d207f1af-1776-48bd-b4ab-adf1217373bb")]
+[assembly: Guid("7870a46d-285e-49cf-8a96-7da7fb05cbd1")]
 
 // Version information for an assembly consists of the following four values:
 //
