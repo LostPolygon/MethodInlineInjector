@@ -7,7 +7,14 @@ using TestInjecteeLibrary;
 namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]
     public class IntegrationTests : IntegrationTestsBase {
+        private const bool kDefaultSaveReferenceOutput = false
+#if TRUE1
+            || true
+#endif
+            ;
+
         [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
         public void SingleStatementToSingleStatement() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
@@ -19,6 +26,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToSingleStatementAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
         public void SingleStatementToComplex() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
@@ -30,8 +51,71 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToComplexAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void TryCatchToComplex() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch))
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void TryCatchToComplexAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void TryCatchToSingleStatement() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch))
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void TryCatchToSingleStatementAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+        [Test]
         [ExpectedException(typeof(MethodInlineInjectorException))]
-        public void NonStatic() {
+        public void Failing_NonStaticInjected() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
                     InjectedLibraryPath,
@@ -43,7 +127,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ExpectedException(typeof(MethodInlineInjectorException))]
-        public void FieldDependent() {
+        public void Failing_FieldDependentInjected() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
                     InjectedLibraryPath,
@@ -55,7 +139,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ExpectedException(typeof(MethodInlineInjectorException))]
-        public void TypeDependent() {
+        public void Failing_TypeDependentInjected() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
                     InjectedLibraryPath,

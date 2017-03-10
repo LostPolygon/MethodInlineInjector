@@ -12,7 +12,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             StringBuilder sb = new StringBuilder();
             PlainTextOutput textOutput = new PlainTextOutput(new StringWriter(sb));
             GetMethodDecompiledCSharpCode(textOutput, method);
-            return sb.ToString().Trim();
+            return sb.ToString();
         }
 
         private static void GetMethodDecompiledCSharpCode(PlainTextOutput textOutput, MethodDefinition method) {
@@ -30,11 +30,11 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             StringBuilder sb = new StringBuilder();
             PlainTextOutput textOutput = new PlainTextOutput(new StringWriter(sb));
             GetMethodDecompiledILCode(textOutput, method);
-            return sb.ToString().Trim();
+            return sb.ToString();
         }
 
         public static void GetMethodDecompiledILCode(ITextOutput textOutput, MethodDefinition method) {
-            ReflectionDisassembler reflectionDisassembler = new ReflectionDisassembler(textOutput, true, CancellationToken.None);
+            ReflectionDisassembler reflectionDisassembler = new ReflectionDisassembler(textOutput, false, CancellationToken.None);
             reflectionDisassembler.DisassembleMethod(method);
         }
     }

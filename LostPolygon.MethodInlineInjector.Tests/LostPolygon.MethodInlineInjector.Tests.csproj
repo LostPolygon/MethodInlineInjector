@@ -99,6 +99,7 @@
     <Compile Include="IntegrationTests.cs" />
     <Compile Include="TestsBase\IntegrationTestsBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestsBase\SaveModifiedAssembliesAttribute.cs" />
     <Compile Include="TestsBase\SaveReferenceOutputAttribute.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -21,7 +21,7 @@ namespace LostPolygon.MethodInlineInjector {
 
         public ResolvedInjectionConfiguration Load() {
             Dictionary<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
-            
+
             List<ResolvedInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods = new List<ResolvedInjectionConfiguration.InjectedAssemblyMethods>();
             foreach (KeyValuePair<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>> pair in injectedAssemblyToMethodsMap) {
                 injectedAssemblyMethods.Add(new ResolvedInjectionConfiguration.InjectedAssemblyMethods(pair.Key, pair.Value.AsReadOnly()));
@@ -31,16 +31,16 @@ namespace LostPolygon.MethodInlineInjector {
 
             Validate(injectedAssemblyMethods, injecteeAssemblies);
 
-            ResolvedInjectionConfiguration resolvedInjectionConfiguration = 
+            ResolvedInjectionConfiguration resolvedInjectionConfiguration =
                 new ResolvedInjectionConfiguration(
-                    injectedAssemblyMethods.AsReadOnly(), 
+                    injectedAssemblyMethods.AsReadOnly(),
                     injecteeAssemblies.AsReadOnly()
                     );
             return resolvedInjectionConfiguration;
         }
 
         private void Validate(
-            List<ResolvedInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods, 
+            List<ResolvedInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods,
             List<ResolvedInjectionConfiguration.InjecteeAssembly> injecteeAssemblies
             ) {
             AssemblyDefinition minInjecteeTargetRuntimeAssemblyDefinition = null;
@@ -71,7 +71,7 @@ namespace LostPolygon.MethodInlineInjector {
                         $"uses runtime version {injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime}, " +
                         $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime " +
                         $"version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
-                        );        
+                        );
                 }
             }
         }
@@ -147,7 +147,7 @@ namespace LostPolygon.MethodInlineInjector {
             List<MethodDefinition> injecteeMethodDefinitions = new List<MethodDefinition>();
 
             // Skip non-injectable methods
-            List<MethodDefinition> filteredMethods = 
+            List<MethodDefinition> filteredMethods =
                 assemblyDefinitionData
                 .AllMethods
                 .ToList();
@@ -156,14 +156,14 @@ namespace LostPolygon.MethodInlineInjector {
             filteredMethods = FilterInjecteeMethods(filteredMethods);
             injecteeMethodDefinitions.AddRange(filteredMethods);
 
-            ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly = 
+            ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly =
                 new ResolvedInjectionConfiguration.InjecteeAssembly(sourceInjecteeAssembly, assemblyDefinitionData, injecteeMethodDefinitions);
 
             return injecteeAssembly;
         }
 
         protected virtual List<MethodDefinition> FilterInjecteeMethods(List<MethodDefinition> injecteeMethods) {
-            return 
+            return
                 injecteeMethods
                 .Where(ValidateInjecteeMethod)
                 .ToList();

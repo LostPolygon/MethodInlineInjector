@@ -15,19 +15,25 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         protected TestEnvironmentConfig TestEnvironmentConfig { get; set; }
 
         protected ResolvedInjectionConfiguration ExecuteSimpleTest(
-            InjectionConfiguration.InjectedMethod injectedMethod, 
+            InjectionConfiguration.InjectedMethod injectedMethod,
             string injecteeMethodName) {
             return ExecuteSimpleTest(new[] { injectedMethod }, new[] { injecteeMethodName });
         }
 
         protected ResolvedInjectionConfiguration ExecuteSimpleTest(
-            InjectionConfiguration.InjectedMethod[] injectedMethods, 
+            InjectionConfiguration.InjectedMethod[] injectedMethods,
             string[] injecteeMethodNames) {
             InjectionConfiguration configuration = IntegrationTestsHelper.GetBasicInjectionConfiguration(injectedMethods);
             ResolvedInjectionConfiguration resolvedConfiguration = IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
             IntegrationTestsHelper.ExecuteInjection(resolvedConfiguration);
 
-            if (TestContext.CurrentContext.Test.Properties.Get("SaveReferenceOutput") is bool boolValue && boolValue) {
+            if (TestContext.CurrentContext.Test.Properties.Get("SaveModifiedAssemblies") is bool saveModifiedAssemblies && saveModifiedAssemblies) {
+                foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
+                    injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
+                }
+            }
+
+            if (TestContext.CurrentContext.Test.Properties.Get("SaveReferenceOutput") is bool saveReferenceOutput && saveReferenceOutput) {
                 IntegrationTestsHelper.WriteReferenceOutputFile(resolvedConfiguration);
                 Console.WriteLine(IntegrationTestsHelper.GetFormattedReferenceOutputFile());
             } else {

@@ -23,7 +23,7 @@ namespace TestInjecteeLibrary {
         }
 
         public void SingleStatement() {
-            Console.WriteLine("OnEnable Start");
+            Console.WriteLine("Injectee: SingleStatement");
         }
     }
 }

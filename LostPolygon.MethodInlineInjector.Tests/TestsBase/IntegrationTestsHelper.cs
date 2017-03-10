@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using devtm.Cecil.Extensions;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -70,7 +71,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             string combinedCode = File.ReadAllText(path);
             string[] split = combinedCode.Split(new[] { kEndOfILCodeSeparator }, StringSplitOptions.RemoveEmptyEntries);
 
-            return (split[0].Trim(), split[1].Trim());
+            return (NormalizeCode(split[0]), NormalizeCode(split[1]));
         }
 
         public static void WriteReferenceOutputFile(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
@@ -88,16 +89,16 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public static (string ilCode, string cSharpCode, string combinedCode) CreateCombinedDecompiledILAndCSharpCode(MethodDefinition method) {
             StringBuilder sb = new StringBuilder();
 
-            string ilCode = DecompilationHelpers.GetMethodDecompiledILCode(method);
+            string ilCode = NormalizeCode(DecompilationHelpers.GetMethodDecompiledILCode(method));
             sb.Append(ilCode);
 
             sb.AppendLine();
             sb.AppendLine();
-            sb.AppendLine(kEndOfILCodeSeparator);
+            sb.Append(kEndOfILCodeSeparator);
             sb.AppendLine();
             sb.AppendLine();
 
-            string cSharpCode = DecompilationHelpers.GetMethodDecompiledCSharpCode(method);
+            string cSharpCode = NormalizeCode(DecompilationHelpers.GetMethodDecompiledCSharpCode(method));
             sb.Append(cSharpCode);
 
             return (ilCode, cSharpCode, sb.ToString());
@@ -120,6 +121,16 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjecteeMethodsOverrideResolvedInjectionConfigurationLoader loader =
                 new InjecteeMethodsOverrideResolvedInjectionConfigurationLoader(injectionConfiguration, injecteeMethodNames);
             return loader.Load();
+        }
+
+        private static string NormalizeCode(string code) {
+            code = code.Trim().Replace("\t", "    ");
+            code = Regex.Replace(code, @"\r\n|\n\r|\n|\r", "\r\n");
+
+            // Trim trailing whitespace
+            code = Regex.Replace(code, @"[ \t]+(\r?$)", @"$1", RegexOptions.Multiline);
+
+            return code;
         }
 
         private static object GetTestProperty(string key) {
