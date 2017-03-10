@@ -7,41 +7,45 @@ using devtm.Cecil.Extensions;
 using LostPolygon.MethodInlineInjector.Configuration;
 
 namespace LostPolygon.MethodInlineInjector {
-    public class CompiledInjectionConfigurationFactory {
+    public class ResolvedInjectionConfigurationLoader {
         private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap = new Dictionary<string, AssemblyDefinitionData>();
         private readonly InjectionConfiguration _injectionConfiguration;
 
-        public CompiledInjectionConfigurationFactory(InjectionConfiguration injectionConfiguration) {
+        public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(InjectionConfiguration injectionConfiguration) {
+            return new ResolvedInjectionConfigurationLoader(injectionConfiguration).Load();
+        }
+
+        protected ResolvedInjectionConfigurationLoader(InjectionConfiguration injectionConfiguration) {
             _injectionConfiguration = injectionConfiguration;
         }
 
-        public CompiledInjectionConfiguration Build() {
-            Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
+        public ResolvedInjectionConfiguration Load() {
+            Dictionary<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
             
-            List<CompiledInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods = new List<CompiledInjectionConfiguration.InjectedAssemblyMethods>();
-            foreach (KeyValuePair<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> pair in injectedAssemblyToMethodsMap) {
-                injectedAssemblyMethods.Add(new CompiledInjectionConfiguration.InjectedAssemblyMethods(pair.Key, pair.Value.AsReadOnly()));
+            List<ResolvedInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods = new List<ResolvedInjectionConfiguration.InjectedAssemblyMethods>();
+            foreach (KeyValuePair<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>> pair in injectedAssemblyToMethodsMap) {
+                injectedAssemblyMethods.Add(new ResolvedInjectionConfiguration.InjectedAssemblyMethods(pair.Key, pair.Value.AsReadOnly()));
             }
 
-            List<CompiledInjectionConfiguration.InjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
+            List<ResolvedInjectionConfiguration.InjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
 
             Validate(injectedAssemblyMethods, injecteeAssemblies);
 
-            CompiledInjectionConfiguration compiledInjectionConfiguration = 
-                new CompiledInjectionConfiguration(
+            ResolvedInjectionConfiguration resolvedInjectionConfiguration = 
+                new ResolvedInjectionConfiguration(
                     injectedAssemblyMethods.AsReadOnly(), 
                     injecteeAssemblies.AsReadOnly()
                     );
-            return compiledInjectionConfiguration;
+            return resolvedInjectionConfiguration;
         }
 
         private void Validate(
-            List<CompiledInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods, 
-            List<CompiledInjectionConfiguration.InjecteeAssembly> injecteeAssemblies
+            List<ResolvedInjectionConfiguration.InjectedAssemblyMethods> injectedAssemblyMethods, 
+            List<ResolvedInjectionConfiguration.InjecteeAssembly> injecteeAssemblies
             ) {
             AssemblyDefinition minInjecteeTargetRuntimeAssemblyDefinition = null;
             AssemblyDefinition maxInjectedTargetRuntimeAssemblyDefinition = null;
-            foreach (CompiledInjectionConfiguration.InjectedAssemblyMethods injectedAssembly in injectedAssemblyMethods) {
+            foreach (ResolvedInjectionConfiguration.InjectedAssemblyMethods injectedAssembly in injectedAssemblyMethods) {
                 AssemblyDefinition assemblyDefinition = injectedAssembly.AssemblyDefinition;
                 TargetRuntime targetRuntime = assemblyDefinition.MainModule.Runtime;
                 if (maxInjectedTargetRuntimeAssemblyDefinition == null || targetRuntime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
@@ -49,7 +53,7 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
+            foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
                 AssemblyDefinition assemblyDefinition = injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition;
                 TargetRuntime targetRuntime = assemblyDefinition.MainModule.Runtime;
                 if (minInjecteeTargetRuntimeAssemblyDefinition == null || targetRuntime > minInjecteeTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
@@ -60,19 +64,20 @@ namespace LostPolygon.MethodInlineInjector {
             if (maxInjectedTargetRuntimeAssemblyDefinition == null)
                 throw new InvalidOperationException(nameof(maxInjectedTargetRuntimeAssemblyDefinition) + " == null");
 
-            foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
+            foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in injecteeAssemblies) {
                 if (injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
                     throw new MethodInlineInjectorException(
                         $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition}' " +
                         $"uses runtime version {injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime}, " +
-                        $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
+                        $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime " +
+                        $"version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
                         );        
                 }
             }
         }
 
-        private Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>> GetInjectedMethods() {
-            var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<CompiledInjectionConfiguration.InjectedMethod>>();
+        private Dictionary<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>> GetInjectedMethods() {
+            var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<ResolvedInjectionConfiguration.InjectedMethod>>();
             foreach (InjectionConfiguration.InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
                 AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
                 MethodDefinition[] matchingMethodDefinitions =
@@ -80,21 +85,23 @@ namespace LostPolygon.MethodInlineInjector {
                         .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
                         .ToArray();
 
-                // TODO: add supports for overloads
                 if (matchingMethodDefinitions.Length == 0)
                     throw new MethodInlineInjectorException($"No matching methods found for {sourceInjectedMethod.MethodFullName}");
 
                 if (matchingMethodDefinitions.Length > 2)
                     throw new MethodInlineInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
 
-                List<CompiledInjectionConfiguration.InjectedMethod> methodDefinitions;
+                List<ResolvedInjectionConfiguration.InjectedMethod> methodDefinitions;
                 if (!injectedAssemblyToMethodsMap.TryGetValue(assemblyDefinitionData.AssemblyDefinition, out methodDefinitions)) {
-                    methodDefinitions = new List<CompiledInjectionConfiguration.InjectedMethod>();
+                    methodDefinitions = new List<ResolvedInjectionConfiguration.InjectedMethod>();
                     injectedAssemblyToMethodsMap.Add(assemblyDefinitionData.AssemblyDefinition, methodDefinitions);
                 }
 
                 MethodDefinition matchedMethodDefinition = matchingMethodDefinitions[0];
-                methodDefinitions.Add(new CompiledInjectionConfiguration.InjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
+                if (!ValidateInjectedMethod(matchedMethodDefinition))
+                    throw new MethodInlineInjectorException($"Method {matchedMethodDefinition} can not be an injected method");
+
+                methodDefinitions.Add(new ResolvedInjectionConfiguration.InjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
             }
 
             return injectedAssemblyToMethodsMap;
@@ -111,17 +118,17 @@ namespace LostPolygon.MethodInlineInjector {
             return assemblyDefinitionData;
         }
 
-        private List<CompiledInjectionConfiguration.InjecteeAssembly> GetInjecteeAssemblies() {
-            var injecteeAssemblies = new List<CompiledInjectionConfiguration.InjecteeAssembly>();
+        private List<ResolvedInjectionConfiguration.InjecteeAssembly> GetInjecteeAssemblies() {
+            var injecteeAssemblies = new List<ResolvedInjectionConfiguration.InjecteeAssembly>();
             foreach (InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly in _injectionConfiguration.InjecteeAssemblies) {
-                CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly = GetInjecteeAssembly(sourceInjecteeAssembly);
+                ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly = GetInjecteeAssembly(sourceInjecteeAssembly);
                 injecteeAssemblies.Add(injecteeAssembly);
             }
 
             return injecteeAssemblies;
         }
 
-        private CompiledInjectionConfiguration.InjecteeAssembly GetInjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly) {
+        private ResolvedInjectionConfiguration.InjecteeAssembly GetInjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly) {
             var memberReferenceWhitelistFilters = new List<InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter>();
             foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceWhitelistItem memberReferenceWhitelistItem in sourceInjecteeAssembly.MemberReferenceWhitelist) {
                 if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter memberReferenceWhitelistFilter) {
@@ -131,7 +138,7 @@ namespace LostPolygon.MethodInlineInjector {
 
                 if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterInclude) {
                     string whiteListIncludeXml = File.ReadAllText(memberReferenceWhitelistFilterInclude.Path);
-                    MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterIncludedList = XmlSerializationUtility.XmlDeserializeFromString<MemberReferenceWhitelistFilterInclude>(whiteListIncludeXml);
+                    MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterIncludedList = SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceWhitelistFilterInclude>(whiteListIncludeXml);
                     memberReferenceWhitelistFilters.AddRange(memberReferenceWhitelistFilterIncludedList.MemberReferenceWhitelist);
                 }
             }
@@ -143,23 +150,44 @@ namespace LostPolygon.MethodInlineInjector {
             List<MethodDefinition> filteredMethods = 
                 assemblyDefinitionData
                 .AllMethods
-                .Where(IsInjectableMethod)
                 .ToList();
 
             // TODO: implement whitelist filtering
+            filteredMethods = FilterInjecteeMethods(filteredMethods);
             injecteeMethodDefinitions.AddRange(filteredMethods);
 
-            CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly = 
-                new CompiledInjectionConfiguration.InjecteeAssembly(sourceInjecteeAssembly, assemblyDefinitionData, injecteeMethodDefinitions);
+            ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly = 
+                new ResolvedInjectionConfiguration.InjecteeAssembly(sourceInjecteeAssembly, assemblyDefinitionData, injecteeMethodDefinitions);
 
             return injecteeAssembly;
         }
 
-        private static bool IsInjectableMethod(MethodDefinition method) {
+        protected virtual List<MethodDefinition> FilterInjecteeMethods(List<MethodDefinition> injecteeMethods) {
+            return 
+                injecteeMethods
+                .Where(ValidateInjecteeMethod)
+                .ToList();
+        }
+
+        protected static bool ValidateInjectedMethod(MethodDefinition method) {
+            bool isNonInjectable =
+                    !method.HasBody ||
+                    method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void ||
+                    method.HasGenericParameters ||
+                    method.HasParameters ||
+                    !method.IsStatic
+                ;
+
+            return !isNonInjectable;
+        }
+
+        protected static bool ValidateInjecteeMethod(MethodDefinition method) {
             bool isNonInjectable =
                 !method.HasBody ||
                 // TODO: allow injection into methods with return value (issue #1)
-                method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void
+                method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void ||
+                method.HasGenericParameters ||
+                method.HasParameters
                 ;
 
             return !isNonInjectable;

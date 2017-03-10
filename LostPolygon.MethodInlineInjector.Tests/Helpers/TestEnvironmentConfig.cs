@@ -6,7 +6,7 @@ using IniParser.Parser;
 using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
-    internal class TestEnvironmentConfig {
+    public class TestEnvironmentConfig {
         private static TestEnvironmentConfig _instance;
 
         public static TestEnvironmentConfig Instance => _instance;

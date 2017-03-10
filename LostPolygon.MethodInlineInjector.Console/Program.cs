@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Threading;
 using LostPolygon.MethodInlineInjector.Configuration;
@@ -12,19 +10,16 @@ namespace LostPolygon.MethodInlineInjector {
 
             // TODO: args validation, stdin config input
             string serializedInjectorConfiguration = File.ReadAllText(args[0]);
-            InjectionConfiguration injectionConfiguration = XmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
+            InjectionConfiguration injectionConfiguration = 
+                SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
             
-            CompiledInjectionConfigurationFactory compiledInjectionConfigurationFactory = new CompiledInjectionConfigurationFactory(injectionConfiguration);
-            CompiledInjectionConfiguration compiledInjectionConfiguration = compiledInjectionConfigurationFactory.Build();
+            ResolvedInjectionConfiguration resolvedInjectionConfiguration = 
+                ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(injectionConfiguration);
 
-            MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(compiledInjectionConfiguration);
-
-            Stopwatch sw = Stopwatch.StartNew();
+            MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);
             assemblyMethodInjector.Inject();
-            sw.Stop();
-            Console.WriteLine("Injected in {0} ms", sw.ElapsedMilliseconds);
 
-            foreach (CompiledInjectionConfiguration.InjecteeAssembly injecteeAssembly in compiledInjectionConfiguration.InjecteeAssemblies) {
+            foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
                 injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
             }
         }

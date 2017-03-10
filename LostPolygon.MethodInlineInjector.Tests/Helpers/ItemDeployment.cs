@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
-    internal static class TestHelpers {
+    internal static class ItemDeployment {
         /// <summary>
         ///     Call in subclass to deploy items before testing.
         /// </summary>
@@ -21,7 +21,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         /// <exception cref="FileNotFoundException">A source item was not found.</exception>
         /// <exception cref="DirectoryNotFoundException">The target deployment directory was not found</exception>
         public static void DeployItems(bool retainDirectories, params string[] items) {
-            //DirectoryInfo environmentDir = new DirectoryInfo(Environment.CurrentDirectory);
             string dataFolderPath = TestEnvironmentConfig.Instance.ProjectDir;
             string binFolderPath = TestEnvironmentConfig.Instance.TargetDir;
 

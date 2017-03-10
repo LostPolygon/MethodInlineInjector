@@ -5,39 +5,43 @@ using System.Xml;
 using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Configuration {
-    public static class XmlSerializationUtility {
+    public static class SimpleXmlSerializationUtility {
         private static readonly XmlSerializerNamespaces kEmptyXmlSerializerNamespaces;
 
-        static XmlSerializationUtility() {
+        static SimpleXmlSerializationUtility() {
             kEmptyXmlSerializerNamespaces = new XmlSerializerNamespaces();
             kEmptyXmlSerializerNamespaces.Add("", "");
         }
 
-        public static string XmlSerializeToString(object objectInstance, Encoding encoding = null) {
+        public static string XmlSerializeToString<T>(T objectInstance, Encoding encoding = null) where T : ISimpleXmlSerializable {
             if (encoding == null) {
                 encoding = Encoding.UTF8;
             }
 
-            XmlSerializer serializer = new XmlSerializer(objectInstance.GetType());
             StringBuilder sb = new StringBuilder();
-
-            using (XmlWriter writer = new XmlTextWriter(new MemoryStream(), encoding)) {
-                serializer.Serialize(writer, objectInstance, kEmptyXmlSerializerNamespaces);
+            using (TextWriter textWriter = new StringWriter(sb)) {
+                using (XmlWriter xmlWriter = new XmlTextWriter(textWriter)) {
+                    objectInstance.WriteXml(xmlWriter);
+                }
             }
 
             return sb.ToString();
         }
 
-        public static T XmlDeserializeFromString<T>(string objectData) {
-            return (T) XmlDeserializeFromString(objectData, typeof(T));
-        }
+        public static T XmlDeserializeFromString<T>(string objectData) where T : ISimpleXmlSerializable {
+            T result;
+            using (TextReader textReader = new StringReader(objectData)) {
+                XmlReaderSettings xmlReaderSettings = new XmlReaderSettings {
+                    IgnoreWhitespace = true,
+                    IgnoreComments = true
+                };
+                XmlReader xmlReader = XmlReader.Create(textReader, xmlReaderSettings);
+                while (xmlReader.NodeType != XmlNodeType.Element) {
+                    xmlReader.Read();
+                }
 
-        public static object XmlDeserializeFromString(string objectData, Type type) {
-            XmlSerializer serializer = new XmlSerializer(type);
-            object result;
-
-            using (TextReader reader = new StringReader(objectData)) {
-                result = serializer.Deserialize(reader);
+                result = Activator.CreateInstance<T>();
+                result.ReadXml(xmlReader);
             }
 
             return result;

@@ -18,7 +18,7 @@ namespace LostPolygon.MethodInlineInjector {
             SerializationHelper.ProcessAdvanceOnRead();
 
             SerializationHelper.ProcessWhileNotElementEnd(() => {
-                if (SerializationHelper.ProcessStartElement("InjectedMethods")) {
+                if (SerializationHelper.ProcessStartElement(nameof(InjectedMethods))) {
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
                         this.ProcessCollection(InjectedMethods);
@@ -26,7 +26,7 @@ namespace LostPolygon.MethodInlineInjector {
                     SerializationHelper.ProcessEndElement();
                 }
 
-                if (SerializationHelper.ProcessStartElement("InjecteeAssemblies")) {
+                if (SerializationHelper.ProcessStartElement(nameof(InjecteeAssemblies))) {
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
                         this.ProcessCollection(InjecteeAssemblies);
@@ -55,12 +55,12 @@ namespace LostPolygon.MethodInlineInjector {
             public override void Serialize() {
                 base.Serialize();
 
-                SerializationHelper.ProcessStartElement("InjecteeAssembly");
+                SerializationHelper.ProcessStartElement(nameof(InjecteeAssembly));
                 {
-                    SerializationHelper.ProcessAttributeString("AssemblyPath", s => AssemblyPath = s, () => AssemblyPath);
+                    SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                     SerializationHelper.ProcessAdvanceOnRead();
 
-                    SerializationHelper.ProcessStartElement("MemberReferenceWhitelist");
+                    SerializationHelper.ProcessStartElement(nameof(MemberReferenceWhitelist));
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
                         this.ProcessCollection(MemberReferenceWhitelist, () => {
@@ -76,7 +76,7 @@ namespace LostPolygon.MethodInlineInjector {
                     }
                     SerializationHelper.ProcessEndElement();
 
-                    SerializationHelper.ProcessStartElement("AssemblyWhitelist");
+                    SerializationHelper.ProcessStartElement(nameof(AssemblyWhitelist));
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
                         this.ProcessCollection(AssemblyWhitelist, () => {
@@ -131,8 +131,8 @@ namespace LostPolygon.MethodInlineInjector {
 
                     SerializationHelper.ProcessStartElement("Filter");
                     {
-                        SerializationHelper.ProcessAttributeString("Filter", s => Filter = s, () => Filter);
-                        SerializationHelper.ProcessAttributeString("IsRegex", s => IsRegex = Convert.ToBoolean(s), () => Convert.ToString(IsRegex));
+                        SerializationHelper.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
+                        SerializationHelper.ProcessAttributeString(nameof(IsRegex), s => IsRegex = Convert.ToBoolean(s), () => Convert.ToString(IsRegex));
                         SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterTypeFlags, l => FilterType = l, () => FilterType);
                     }
                     SerializationHelper.ProcessAdvanceOnRead();
@@ -142,7 +142,7 @@ namespace LostPolygon.MethodInlineInjector {
                 #endregion
 
                 public override string ToString() {
-                    return $"Filter: '{Filter}', Is Regex: {IsRegex}, Filter Type: {FilterType}";
+                    return $"{nameof(Filter)}: '{Filter}', {nameof(IsRegex)}: {IsRegex}, {nameof(FilterType)}: {FilterType}";
                 }
 
                 [Flags]
@@ -182,8 +182,8 @@ namespace LostPolygon.MethodInlineInjector {
 
                     SerializationHelper.ProcessStartElement("Assembly");
                     {
-                        SerializationHelper.ProcessAttributeString("Name", s => Name = s, () => Name);
-                        SerializationHelper.ProcessAttributeString("IsStrictCheck", s => IsStrictCheck= Convert.ToBoolean(s), () => Convert.ToString(IsStrictCheck));
+                        SerializationHelper.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
+                        SerializationHelper.ProcessAttributeString(nameof(IsStrictCheck), s => IsStrictCheck= Convert.ToBoolean(s), () => Convert.ToString(IsStrictCheck));
                     }
                     SerializationHelper.ProcessAdvanceOnRead();
                     SerializationHelper.ProcessEndElement();
@@ -192,7 +192,7 @@ namespace LostPolygon.MethodInlineInjector {
                 #endregion
 
                 public override string ToString() {
-                    return $"Name: '{Name}', Strict Check: {IsStrictCheck}";
+                    return $"{nameof(Name)}: '{Name}', {nameof(IsStrictCheck)}: {IsStrictCheck}";
                 }
             }
 
@@ -208,9 +208,16 @@ namespace LostPolygon.MethodInlineInjector {
             public InjectedMethod() {
             }
 
-            public InjectedMethod(string assemblyPath, string methodFullName) {
+            public InjectedMethod(
+                string assemblyPath, 
+                string methodFullName,
+                MethodInjectionPosition injectionPosition = MethodInjectionPosition.InjecteeMethodStart,
+                MethodReturnBehaviour returnBehaviour = MethodReturnBehaviour.ReturnFromSelf
+                ) {
                 AssemblyPath = assemblyPath;
                 MethodFullName = methodFullName;
+                InjectionPosition = injectionPosition;
+                ReturnBehaviour = returnBehaviour;
             }
 
             #region Serialization
@@ -220,10 +227,10 @@ namespace LostPolygon.MethodInlineInjector {
 
                 SerializationHelper.ProcessStartElement("InjectedMethod");
                 {
-                    SerializationHelper.ProcessAttributeString("AssemblyPath", s => AssemblyPath = s, () => AssemblyPath);
-                    SerializationHelper.ProcessAttributeString("MethodFullName", s => MethodFullName = s, () => MethodFullName);
-                    SerializationHelper.ProcessEnumAttribute("InjectionPosition", s => InjectionPosition = s, () => InjectionPosition);
-                    SerializationHelper.ProcessEnumAttribute("ReturnBehaviour", s => ReturnBehaviour = s, () => ReturnBehaviour);
+                    SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
+                    SerializationHelper.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
+                    SerializationHelper.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
+                    SerializationHelper.ProcessEnumAttribute(nameof(ReturnBehaviour), s => ReturnBehaviour = s, () => ReturnBehaviour);
                 }
                 SerializationHelper.ProcessAdvanceOnRead();
                 SerializationHelper.ProcessEndElement();
@@ -232,10 +239,10 @@ namespace LostPolygon.MethodInlineInjector {
             #endregion
 
             public override string ToString() {
-                return $"Assembly Path: '{AssemblyPath}', " +
-                       $"Method Full Name: '{MethodFullName}', " +
-                       $"Injection Position: {InjectionPosition}, " +
-                       $"Return Behaviour: {ReturnBehaviour}";
+                return $"{nameof(AssemblyPath)}: '{AssemblyPath}', " +
+                       $"{nameof(MethodFullName)}: '{MethodFullName}', " +
+                       $"{nameof(InjectionPosition)}: {InjectionPosition}, " +
+                       $"{nameof(ReturnBehaviour)}: {ReturnBehaviour}";
             }
 
             public enum MethodInjectionPosition {
@@ -266,7 +273,7 @@ namespace LostPolygon.MethodInlineInjector {
 
                 SerializationHelper.ProcessStartElement("Include");
                 {
-                    SerializationHelper.ProcessAttributeString("Path", s => Path = s, () => Path);
+                    SerializationHelper.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
                 }
                 SerializationHelper.ProcessAdvanceOnRead();
                 SerializationHelper.ProcessEndElement();
@@ -275,7 +282,7 @@ namespace LostPolygon.MethodInlineInjector {
             #endregion
 
             public override string ToString() {
-                return $"Path: '{Path}'";
+                return $"{nameof(Path)}: '{Path}'";
             }
         }
     }

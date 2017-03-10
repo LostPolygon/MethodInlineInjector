@@ -14,13 +14,13 @@ namespace LostPolygon.MethodInlineInjector {
             }
         }
 
-        public static Instruction ReplaceAndFixReferences(this ILProcessor processor, Instruction oldInstruction, Instruction newInstruction, MethodDefinition methodDefinition) {
+        public static Instruction ReplaceAndFixReferences(this ILProcessor processor, Instruction oldInstruction, Instruction newInstruction) {
             processor.Replace(oldInstruction, newInstruction);
-            foreach (Instruction bodyInstruction in methodDefinition.Body.Instructions) {
+            foreach (Instruction bodyInstruction in processor.Body.Instructions) {
                 ReplaceOperandInstruction(bodyInstruction, oldInstruction, newInstruction);
             }
 
-            foreach (ExceptionHandler exceptionHandler in methodDefinition.Body.ExceptionHandlers) {
+            foreach (ExceptionHandler exceptionHandler in processor.Body.ExceptionHandlers) {
                 ReplaceOperandInstruction(exceptionHandler.FilterStart, oldInstruction, newInstruction);
                 ReplaceOperandInstruction(exceptionHandler.HandlerStart, oldInstruction, newInstruction);
                 ReplaceOperandInstruction(exceptionHandler.HandlerEnd, oldInstruction, newInstruction);
