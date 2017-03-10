@@ -2,8 +2,8 @@
     instance void SingleStatement () cil managed
 {
     // Method begins at RVA 0x20f5
-    // Code size 13 (0xd)
-    .maxstack 8
+    // Code size 26 (0x1a)
+    .maxstack 1
 
     IL_0000: nop
     IL_0001: ldstr "Injected: This is injected code!"

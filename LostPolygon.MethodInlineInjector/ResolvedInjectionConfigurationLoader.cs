@@ -184,10 +184,7 @@ namespace LostPolygon.MethodInlineInjector {
         protected static bool ValidateInjecteeMethod(MethodDefinition method) {
             bool isNonInjectable =
                 !method.HasBody ||
-                // TODO: allow injection into methods with return value (issue #1)
-                method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void ||
-                method.HasGenericParameters ||
-                method.HasParameters
+                method.HasGenericParameters
                 ;
 
             return !isNonInjectable;

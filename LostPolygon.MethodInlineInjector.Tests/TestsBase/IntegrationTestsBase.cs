@@ -14,9 +14,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         protected TestEnvironmentConfig TestEnvironmentConfig { get; set; }
 
-        protected ResolvedInjectionConfiguration ExecuteSimpleTest(
-            InjectionConfiguration.InjectedMethod injectedMethod,
-            string injecteeMethodName) {
+        protected ResolvedInjectionConfiguration ExecuteSimpleTest(InjectionConfiguration.InjectedMethod injectedMethod, string injecteeMethodName) {
             return ExecuteSimpleTest(new[] { injectedMethod }, new[] { injecteeMethodName });
         }
 

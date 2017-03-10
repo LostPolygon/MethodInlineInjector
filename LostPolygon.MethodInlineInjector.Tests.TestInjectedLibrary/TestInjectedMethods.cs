@@ -26,6 +26,17 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: End");
         }
 
+        public static void SimpleReturn() {
+            Console.WriteLine("Injected: Begin");
+
+            if (Environment.UserInteractive) {
+                Console.WriteLine("Injected: Environment.UserInteractive is true, returning");
+                return;
+            }
+
+            Console.WriteLine("Injected: End");
+        }
+
         public static void DeepReturn() {
             Console.WriteLine("Injected: Begin");
             Random random = new Random();
@@ -51,7 +62,7 @@ namespace TestInjectedLibrary {
             } finally {
                 Console.WriteLine("Injected: Finally");
             }
-            
+
             Console.WriteLine("Injected: End");
         }
 

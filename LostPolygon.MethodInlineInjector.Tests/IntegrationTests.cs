@@ -8,20 +8,21 @@ namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]
     public class IntegrationTests : IntegrationTestsBase {
         private const bool kDefaultSaveReferenceOutput = false
-#if TRUE1
+#if TRUE
             || true
 #endif
             ;
 
         [Test]
         [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        [SaveModifiedAssemblies]
         public void SingleStatementToSingleStatement() {
             ExecuteSimpleTest(
                 new InjectionConfiguration.InjectedMethod(
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 
@@ -34,7 +35,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
                     InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 
@@ -46,7 +47,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.Complex)}"
             );
         }
 
@@ -59,7 +60,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
                     InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.Complex)}"
             );
         }
 
@@ -71,7 +72,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.Complex)}"
             );
         }
 
@@ -84,7 +85,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch)),
                     InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.Complex)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.Complex)}"
             );
         }
 
@@ -96,7 +97,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 
@@ -109,7 +110,83 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TryCatch)),
                     InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToReturnValue() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement))
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.ReturnValue)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToReturnValueAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.ReturnValue)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToCallResultReturnValue() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement))
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.CallResultReturnValue)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SingleStatementToCallResultReturnValueAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SingleStatement)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.CallResultReturnValue)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SimpleReturnToReturnValue() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SimpleReturn))
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.ReturnValue)}"
+            );
+        }
+
+        [Test]
+        [SaveReferenceOutput(kDefaultSaveReferenceOutput)]
+        public void SimpleReturnToReturnValueAtReturn() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.SimpleReturn)),
+                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                ),
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.ReturnValue)}"
             );
         }
 
@@ -121,7 +198,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.NonStatic))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 
@@ -133,7 +210,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.FieldDependent))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 
@@ -145,7 +222,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     InjectedLibraryPath,
                     IntegrationTestsHelper.GetInjectedMethodFullName(nameof(TestInjectedMethods.TypeDependent))
                 ),
-                $"{nameof(TestInjecteeLibrary)}.{nameof(TestInjectee)}.{nameof(TestInjectee.SingleStatement)}"
+                $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.SingleStatement)}"
             );
         }
 

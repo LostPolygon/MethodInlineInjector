@@ -131,6 +131,9 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="TestData\Common\RuntimeAssembliesWhitelist.xml" />
+    <Content Include="TestData\Common\test.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\Common\UnityPerfomanceWhitelist.xml" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

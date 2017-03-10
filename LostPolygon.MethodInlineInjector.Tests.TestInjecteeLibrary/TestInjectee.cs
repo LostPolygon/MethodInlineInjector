@@ -25,5 +25,19 @@ namespace TestInjecteeLibrary {
         public void SingleStatement() {
             Console.WriteLine("Injectee: SingleStatement");
         }
+
+        public void WithParameters(int a, float b) {
+            Console.WriteLine("Injectee: Begin");
+            Console.WriteLine("Injectee: a + b = " + (a + b));
+            Console.WriteLine("Injectee: End");
+        }
+
+        public int ReturnValue() {
+            return -3;
+        }
+
+        public int CallResultReturnValue() {
+            return Math.Sign(-3);
+        }
     }
 }

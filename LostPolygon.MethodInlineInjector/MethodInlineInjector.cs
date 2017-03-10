@@ -44,7 +44,7 @@ namespace LostPolygon.MethodInlineInjector {
 
                     foreach (MethodDefinition injecteeMethod in injecteeAssembly.InjecteeMethodsDefinitions) {
                         foreach (ResolvedInjectionConfiguration.InjectedMethod injectedMethod in injectedAssemblyMethodsTuple.Methods) {
-                            MethodDefinition importedInjectedMethod = 
+                            MethodDefinition importedInjectedMethod =
                                 CloneAndImportMethod(injectedMethod.MethodDefinition, injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition);
                             InjectMethod(importedInjectedMethod, injecteeMethod, injectedMethod.SourceInjectedMethod.InjectionPosition);
                         }
@@ -89,14 +89,14 @@ namespace LostPolygon.MethodInlineInjector {
                 // Clone exception handlers
                 injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
 
-                // Replace Ret from the end of the injected method with Nop, 
+                // Replace Ret from the end of the injected method with Nop,
                 // so the execution could go to injectee code after the injected method end
-                injectedLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injectedLastInstruction, Instruction.Create(OpCodes.Nop));  
+                injectedLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injectedLastInstruction, Instruction.Create(OpCodes.Nop));
             } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
                 // Inject variables to the end of the variable list
                 injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
-                
-                // Ret instruction at the end of the injectee method must be replace with Nop, 
+
+                // Ret instruction at the end of the injectee method must be replace with Nop,
                 // so the execution could go to the injected code after the injecteed method end
                 Instruction injecteeLastInstruction = injecteeMethod.Body.Instructions.Last();
 
@@ -109,7 +109,7 @@ namespace LostPolygon.MethodInlineInjector {
                 // Clone exception handlers
                 injecteeMethod.Body.ExceptionHandlers.AddRange(injectedMethod.Body.ExceptionHandlers);
 
-                // Replace Ret from the end of the injectee method with Nop, 
+                // Replace Ret from the end of the injectee method with Nop,
                 // so the execution could go to injected code after the injectee method end
                 injecteeLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injecteeLastInstruction, Instruction.Create(OpCodes.Nop));
             }
@@ -128,7 +128,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private class MethodDefinitionClonerValidated : MethodDefinitionCloner {
-            public MethodDefinitionClonerValidated(MethodDefinition sourceMethod, MethodDefinition targetMethod, ModuleDefinition targetModule) 
+            public MethodDefinitionClonerValidated(MethodDefinition sourceMethod, MethodDefinition targetMethod, ModuleDefinition targetModule)
                 : base(sourceMethod, targetMethod, targetModule) {
             }
 

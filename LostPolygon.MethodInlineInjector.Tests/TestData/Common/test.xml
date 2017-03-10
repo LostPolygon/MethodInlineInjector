@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MemberReferenceWhitelist>
+  <Filter Filter="test filter" IsRegex="True" SkipTypes="False" SkipProperties="False" />
+</MemberReferenceWhitelist>
