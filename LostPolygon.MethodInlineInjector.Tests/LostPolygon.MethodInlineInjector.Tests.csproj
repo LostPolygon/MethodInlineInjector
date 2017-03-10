@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -111,10 +110,6 @@
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Console\LostPolygon.MethodInlineInjector.Console.csproj">
-      <Project>{7870a46d-285e-49cf-8a96-7da7fb05cbd1}</Project>
-      <Name>LostPolygon.MethodInlineInjector.Console</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary.csproj">
       <Project>{46054333-8706-4412-980b-659df83891f8}</Project>
       <Name>LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary</Name>
@@ -147,12 +142,4 @@ echo ProjectDir=$(ProjectDir) &gt;&gt; %25TEST_ENVIRONMENT_CONFIG_FILE%25
 echo TargetDir=$(TargetDir) &gt;&gt; %25TEST_ENVIRONMENT_CONFIG_FILE%25
 echo ConfigurationName=$(ConfigurationName) &gt;&gt; %25TEST_ENVIRONMENT_CONFIG_FILE%25</PostBuildEvent>
   </PropertyGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.props'))" />
-    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.targets'))" />
-  </Target>
-  <Import Project="..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.targets" Condition="Exists('..\packages\MSTest.TestAdapter.1.1.12\build\net45\MSTest.TestAdapter.targets')" />
 </Project>
