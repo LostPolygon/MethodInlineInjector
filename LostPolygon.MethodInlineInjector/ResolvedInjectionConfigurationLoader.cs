@@ -98,8 +98,7 @@ namespace LostPolygon.MethodInlineInjector {
                 }
 
                 MethodDefinition matchedMethodDefinition = matchingMethodDefinitions[0];
-                if (!ValidateInjectedMethod(matchedMethodDefinition))
-                    throw new MethodInlineInjectorException($"Method {matchedMethodDefinition} can not be an injected method");
+                ValidateInjectedMethod(sourceInjectedMethod, matchedMethodDefinition);
 
                 methodDefinitions.Add(new ResolvedInjectionConfiguration.InjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
             }
@@ -146,7 +145,7 @@ namespace LostPolygon.MethodInlineInjector {
             AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
             List<MethodDefinition> injecteeMethodDefinitions = new List<MethodDefinition>();
 
-            // Skip non-injectable methods
+            // Final method list
             List<MethodDefinition> filteredMethods =
                 assemblyDefinitionData
                 .AllMethods
@@ -163,22 +162,43 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual List<MethodDefinition> FilterInjecteeMethods(List<MethodDefinition> injecteeMethods) {
+            // Skip non-injectable methods
             return
                 injecteeMethods
                 .Where(ValidateInjecteeMethod)
                 .ToList();
         }
 
-        protected static bool ValidateInjectedMethod(MethodDefinition method) {
-            bool isNonInjectable =
-                    !method.HasBody ||
-                    method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void ||
-                    method.HasGenericParameters ||
-                    method.HasParameters ||
-                    !method.IsStatic
-                ;
+        protected static void ValidateInjectedMethod(InjectionConfiguration.InjectedMethod sourceInjectedMethod, MethodDefinition method) {
+            if (sourceInjectedMethod.InjectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart &&
+                sourceInjectedMethod.ReturnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(
+                    method,
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodInjectionPosition)}." +
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart)} " +
+                    $"is not compatible with " +
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour)}." +
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)}, " +
+                    $"use " +
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour)}." +
+                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromSelf)} " +
+                    $"instead"
+                    ));
 
-            return !isNonInjectable;
+            if (!method.HasBody)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "method has no body"));
+
+            if (method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't return any values"));
+
+            if (method.HasParameters)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't have parameters"));
+
+            if (method.HasGenericParameters)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't have generic parameters"));
+
+            if (!method.IsStatic)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method has to be static"));
         }
 
         protected static bool ValidateInjecteeMethod(MethodDefinition method) {
@@ -188,6 +208,10 @@ namespace LostPolygon.MethodInlineInjector {
                 ;
 
             return !isNonInjectable;
+        }
+
+        protected static string CreateInvalidInjectedMethodMessage(MethodDefinition method, string message) {
+            return $"Injected method {method.GetFullName()} is not valid, reason: {message}";
         }
     }
 }
