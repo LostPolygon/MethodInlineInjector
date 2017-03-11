@@ -12,7 +12,7 @@ namespace LostPolygon.MethodInlineInjector {
             _serializationHelper = new XmlSerializationHelper(Serialize);
         }
 
-        public XmlSchema GetSchema() { 
+        public XmlSchema GetSchema() {
             throw new InvalidOperationException();
         }
 

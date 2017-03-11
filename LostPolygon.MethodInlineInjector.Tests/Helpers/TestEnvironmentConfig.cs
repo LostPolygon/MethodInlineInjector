@@ -20,7 +20,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             FileIniDataParser iniParser = new FileIniDataParser();
             IniData iniData = iniParser.ReadFile(testEnvironmentConfigPath);
 
-            PropertyInfo[] propertyInfos = 
+            PropertyInfo[] propertyInfos =
                 typeof(TestEnvironmentConfig)
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public);
 

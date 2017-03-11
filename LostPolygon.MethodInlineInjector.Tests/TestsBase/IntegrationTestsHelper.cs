@@ -13,16 +13,19 @@ namespace LostPolygon.MethodInlineInjector.Tests {
     public static class IntegrationTestsHelper {
         public const string kEndOfILCodeSeparator = "// End of IL code";
 
-        public static string GetInjectedMethodFullName(string injectedMethodName) {
-            return $"{GetTestProperty(nameof(IntegrationTestsBase.InjectedClassName))}.{injectedMethodName}";
-        }
-
         public static string GetReferenceOutputFilePath() {
+            string className = TestContext.CurrentContext.Test.ClassName.Split('.').Last();
+            if (TestContext.CurrentContext.Test.Properties.Get(nameof(ClassNameOverrideAttribute).RemoveAttribute()) is string classNameOverride) {
+                className = classNameOverride;
+            }
+
+            className = className.Replace('+', '.');
+
             string path =
                 Path.Combine(
                     TestEnvironmentConfig.Instance.ProjectDir,
                     "ReferenceOutput",
-                    TestContext.CurrentContext.Test.ClassName.Split('.').Last(),
+                    className,
                     TestContext.CurrentContext.Test.MethodName + ".ilcs"
                 );
 
@@ -115,6 +118,14 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public static void ExecuteInjection(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
             MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);
             assemblyMethodInjector.Inject();
+        }
+
+        public static void WriteModifiedAssembliesIfRequested(ResolvedInjectionConfiguration resolvedConfiguration) {
+            if (TestContext.CurrentContext.Test.Properties.Get(nameof(SaveModifiedAssembliesAttribute).RemoveAttribute()) is bool saveModifiedAssemblies && saveModifiedAssemblies) {
+                foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
+                    injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
+                }
+            }
         }
 
         public static ResolvedInjectionConfiguration GetBasicResolvedInjectionConfiguration(InjectionConfiguration injectionConfiguration, params string[] injecteeMethodNames) {

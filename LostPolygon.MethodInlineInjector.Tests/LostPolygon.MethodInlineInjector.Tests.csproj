@@ -92,14 +92,22 @@
     <Compile Include="Helpers\CSharpLanguage.cs" />
     <Compile Include="Helpers\DecompilationHelpers.cs" />
     <Compile Include="Helpers\ExpectedExceptionAttribute.cs" />
+    <Compile Include="Helpers\StringExtensions.cs" />
+    <Compile Include="InjectorTests.cs" />
+    <Compile Include="SmokeTests.cs" />
+    <Compile Include="IntegrationTestMainBase.cs" />
+    <Compile Include="ResolvedInjectionConfigurationLoaderTests.cs" />
+    <Compile Include="TestsBase\ForceRegenerateReferenceOutputAttribute.cs" />
+    <Compile Include="TestsBase\ApplyChildFixtureNameAttribute.cs" />
     <Compile Include="TestsBase\IntegrationTestsHelper.cs" />
     <Compile Include="Helpers\TestEnvironmentConfig.cs" />
     <Compile Include="Helpers\ItemDeployment.cs" />
-    <Compile Include="IntegrationTests.cs" />
+    <Compile Include="InjectorTestsBase.cs" />
     <Compile Include="TestsBase\IntegrationTestsBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestsBase\ClassNameOverrideAttribute.cs" />
     <Compile Include="TestsBase\SaveModifiedAssembliesAttribute.cs" />
-    <Compile Include="TestsBase\SaveReferenceOutputAttribute.cs" />
+    <Compile Include="TestsBase\ValidReferenceOutputAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

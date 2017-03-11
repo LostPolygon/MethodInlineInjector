@@ -1,0 +1,70 @@
+.method public hidebysig
+    instance void SingleStatement () cil managed
+{
+    // Method begins at RVA 0x20f5
+    // Code size 13 (0xd)
+    .maxstack 8
+    .locals (
+        [0] class [mscorlib]System.Exception
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injectee: SingleStatement"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: nop
+    IL_000d: nop
+    IL_000e: ldstr "Injected: Start"
+    IL_0013: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0018: nop
+    IL_0019: nop
+    IL_001a: ldstr "Injected: Try"
+    IL_001f: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0024: nop
+    IL_0025: nop
+    IL_0026: leave.s IL_003d
+    IL_0028: stloc.0
+    IL_0029: nop
+    IL_002a: ldstr "Injected: Catch "
+    IL_002f: ldloc.0
+    IL_0030: call string [mscorlib]System.String::Concat(object, object)
+    IL_0035: call void [mscorlib]System.Console::WriteLine(string)
+    IL_003a: nop
+    IL_003b: rethrow
+    IL_003d: leave.s IL_004d
+    IL_003f: nop
+    IL_0040: ldstr "Injected: Finally"
+    IL_0045: call void [mscorlib]System.Console::WriteLine(string)
+    IL_004a: nop
+    IL_004b: nop
+    IL_004c: endfinally
+    IL_004d: ldstr "Injected: End"
+    IL_0052: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0057: nop
+    IL_0058: ret
+
+    Try IL_0019-IL_0028 Catch class [mscorlib]System.Exception IL_0028-IL_003d
+    Try IL_0019-IL_003f Finally IL_003f-IL_004d
+} // end of method TestInjectee::SingleStatement
+
+// End of IL code
+
+public void SingleStatement()
+{
+    Console.WriteLine("Injectee: SingleStatement");
+    Console.WriteLine("Injected: Start");
+    try
+    {
+        Console.WriteLine("Injected: Try");
+    }
+    catch (Exception arg)
+    {
+        Console.WriteLine("Injected: Catch " + arg);
+        throw;
+    }
+    finally
+    {
+        Console.WriteLine("Injected: Finally");
+    }
+    Console.WriteLine("Injected: End");
+}

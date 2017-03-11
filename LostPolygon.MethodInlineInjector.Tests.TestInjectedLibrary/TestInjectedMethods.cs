@@ -4,8 +4,6 @@ using System.Text.RegularExpressions;
 
 namespace TestInjectedLibrary {
     public class TestInjectedMethods {
-        private static int _intField = 5;
-
         public static void SingleStatement() {
             Console.WriteLine("Injected: This is injected code!");
         }
@@ -66,16 +64,5 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: End");
         }
 
-        public static void FieldDependent() {
-            Console.WriteLine("Injected: _intField = " + _intField);
-        }
-
-        public static void TypeDependent() {
-            SomeOtherClass.AddInts(3, 8);
-        }
-
-        public void NonStatic() {
-            Console.WriteLine("test");
-        }
     }
 }

@@ -1,0 +1,75 @@
+.method public hidebysig
+    instance int32 ReturnValue () cil managed
+{
+    // Method begins at RVA 0x2138
+    // Code size 8 (0x8)
+    .maxstack 1
+    .locals init (
+        [0] class [mscorlib]System.Random,
+        [1] bool,
+        [2] bool,
+        [3] int32
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injected: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_0011: stloc.0
+    IL_0012: ldloc.0
+    IL_0013: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0018: ldc.r8 0.5
+    IL_0021: cgt
+    IL_0023: stloc.1
+    IL_0024: ldloc.1
+    IL_0025: brfalse.s IL_0057
+    IL_0027: nop
+    IL_0028: ldstr "Injected: Bad luck :("
+    IL_002d: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0032: nop
+    IL_0033: ldloc.0
+    IL_0034: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0039: ldc.r8 0.5
+    IL_0042: cgt
+    IL_0044: stloc.2
+    IL_0045: ldloc.2
+    IL_0046: brfalse.s IL_0056
+    IL_0048: nop
+    IL_0049: ldstr "Injected: Super bad luck :("
+    IL_004e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0053: nop
+    IL_0054: br.s IL_0062
+    IL_0056: nop
+    IL_0057: ldstr "Injected: End"
+    IL_005c: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0061: nop
+    IL_0062: nop
+    IL_0063: nop
+    IL_0064: ldc.i4.s -3
+    IL_0066: stloc.3
+    IL_0067: br.s IL_0069
+    IL_0069: ldloc.3
+    IL_006a: ret
+} // end of method TestInjectee::ReturnValue
+
+// End of IL code
+
+public int ReturnValue()
+{
+    Console.WriteLine("Injected: Begin");
+    Random random = new Random();
+    bool flag = random.NextDouble() > 0.5;
+    if (flag)
+    {
+        Console.WriteLine("Injected: Bad luck :(");
+        bool flag2 = random.NextDouble() > 0.5;
+        if (flag2)
+        {
+            Console.WriteLine("Injected: Super bad luck :(");
+            return -3;
+        }
+    }
+    Console.WriteLine("Injected: End");
+    return -3;
+}

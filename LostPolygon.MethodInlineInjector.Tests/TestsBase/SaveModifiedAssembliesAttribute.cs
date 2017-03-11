@@ -7,7 +7,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         public SaveModifiedAssembliesAttribute(bool value) {
-            Properties.Set("SaveModifiedAssemblies", value);
+            Properties.Set(nameof(SaveModifiedAssembliesAttribute).RemoveAttribute(), value);
         }
     }
 }

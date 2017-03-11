@@ -7,6 +7,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public abstract string InjectedLibraryName { get; }
         public abstract string InjecteeLibraryName { get; }
         public abstract string InjectedClassName { get; }
+        public abstract string InjecteeClassName { get; }
         public abstract string InjectedLibraryPath { get; }
         public abstract string InjecteeLibraryPath { get; }
 
@@ -14,31 +15,42 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         protected TestEnvironmentConfig TestEnvironmentConfig { get; set; }
 
-        protected ResolvedInjectionConfiguration ExecuteSimpleTest(InjectionConfiguration.InjectedMethod injectedMethod, string injecteeMethodName) {
+        protected static ResolvedInjectionConfiguration ExecuteSimpleTest(InjectionConfiguration.InjectedMethod injectedMethod, string injecteeMethodName) {
             return ExecuteSimpleTest(new[] { injectedMethod }, new[] { injecteeMethodName });
         }
 
-        protected ResolvedInjectionConfiguration ExecuteSimpleTest(
+        protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
             InjectionConfiguration.InjectedMethod[] injectedMethods,
             string[] injecteeMethodNames) {
             InjectionConfiguration configuration = IntegrationTestsHelper.GetBasicInjectionConfiguration(injectedMethods);
             ResolvedInjectionConfiguration resolvedConfiguration = IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
-            IntegrationTestsHelper.ExecuteInjection(resolvedConfiguration);
 
-            if (TestContext.CurrentContext.Test.Properties.Get("SaveModifiedAssemblies") is bool saveModifiedAssemblies && saveModifiedAssemblies) {
-                foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
-                    injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
-                }
-            }
-
-            if (TestContext.CurrentContext.Test.Properties.Get("SaveReferenceOutput") is bool saveReferenceOutput && saveReferenceOutput) {
-                IntegrationTestsHelper.WriteReferenceOutputFile(resolvedConfiguration);
-                Console.WriteLine(IntegrationTestsHelper.GetFormattedReferenceOutputFile());
-            } else {
-                IntegrationTestsHelper.AssertFirstMethod(resolvedConfiguration);
-            }
+            ExecuteSimpleTest(resolvedConfiguration);
 
             return resolvedConfiguration;
+        }
+
+        protected static void ExecuteSimpleTest(ResolvedInjectionConfiguration resolvedConfiguration) {
+            IntegrationTestsHelper.ExecuteInjection(resolvedConfiguration);
+            IntegrationTestsHelper.WriteModifiedAssembliesIfRequested(resolvedConfiguration);
+
+            bool validReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ValidReferenceOutputAttribute).RemoveAttribute()) is bool tmp1 && tmp1;
+            bool forceRegenerateReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ForceRegenerateReferenceOutputAttribute).RemoveAttribute()) is bool tmp2 && tmp2;
+            if (validReferenceOutput && !forceRegenerateReferenceOutput) {
+                IntegrationTestsHelper.AssertFirstMethod(resolvedConfiguration);
+            } else {
+                IntegrationTestsHelper.WriteReferenceOutputFile(resolvedConfiguration);
+                Console.WriteLine(IntegrationTestsHelper.GetFormattedReferenceOutputFile());
+                Assert.Fail("Reference output not validated");
+            }
+        }
+
+        protected static void ExecuteSimpleInjection(InjectionConfiguration configuration) {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(configuration);
+
+            IntegrationTestsHelper.ExecuteInjection(resolvedConfiguration);
+            IntegrationTestsHelper.WriteModifiedAssembliesIfRequested(resolvedConfiguration);
         }
 
         #region Setup

@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InvalidInjectedMethods.cs" />
     <Compile Include="SomeOtherClass.cs" />
     <Compile Include="TestInjectedMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

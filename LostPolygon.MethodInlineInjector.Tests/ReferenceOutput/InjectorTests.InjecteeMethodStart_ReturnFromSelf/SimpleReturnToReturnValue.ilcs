@@ -18,7 +18,7 @@
     IL_0012: ldloc.0
     IL_0013: brfalse.s IL_0023
     IL_0015: nop
-    IL_0016: ldstr "Injected: Environment.UserInteractive is true"
+    IL_0016: ldstr "Injected: Environment.UserInteractive is true, returning"
     IL_001b: call void [mscorlib]System.Console::WriteLine(string)
     IL_0020: nop
     IL_0021: br.s IL_002e
@@ -42,7 +42,7 @@ public int ReturnValue()
     bool userInteractive = Environment.UserInteractive;
     if (userInteractive)
     {
-        Console.WriteLine("Injected: Environment.UserInteractive is true");
+        Console.WriteLine("Injected: Environment.UserInteractive is true, returning");
     }
     else
     {
