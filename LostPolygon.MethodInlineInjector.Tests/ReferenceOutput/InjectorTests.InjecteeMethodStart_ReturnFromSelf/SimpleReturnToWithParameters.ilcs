@@ -1,0 +1,67 @@
+.method public hidebysig
+    instance void WithParameters (
+        int32 a,
+        float32 b
+    ) cil managed
+{
+    // Method begins at RVA 0x2103
+    // Code size 49 (0x31)
+    .maxstack 8
+    .locals (
+        [0] bool
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injected: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: call bool [mscorlib]System.Environment::get_UserInteractive()
+    IL_0011: stloc.0
+    IL_0012: ldloc.0
+    IL_0013: brfalse.s IL_0023
+    IL_0015: nop
+    IL_0016: ldstr "Injected: Environment.UserInteractive is true, returning"
+    IL_001b: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0020: nop
+    IL_0021: br.s IL_002e
+    IL_0023: ldstr "Injected: End"
+    IL_0028: call void [mscorlib]System.Console::WriteLine(string)
+    IL_002d: nop
+    IL_002e: nop
+    IL_002f: nop
+    IL_0030: ldstr "Injectee: Begin"
+    IL_0035: call void [mscorlib]System.Console::WriteLine(string)
+    IL_003a: nop
+    IL_003b: ldstr "Injectee: a + b = "
+    IL_0040: ldarg.1
+    IL_0041: conv.r4
+    IL_0042: ldarg.2
+    IL_0043: add
+    IL_0044: box [mscorlib]System.Single
+    IL_0049: call string [mscorlib]System.String::Concat(object, object)
+    IL_004e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0053: nop
+    IL_0054: ldstr "Injectee: End"
+    IL_0059: call void [mscorlib]System.Console::WriteLine(string)
+    IL_005e: nop
+    IL_005f: ret
+} // end of method TestInjectee::WithParameters
+
+// End of IL code
+
+public void WithParameters(int a, float b)
+{
+    Console.WriteLine("Injected: Begin");
+    bool userInteractive = Environment.UserInteractive;
+    if (userInteractive)
+    {
+        Console.WriteLine("Injected: Environment.UserInteractive is true, returning");
+    }
+    else
+    {
+        Console.WriteLine("Injected: End");
+    }
+    Console.WriteLine("Injectee: Begin");
+    Console.WriteLine("Injectee: a + b = " + ((float)a + b));
+    Console.WriteLine("Injectee: End");
+}

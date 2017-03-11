@@ -32,6 +32,20 @@ namespace TestInjecteeLibrary {
             Console.WriteLine("Injectee: End");
         }
 
+        public void WithRefParameter(int a, ref float b) {
+            Console.WriteLine("Injectee: Begin");
+            b += 3.14f;
+            Console.WriteLine("Injectee: a + b = " + (a + b));
+            Console.WriteLine("Injectee: End");
+        }
+
+        public void WithOutParameter(int a, int b, out float c) {
+            Console.WriteLine("Injectee: Begin");
+            c = a + b;
+            Console.WriteLine("Injectee: c = a + b = " + c);
+            Console.WriteLine("Injectee: End");
+        }
+
         public int ReturnValue() {
             return -3;
         }
