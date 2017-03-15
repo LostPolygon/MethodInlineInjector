@@ -66,11 +66,17 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjecteeLibraryName), InjecteeLibraryName);
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjectedClassName), InjectedClassName);
 
-            string injectedLibraryPath = InjectedLibraryPath;
-            File.Copy(injectedLibraryPath, InjectedLibraryName, true);
+            void CopyIfDateMismatch(string source, string destination) {
+                Console.WriteLine($"source {File.GetCreationTimeUtc(source)}");
+                Console.WriteLine($"destination {File.GetCreationTimeUtc(destination)}");
+                if (File.GetLastWriteTimeUtc(source) == File.GetLastWriteTimeUtc(destination))
+                    return;
 
-            string injecteeLibraryPath = InjecteeLibraryPath;
-            File.Copy(injecteeLibraryPath, InjecteeLibraryName, true);
+                File.Copy(source, destination, true);
+            }
+
+            CopyIfDateMismatch(InjectedLibraryPath, InjectedLibraryName);
+            CopyIfDateMismatch(InjecteeLibraryPath, InjecteeLibraryName);
         }
 
         [OneTimeSetUp]
