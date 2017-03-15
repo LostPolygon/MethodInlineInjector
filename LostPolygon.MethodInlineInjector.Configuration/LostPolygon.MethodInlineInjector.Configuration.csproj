@@ -37,13 +37,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InjectionConfiguration.cs" />
-    <Compile Include="ISimpleXmlSerializable.cs" />
+    <Compile Include="Serialization\ISimpleXmlSerializable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyCollectionUtility.cs" />
-    <Compile Include="SimpleXmlSerializable.cs" />
-    <Compile Include="SimpleXmlSerializableExtensions.cs" />
-    <Compile Include="SimpleXmlSerializationHelper.cs" />
-    <Compile Include="SimpleXmlSerializationUtility.cs" />
+    <Compile Include="Serialization\KnownInheritorsAttribute.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializable.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializableExtensions.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializationHelper.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializationUtility.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

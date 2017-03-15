@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
@@ -141,7 +142,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             long defaultValueLong = defaultValue.ToInt64(null);
             T[] enumValues = (T[]) Enum.GetValues(enumType);
             string[] enumNames = Enum.GetNames(enumType);
-            
+
             if (IsXmlSerializationReading) {
                 long resultEnumValue = defaultValueLong;
                 for (int i = 0; i < enumNames.Length; i++) {
@@ -190,6 +191,27 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 if (GetXmlRootName(type) == name)
                     return (T) Activator.CreateInstance(type);
             }
+
+            throw new NotSupportedException($"Unknown element name {name}");
+        }
+
+        public static T CreateByKnownInheritors<T>(string name) where T : ISimpleXmlSerializable {
+            IEnumerable<Type> knownInheritors =
+                Attribute
+                .GetCustomAttributes(typeof(T), typeof(KnownInheritorsAttribute))
+                .Cast<KnownInheritorsAttribute>()
+                .SelectMany(attribute => attribute.InheritorTypes)
+                .Distinct();
+
+            bool isEmpty = true;
+            foreach (Type type in knownInheritors) {
+                isEmpty = false;
+                if (GetXmlRootName(type) == name)
+                    return (T) Activator.CreateInstance(type);
+            }
+
+            if (isEmpty)
+                throw new InvalidOperationException($"Type {typeof(T)} has no {nameof(KnownInheritorsAttribute)} attached");
 
             throw new NotSupportedException($"Unknown element name {name}");
         }

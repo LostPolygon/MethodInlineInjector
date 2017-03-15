@@ -86,11 +86,10 @@ namespace LostPolygon.MethodInlineInjector {
                             v => MemberReferenceBlacklist = v,
                             () => MemberReferenceBlacklist,
                             () =>
-                                SimpleXmlSerializationHelper.CreateByXmlRootName<IMemberReferenceBlacklistItem>(
-                                    SerializationHelper.XmlSerializationReader.Name,
-                                    typeof(MemberReferenceBlacklistFilter),
-                                    typeof(MemberReferenceBlacklistFilterInclude)
-                        ));
+                                SimpleXmlSerializationHelper.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                                    SerializationHelper.XmlSerializationReader.Name
+                                )
+                        );
                     }
                     SerializationHelper.ProcessEndElement();
 
@@ -101,22 +100,21 @@ namespace LostPolygon.MethodInlineInjector {
                             v => AssemblyReferenceWhitelist = v,
                             () => AssemblyReferenceWhitelist,
                             () =>
-                                SimpleXmlSerializationHelper.CreateByXmlRootName<IAssemblyReferenceWhitelistItem>(
-                                    SerializationHelper.XmlSerializationReader.Name,
-                                    typeof(AssemblyReferenceWhitelistFilter),
-                                    typeof(AssemblyReferenceWhitelistFilterInclude)
-                        ));
+                                SimpleXmlSerializationHelper.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                                    SerializationHelper.XmlSerializationReader.Name
+                                )
+                        );
                     }
                     SerializationHelper.ProcessEndElement();
                 }
                 SerializationHelper.ProcessEndElement();
             }
 
-
             #endregion
 
             #region MemberReferenceBlacklist
 
+            [KnownInheritors(typeof(MemberReferenceBlacklistFilter), typeof(MemberReferenceBlacklistFilterInclude))]
             public interface IMemberReferenceBlacklistItem : ISimpleXmlSerializable {
             }
 
@@ -183,6 +181,7 @@ namespace LostPolygon.MethodInlineInjector {
 
             #region AssemblyReferenceWhitelist
 
+            [KnownInheritors(typeof(AssemblyReferenceWhitelistFilter), typeof(AssemblyReferenceWhitelistFilterInclude))]
             public interface IAssemblyReferenceWhitelistItem : ISimpleXmlSerializable {
             }
 

@@ -25,7 +25,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             string[] injecteeMethodNames,
             bool assertFirstMethodMatch = true) {
             InjectionConfiguration configuration = IntegrationTestsHelper.GetBasicInjectionConfiguration(injectedMethods);
-            ResolvedInjectionConfiguration resolvedConfiguration = 
+            ResolvedInjectionConfiguration resolvedConfiguration =
                 IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
 
             ExecuteSimpleTest(resolvedConfiguration, assertFirstMethodMatch);

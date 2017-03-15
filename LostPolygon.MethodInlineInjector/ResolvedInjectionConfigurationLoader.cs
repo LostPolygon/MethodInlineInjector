@@ -134,34 +134,42 @@ namespace LostPolygon.MethodInlineInjector {
 
         private ResolvedInjectionConfiguration.InjecteeAssembly GetInjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly) {
             var memberReferenceBlacklistFilters = new List<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter>();
-            foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem memberReferenceBlacklistItem in sourceInjecteeAssembly.MemberReferenceBlacklist) {
-                if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter memberReferenceBlacklistFilter) {
-                    memberReferenceBlacklistFilters.Add(memberReferenceBlacklistFilter);
-                    continue;
-                }
-
-                if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterInclude) {
-                    string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
-                    MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterIncludedList =
-                        SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterInclude>(whiteListIncludeXml);
-                    memberReferenceBlacklistFilters.AddRange(memberReferenceBlacklistFilterIncludedList.Items);
-                }
-            }
-
             var assemblyReferenceWhitelistFilters = new List<InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter>();
-            foreach (InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem assemblyReferenceWhitelistItem in sourceInjecteeAssembly.AssemblyReferenceWhitelist) {
-                if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter assemblyReferenceWhitelistFilter) {
-                    assemblyReferenceWhitelistFilters.Add(assemblyReferenceWhitelistFilter);
-                    continue;
-                }
 
-                if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterInclude) {
-                    string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
-                    AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterIncludedList =
-                        SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterInclude>(whiteListIncludeXml);
-                    assemblyReferenceWhitelistFilters.AddRange(assemblyReferenceWhitelistFilterIncludedList.Items);
+            void LoadMemberReferenceBlacklistFilters(IEnumerable<InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem> items) {
+                foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem memberReferenceBlacklistItem in items) {
+                    if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter memberReferenceBlacklistFilter) {
+                        memberReferenceBlacklistFilters.Add(memberReferenceBlacklistFilter);
+                        continue;
+                    }
+
+                    if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterInclude) {
+                        string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
+                        MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterIncludedList =
+                            SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterInclude>(whiteListIncludeXml);
+                        LoadMemberReferenceBlacklistFilters(memberReferenceBlacklistFilterIncludedList.Items);
+                    }
                 }
             }
+
+            void LoadAssemblyReferenceWhitelistFilters(IEnumerable<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> items) {
+                foreach (InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem assemblyReferenceWhitelistItem in items) {
+                    if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter assemblyReferenceWhitelistFilter) {
+                        assemblyReferenceWhitelistFilters.Add(assemblyReferenceWhitelistFilter);
+                        continue;
+                    }
+
+                    if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterInclude) {
+                        string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
+                        AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterIncludedList =
+                            SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterInclude>(whiteListIncludeXml);
+                        LoadAssemblyReferenceWhitelistFilters(assemblyReferenceWhitelistFilterIncludedList.Items);
+                    }
+                }
+            }
+
+            LoadMemberReferenceBlacklistFilters(sourceInjecteeAssembly.MemberReferenceBlacklist);
+            LoadAssemblyReferenceWhitelistFilters(sourceInjecteeAssembly.AssemblyReferenceWhitelist);
 
             AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
 
@@ -233,8 +241,7 @@ namespace LostPolygon.MethodInlineInjector {
                         if (!TestString(blacklistFilter, type.FullName))
                             return false;
 
-                        if (!blacklistFilter.FilterOptions.HasFlag(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors) ||
-                            type.BaseType == null)
+                        if (!blacklistFilter.MatchAncestors || type.BaseType == null)
                             break;
 
                         type = type.BaseType.GetDefinition();
@@ -322,16 +329,23 @@ namespace LostPolygon.MethodInlineInjector {
                 // Skip root element when reading
                 SerializationHelper.ProcessAdvanceOnRead();
 
-                this.ProcessCollection(Items);
+                this.ProcessCollection(
+                    Items,
+                    () =>
+                        SimpleXmlSerializationHelper.CreateByKnownInheritors<TItem>(
+                            SerializationHelper.XmlSerializationReader.Name
+                        ));
             }
         }
 
         [XmlRoot("MemberReferenceBlacklist")]
-        private class MemberReferenceBlacklistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter> {
+        private class MemberReferenceBlacklistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem> {
+
         }
 
         [XmlRoot("AssemblyReferenceWhitelist")]
-        private class AssemblyReferenceWhitelistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter> {
+        private class AssemblyReferenceWhitelistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> {
+
         }
     }
 }
