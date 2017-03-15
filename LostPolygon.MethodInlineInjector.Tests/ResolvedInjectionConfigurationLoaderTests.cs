@@ -1,9 +1,10 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using TestInjectedLibrary;
 using TestInjecteeLibrary;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
-    public class ResolvedInjectionConfigurationLoaderTests : IntegrationTestMainBase {
+    public class ResolvedInjectionConfigurationLoaderTests : ConfigurationTests {
         [Test]
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectNonStatic() {
@@ -25,6 +26,18 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.FieldDependent)}"
                 ),
                 $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+        [Test]
+        public void AttemptInjectFieldDependentValid() {
+            ExecuteSimpleTest(
+                new InjectionConfiguration.InjectedMethod(
+                    InjectedLibraryPath,
+                    $"{InjectedClassName}.{nameof(InvalidInjectedMethods.FieldDependentValid)}"
+                ),
+                $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}",
+                false
             );
         }
 
@@ -88,6 +101,84 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 ),
                 null
             );
+        }
+
+        [Test]
+        public void BlacklistTypeTest() {
+            string blacklistedTypeFullName = typeof(TestInjectee).FullName;
+            ExecuteSimpleBlacklistTypeTest(blacklistedTypeFullName);
+        }
+
+        [Test]
+        public void BlacklistTypeByRegexTest() {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ExecuteBlacklistTest(
+                    new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+                        "Injecte[ed]",
+                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
+                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.IsRegex |
+                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                    )
+                );
+
+            Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(TestInjectee).FullName));
+            Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(ChildTestInjectee).FullName));
+            Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(StructTestInjectee).FullName));
+        }
+
+        [Test]
+        public void BlacklistTypeAndChildTypesTest() {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ExecuteSimpleBlacklistTypeTest(
+                    typeof(TestInjectee).FullName,
+                    InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
+                    InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                );
+
+            Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(ChildTestInjectee).FullName));
+        }
+
+        [Test]
+        public void BlacklistStructTypeTest() {
+            ExecuteSimpleBlacklistTypeTest(
+                typeof(StructTestInjectee).FullName,
+                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
+                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+            );
+        }
+
+        private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTypeTest(
+            string blacklistedTypeFullName,
+            InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags filterFlags =
+                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes
+        ) {
+            var memberReferenceBlacklist = new InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem[] {
+                new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+                    blacklistedTypeFullName,
+                    filterFlags
+                ),
+            };
+
+            ResolvedInjectionConfiguration resolvedConfiguration = ExecuteBlacklistTest(memberReferenceBlacklist);
+            Assert.True(IsTypeSkipped(resolvedConfiguration, blacklistedTypeFullName));
+
+            return resolvedConfiguration;
+        }
+
+        private ResolvedInjectionConfiguration ExecuteBlacklistTest(
+            params InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem[] memberReferenceBlacklist) {
+            InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist: memberReferenceBlacklist.ToList());
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(configuration);
+            ExecuteSimpleTest(resolvedConfiguration, false);
+            return resolvedConfiguration;
+        }
+
+        private static bool IsTypeSkipped(ResolvedInjectionConfiguration resolvedConfiguration, string skippedTypeFullName) {
+            return resolvedConfiguration
+                       .InjecteeAssemblies
+                       .SelectMany(assembly => assembly.InjecteeMethodsDefinitions)
+                       .FirstOrDefault(method => method.DeclaringType.FullName == skippedTypeFullName) == null;
         }
 
         #region Setup

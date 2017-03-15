@@ -34,6 +34,8 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="StructTestInjectee.cs" />
+    <Compile Include="ChildTestInjectee.cs" />
     <Compile Include="TestInjectee.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

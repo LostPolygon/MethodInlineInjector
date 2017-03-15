@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Serialization;
 using Mono.Cecil;
 using devtm.Cecil.Extensions;
-using LostPolygon.MethodInlineInjector.Configuration;
+using LostPolygon.MethodInlineInjector.Serialization;
+using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedInjectionConfigurationLoader {
-        private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap = new Dictionary<string, AssemblyDefinitionData>();
+        private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap =
+            new Dictionary<string, AssemblyDefinitionData>();
         private readonly InjectionConfiguration _injectionConfiguration;
 
         public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(InjectionConfiguration injectionConfiguration) {
@@ -71,7 +75,7 @@ namespace LostPolygon.MethodInlineInjector {
                         $"uses runtime version {injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime}, " +
                         $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime " +
                         $"version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
-                        );
+                    );
                 }
             }
         }
@@ -81,9 +85,10 @@ namespace LostPolygon.MethodInlineInjector {
             foreach (InjectionConfiguration.InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
                 AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
                 MethodDefinition[] matchingMethodDefinitions =
-                    assemblyDefinitionData.AllMethods
-                        .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
-                        .ToArray();
+                    assemblyDefinitionData
+                    .AllMethods
+                    .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
+                    .ToArray();
 
                 if (matchingMethodDefinitions.Length == 0)
                     throw new MethodInlineInjectorException($"No matching methods found for {sourceInjectedMethod.MethodFullName}");
@@ -98,7 +103,7 @@ namespace LostPolygon.MethodInlineInjector {
                 }
 
                 MethodDefinition matchedMethodDefinition = matchingMethodDefinitions[0];
-                ValidateInjectedMethod(sourceInjectedMethod, matchedMethodDefinition);
+                ValidateInjectedMethod(matchedMethodDefinition);
 
                 methodDefinitions.Add(new ResolvedInjectionConfiguration.InjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
             }
@@ -128,83 +133,177 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private ResolvedInjectionConfiguration.InjecteeAssembly GetInjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly) {
-            var memberReferenceWhitelistFilters = new List<InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter>();
-            foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceWhitelistItem memberReferenceWhitelistItem in sourceInjecteeAssembly.MemberReferenceWhitelist) {
-                if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilter memberReferenceWhitelistFilter) {
-                    memberReferenceWhitelistFilters.Add(memberReferenceWhitelistFilter);
+            var memberReferenceBlacklistFilters = new List<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter>();
+            foreach (InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem memberReferenceBlacklistItem in sourceInjecteeAssembly.MemberReferenceBlacklist) {
+                if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter memberReferenceBlacklistFilter) {
+                    memberReferenceBlacklistFilters.Add(memberReferenceBlacklistFilter);
                     continue;
                 }
 
-                if (memberReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterInclude) {
-                    string whiteListIncludeXml = File.ReadAllText(memberReferenceWhitelistFilterInclude.Path);
-                    MemberReferenceWhitelistFilterInclude memberReferenceWhitelistFilterIncludedList = SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceWhitelistFilterInclude>(whiteListIncludeXml);
-                    memberReferenceWhitelistFilters.AddRange(memberReferenceWhitelistFilterIncludedList.MemberReferenceWhitelist);
+                if (memberReferenceBlacklistItem is InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterInclude) {
+                    string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
+                    MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterIncludedList =
+                        SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterInclude>(whiteListIncludeXml);
+                    memberReferenceBlacklistFilters.AddRange(memberReferenceBlacklistFilterIncludedList.Items);
+                }
+            }
+
+            var assemblyReferenceWhitelistFilters = new List<InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter>();
+            foreach (InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem assemblyReferenceWhitelistItem in sourceInjecteeAssembly.AssemblyReferenceWhitelist) {
+                if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter assemblyReferenceWhitelistFilter) {
+                    assemblyReferenceWhitelistFilters.Add(assemblyReferenceWhitelistFilter);
+                    continue;
+                }
+
+                if (assemblyReferenceWhitelistItem is InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterInclude) {
+                    string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
+                    AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterIncludedList =
+                        SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterInclude>(whiteListIncludeXml);
+                    assemblyReferenceWhitelistFilters.AddRange(assemblyReferenceWhitelistFilterIncludedList.Items);
                 }
             }
 
             AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
-            List<MethodDefinition> injecteeMethodDefinitions = new List<MethodDefinition>();
 
-            // Final method list
-            List<MethodDefinition> filteredMethods =
-                assemblyDefinitionData
-                .AllMethods
+            List<MethodDefinition> filteredInjecteeMethods =
+                GetFilteredInjecteeMethods(assemblyDefinitionData, memberReferenceBlacklistFilters);
+
+            List<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> assemblyReferenceWhitelist =
+                assemblyReferenceWhitelistFilters
+                .Select(item => (AssemblyNameReference.Parse(item.Name), item.IsStrictNameCheck))
                 .ToList();
 
-            // TODO: implement whitelist filtering
-            filteredMethods = FilterInjecteeMethods(filteredMethods);
-            injecteeMethodDefinitions.AddRange(filteredMethods);
-
             ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly =
-                new ResolvedInjectionConfiguration.InjecteeAssembly(sourceInjecteeAssembly, assemblyDefinitionData, injecteeMethodDefinitions);
+                new ResolvedInjectionConfiguration.InjecteeAssembly(
+                    sourceInjecteeAssembly,
+                    assemblyDefinitionData,
+                    filteredInjecteeMethods.AsReadOnly(),
+                    assemblyReferenceWhitelist.AsReadOnly());
 
             return injecteeAssembly;
         }
 
-        protected virtual List<MethodDefinition> FilterInjecteeMethods(List<MethodDefinition> injecteeMethods) {
-            // Skip non-injectable methods
-            return
-                injecteeMethods
+        protected virtual List<MethodDefinition> GetFilteredInjecteeMethods(
+            AssemblyDefinitionData assemblyDefinitionData,
+            List<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters) {
+            Dictionary<string, Regex> regexCache = new Dictionary<string, Regex>();
+
+            TypeDefinition[] types =
+                assemblyDefinitionData
+                .AllTypes
+                .Where(TestType)
+                .ToArray();
+
+            List<MethodDefinition> injecteeMethods =
+                types
+                .SelectMany(GetTestedMethodsFromType)
                 .Where(ValidateInjecteeMethod)
                 .ToList();
+
+            return injecteeMethods;
+
+            Regex GetFilterRegex(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter blacklistFilter) {
+                Regex filterRegex;
+                if (!regexCache.TryGetValue(blacklistFilter.Filter, out filterRegex)) {
+                    filterRegex = new Regex(blacklistFilter.Filter, RegexOptions.Compiled);
+                    regexCache[blacklistFilter.Filter] = filterRegex;
+                }
+
+                return filterRegex;
+            }
+
+            bool TestString(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter blacklistFilter, string fullName) {
+                if (blacklistFilter.IsRegex) {
+                    if (GetFilterRegex(blacklistFilter).IsMatch(fullName))
+                        return false;
+                } else {
+                    if (fullName.Contains(blacklistFilter.Filter))
+                        return false;
+                }
+
+                return true;
+            }
+
+            bool TestType(TypeDefinition type) {
+                foreach (var blacklistFilter in memberReferenceBlacklistFilters) {
+                    if (!blacklistFilter.FilterOptions.HasFlag(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes))
+                        continue;
+
+                    while (true) {
+                        if (!TestString(blacklistFilter, type.FullName))
+                            return false;
+
+                        if (!blacklistFilter.FilterOptions.HasFlag(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors) ||
+                            type.BaseType == null)
+                            break;
+
+                        type = type.BaseType.GetDefinition();
+                    }
+                }
+
+                return true;
+            }
+
+            IEnumerable<MethodDefinition> GetTestedMethodsFromType(TypeDefinition type) {
+                HashSet<MethodDefinition> blacklistedMethods = new HashSet<MethodDefinition>();
+                Collection<PropertyDefinition> properties = type.Properties;
+                Collection<MethodDefinition> methods = type.Methods;
+
+                // TODO: ancestor support
+                foreach (var blacklistFilter in memberReferenceBlacklistFilters) {
+                    if (!blacklistFilter.FilterOptions.HasFlag(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipProperties))
+                        continue;
+
+                    foreach (PropertyDefinition property in properties) {
+                        if (TestString(blacklistFilter, property.FullName)) {
+                            if (property.GetMethod != null) {
+                                blacklistedMethods.Add(property.GetMethod);
+                            }
+                            if (property.SetMethod != null) {
+                                blacklistedMethods.Add(property.SetMethod);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var blacklistFilter in memberReferenceBlacklistFilters) {
+                    if (!blacklistFilter.FilterOptions.HasFlag(InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipMethods))
+                        continue;
+
+                    foreach (MethodDefinition method in methods) {
+                        if (TestString(blacklistFilter, method.FullName)) {
+                            blacklistedMethods.Add(method);
+                        }
+                    }
+                }
+
+                return
+                    methods
+                    .Except(blacklistedMethods);
+            }
         }
 
-        protected static void ValidateInjectedMethod(InjectionConfiguration.InjectedMethod sourceInjectedMethod, MethodDefinition method) {
-            if (sourceInjectedMethod.InjectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart &&
-                sourceInjectedMethod.ReturnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(
-                    method,
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodInjectionPosition)}." +
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart)} " +
-                    $"is not compatible with " +
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour)}." +
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)}, " +
-                    $"use " +
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour)}." +
-                    $"{nameof(InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromSelf)} " +
-                    $"instead"
-                    ));
+        protected virtual void ValidateInjectedMethod(MethodDefinition injectedMethod) {
+            if (!injectedMethod.HasBody)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "method has no body"));
 
-            if (!method.HasBody)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "method has no body"));
+            if (injectedMethod.MethodReturnType.ReturnType != injectedMethod.Module.TypeSystem.Void)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't return any values"));
 
-            if (method.MethodReturnType.ReturnType != method.Module.TypeSystem.Void)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't return any values"));
+            if (injectedMethod.HasParameters)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't have parameters"));
 
-            if (method.HasParameters)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't have parameters"));
+            if (injectedMethod.HasGenericParameters)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't have generic parameters"));
 
-            if (method.HasGenericParameters)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method can't have generic parameters"));
-
-            if (!method.IsStatic)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(method, "injected method has to be static"));
+            if (!injectedMethod.IsStatic)
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method has to be static"));
         }
 
-        protected static bool ValidateInjecteeMethod(MethodDefinition method) {
+        protected virtual bool ValidateInjecteeMethod(MethodDefinition injecteeMethod) {
             bool isNonInjectable =
-                !method.HasBody ||
-                method.HasGenericParameters
+                !injecteeMethod.HasBody ||
+                injecteeMethod.HasGenericParameters
                 ;
 
             return !isNonInjectable;
@@ -212,6 +311,27 @@ namespace LostPolygon.MethodInlineInjector {
 
         protected static string CreateInvalidInjectedMethodMessage(MethodDefinition method, string message) {
             return $"Injected method {method.GetFullName()} is not valid, reason: {message}";
+        }
+
+        private class FileInclude<TItem> : SimpleXmlSerializable where TItem : class, ISimpleXmlSerializable {
+            public List<TItem> Items { get; set; } = new List<TItem>();
+
+            public override void Serialize() {
+                base.Serialize();
+
+                // Skip root element when reading
+                SerializationHelper.ProcessAdvanceOnRead();
+
+                this.ProcessCollection(Items);
+            }
+        }
+
+        [XmlRoot("MemberReferenceBlacklist")]
+        private class MemberReferenceBlacklistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter> {
+        }
+
+        [XmlRoot("AssemblyReferenceWhitelist")]
+        private class AssemblyReferenceWhitelistFilterInclude : FileInclude<InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter> {
         }
     }
 }

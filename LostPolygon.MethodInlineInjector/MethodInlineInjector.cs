@@ -5,6 +5,7 @@ using devtm.Cecil;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
     public partial class MethodInlineInjector {
@@ -15,55 +16,104 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public void Inject() {
-            foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in _resolvedInjectionConfiguration.InjecteeAssemblies) {
-                foreach (ResolvedInjectionConfiguration.InjectedAssemblyMethods injectedAssemblyMethodsTuple in _resolvedInjectionConfiguration.InjectedMethods) {
-                    List<AssemblyNameReference> injecteeAssemblyNameReferences =
-                        injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences
-                            .ToList();
-
-                    List<TypeReference> injectedTypeReferences =
-                        injectedAssemblyMethodsTuple.AssemblyDefinition.MainModule.GetTypeReferences()
-                            .ToList();
-
-                    foreach (TypeReference injectedTypeReference in injectedTypeReferences) {
-                        // TODO: add strict name check mode
-                        AssemblyNameReference matchingAssemblyNameReference =
-                            GetMatchingAssemblyNameReference(injectedTypeReference.Scope, injecteeAssemblyNameReferences);
-
-                        // TODO: implement whitelist of assemblies that can be added
-                        if (matchingAssemblyNameReference == null) {
-                            Console.WriteLine(
-                                $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
-                                $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
-                                $"the reference will be added"
-                            );
-                        } else {
-                            injectedTypeReference.Scope = matchingAssemblyNameReference;
-                        }
-                    }
-
-                    foreach (MethodDefinition injecteeMethod in injecteeAssembly.InjecteeMethodsDefinitions) {
-                        foreach (ResolvedInjectionConfiguration.InjectedMethod injectedMethod in injectedAssemblyMethodsTuple.Methods) {
-                            MethodDefinition importedInjectedMethod =
-                                CloneAndImportMethod(injectedMethod.MethodDefinition, injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition);
-                            InjectMethod(importedInjectedMethod, injecteeMethod, injectedMethod.SourceInjectedMethod.InjectionPosition);
-                        }
-                    }
+            foreach (var injecteeAssembly in _resolvedInjectionConfiguration.InjecteeAssemblies) {
+                foreach (var injectedAssemblyMethodsTuple in _resolvedInjectionConfiguration.InjectedMethods) {
+                    InjectToAssembly(injecteeAssembly, injectedAssemblyMethodsTuple);
                 }
             }
         }
 
-        private static AssemblyNameReference GetMatchingAssemblyNameReference(IMetadataScope injectedAssemblyNameReference, List<AssemblyNameReference> injecteeAssemblyNameReferences) {
+        private static void InjectToAssembly(ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly, ResolvedInjectionConfiguration.InjectedAssemblyMethods injectedAssemblyMethodsTuple) {
+            Collection<AssemblyNameReference> injecteeAssemblyNameReferences =
+                injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences;
+
+            IEnumerable<TypeReference> injectedTypeReferences =
+                injectedAssemblyMethodsTuple.AssemblyDefinition.MainModule.GetTypeReferences();
+
+            foreach (TypeReference injectedTypeReference in injectedTypeReferences) {
+                AssemblyNameReference injectedAssemblyNameReference = injectedTypeReference.Scope as AssemblyNameReference;
+
+                // TODO: add strict name check mode
+                AssemblyNameReference matchingAssemblyNameReference =
+                    GetMatchingAssemblyNameReference(injectedAssemblyNameReference, injecteeAssemblyNameReferences, false);
+
+                if (matchingAssemblyNameReference == null) {
+                    bool IsAssemblyReferenceWhitelisted(
+                        AssemblyNameReference assemblyNameReference,
+                        AssemblyNameReference whitelistedAssemblyNameReference,
+                        bool isStrictCheck) {
+                        if (isStrictCheck) {
+                            return assemblyNameReference.FullName == whitelistedAssemblyNameReference.FullName;
+                        } else {
+                            return assemblyNameReference.Name == whitelistedAssemblyNameReference.Name;
+                        }
+                    }
+
+                    bool isWhitelisted =
+                        injecteeAssembly
+                        .AssemblyReferenceWhiteList
+                        .Any(tuple => IsAssemblyReferenceWhitelisted(injectedAssemblyNameReference, tuple.Item1, tuple.Item2));
+
+                    if (!isWhitelisted)
+                        throw new MethodInlineInjectorException(
+                            $"Assembly '{injectedAssemblyNameReference}' is not whitelisted " +
+                            $"and cannot be added as a reference"
+                        );
+
+                    Console.WriteLine(
+                        $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
+                        $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
+                        $"the reference will be added"
+                    );
+                } else {
+                    injectedTypeReference.Scope = matchingAssemblyNameReference;
+                }
+            }
+
+            foreach (MethodDefinition injecteeMethod in injecteeAssembly.InjecteeMethodsDefinitions) {
+                foreach (ResolvedInjectionConfiguration.InjectedMethod injectedMethod in injectedAssemblyMethodsTuple.Methods) {
+                    MethodDefinition importedInjectedMethod =
+                        CloneAndImportMethod(
+                            injectedMethod.MethodDefinition,
+                            injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition
+                        );
+                    InjectMethod(
+                        importedInjectedMethod,
+                        injecteeMethod,
+                        injectedMethod.SourceInjectedMethod.InjectionPosition,
+                        injectedMethod.SourceInjectedMethod.ReturnBehaviour
+                    );
+                }
+            }
+        }
+
+        private static AssemblyNameReference GetMatchingAssemblyNameReference(
+            AssemblyNameReference injectedAssemblyNameReference,
+            IEnumerable<AssemblyNameReference> injecteeAssemblyNameReferences,
+            bool isStrictCheck) {
             foreach (AssemblyNameReference injecteeAssemblyNameReference in injecteeAssemblyNameReferences) {
-                if (injectedAssemblyNameReference.Name == injecteeAssemblyNameReference.Name) {
-                    return injecteeAssemblyNameReference;
+                if (isStrictCheck) {
+                    if (injectedAssemblyNameReference.FullName == injecteeAssemblyNameReference.FullName)
+                        return injecteeAssemblyNameReference;
+                } else {
+                    if (injectedAssemblyNameReference.Name == injecteeAssemblyNameReference.Name)
+                        return injecteeAssemblyNameReference;
                 }
             }
 
             return null;
         }
 
-        private static void InjectMethod(MethodDefinition injectedMethod, MethodDefinition injecteeMethod, InjectionConfiguration.InjectedMethod.MethodInjectionPosition injectionPosition) {
+        private static void InjectMethod(
+            MethodDefinition injectedMethod,
+            MethodDefinition injecteeMethod,
+            InjectionConfiguration.InjectedMethod.MethodInjectionPosition injectionPosition,
+            InjectionConfiguration.InjectedMethod.MethodReturnBehaviour returnBehaviour
+            ) {
+            // TODO: implement ReturnFromInjectee
+            //if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
+            //    throw new NotImplementedException("ReturnFromInjectee");
+
             // Unroll short form instructions so they can be auto-fixed by Cecil
             // automatically when new instructions are inserted
             injectedMethod.Body.SimplifyMacros();
@@ -79,6 +129,16 @@ namespace LostPolygon.MethodInlineInjector {
                 // First instruction of the injectee method. Instruction of the injected methods are inserted before it
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
                 Instruction injectedLastInstruction = injectedMethod.Body.Instructions.Last();
+
+                if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee) {
+                    for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
+                        Instruction instruction = injectedMethod.Body.Instructions[i];
+                        if (instruction.Operand == injectedLastInstruction) {
+                            instruction.OpCode = OpCodes.Ret;
+                            instruction.Operand = null;
+                        }
+                    }
+                }
 
                 // Insert injected method to the beginning
                 for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
@@ -119,8 +179,9 @@ namespace LostPolygon.MethodInlineInjector {
 
         private static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition targetAssembly) {
             TypeReference importedReturnTypeReference = targetAssembly.MainModule.Import(sourceMethod.ReturnType);
-            MethodDefinition clonedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference);
-            clonedMethod.DeclaringType = targetAssembly.MainModule.Types[0];
+            MethodDefinition clonedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference) {
+                DeclaringType = targetAssembly.MainModule.Types[0]
+            };
             MethodDefinitionCloner methodDefinitionCloner = new MethodDefinitionClonerValidated(sourceMethod, clonedMethod, targetAssembly.MainModule);
             methodDefinitionCloner.Clone();
 
@@ -128,7 +189,10 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private class MethodDefinitionClonerValidated : MethodDefinitionCloner {
-            public MethodDefinitionClonerValidated(MethodDefinition sourceMethod, MethodDefinition targetMethod, ModuleDefinition targetModule)
+            public MethodDefinitionClonerValidated(
+                MethodDefinition sourceMethod,
+                MethodDefinition targetMethod,
+                ModuleDefinition targetModule)
                 : base(sourceMethod, targetMethod, targetModule) {
             }
 
@@ -151,6 +215,13 @@ namespace LostPolygon.MethodInlineInjector {
                 return base.ImportMethodReference(operand);
             }
 
+            protected override FieldReference ImportFieldReference(FieldReference operand) {
+                ValidateTypeReference(operand.DeclaringType);
+                ValidateTypeReference(operand.FieldType);
+
+                return base.ImportFieldReference(operand);
+            }
+
             private void ValidateTypeReference(TypeReference type) {
                 if (type.Scope == SourceMethod.Module)
                     throw new MethodInlineInjectorException(
@@ -158,6 +229,5 @@ namespace LostPolygon.MethodInlineInjector {
                         $"'{SourceMethod.Module.Assembly}' to the injectee assembly '{TargetMethod.Module.Assembly}'");
             }
         }
-
     }
 }

@@ -23,10 +23,5 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         public override string InjectedClassName => typeof(TestInjectedLibrary.TestInjectedMethods).FullName;
         public override string InjecteeClassName => typeof(TestInjecteeLibrary.TestInjectee).FullName;
-
-        protected override string[] CommonFiles => new[] {
-            "TestData/Common/RuntimeAssembliesWhitelist.xml",
-            "TestData/Common/UnityPerfomanceWhitelist.xml"
-        };
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using devtm.Cecil.Extensions;
 using Mono.Cecil;
@@ -69,6 +68,10 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual MethodReference ImportMethodReference(MethodReference operand) {
+            return TargetModule.Import(operand);
+        }
+
+        protected virtual FieldReference ImportFieldReference(FieldReference operand) {
             return TargetModule.Import(operand);
         }
 
@@ -148,17 +151,9 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual Instruction CloneFieldReferenceOperandInstruction(Instruction sourceInstruction, FieldReference operand) {
-            FieldDefinition fieldDefinition = null;
-            foreach (FieldDefinition field in TargetMethod.DeclaringType.Fields) {
-                if (field.Name != operand.Name)
-                    continue;
-
-                fieldDefinition = field;
-                break;
-            }
-
+            FieldDefinition fieldDefinition = ImportFieldReference(operand).Resolve();
             if (fieldDefinition == null)
-                throw new MethodInlineInjectorException("The block can't be copied because some fields do not exist in the target method declaring type");
+                throw new MethodInlineInjectorException($"Field '{operand}' not found in the source method module");
 
             return Instruction.Create(sourceInstruction.OpCode, fieldDefinition);
         }

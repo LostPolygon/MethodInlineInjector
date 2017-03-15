@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.IO;
 using System.Threading;
-using LostPolygon.MethodInlineInjector.Configuration;
+using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     internal class Program {
@@ -10,10 +10,10 @@ namespace LostPolygon.MethodInlineInjector {
 
             // TODO: args validation, stdin config input
             string serializedInjectorConfiguration = File.ReadAllText(args[0]);
-            InjectionConfiguration injectionConfiguration = 
+            InjectionConfiguration injectionConfiguration =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
-            
-            ResolvedInjectionConfiguration resolvedInjectionConfiguration = 
+
+            ResolvedInjectionConfiguration resolvedInjectionConfiguration =
                 ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(injectionConfiguration);
 
             MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);

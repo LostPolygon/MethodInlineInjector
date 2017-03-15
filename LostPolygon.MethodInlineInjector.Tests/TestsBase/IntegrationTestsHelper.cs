@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -101,18 +101,35 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             sb.AppendLine();
             sb.AppendLine();
 
-            string cSharpCode = NormalizeCode(DecompilationHelpers.GetMethodDecompiledCSharpCode(method));
+            string cSharpCode;
+            try {
+                cSharpCode = NormalizeCode(DecompilationHelpers.GetMethodDecompiledCSharpCode(method));
+            } catch (Exception e) {
+                cSharpCode = e.ToString();
+            }
             sb.Append(cSharpCode);
 
             return (ilCode, cSharpCode, sb.ToString());
         }
 
         public static InjectionConfiguration GetBasicInjectionConfiguration(params InjectionConfiguration.InjectedMethod[] injectedMethods) {
-            InjectionConfiguration configuration = new InjectionConfiguration();
-            configuration.InjecteeAssemblies.Add(new InjectionConfiguration.InjecteeAssembly(GetTestProperty<string>(nameof(IntegrationTestsBase.InjecteeLibraryName))));
-            configuration.InjectedMethods.AddRange(injectedMethods);
+            InjectionConfiguration configuration = new InjectionConfiguration(
+                new List<InjectionConfiguration.InjecteeAssembly> {
+                    new InjectionConfiguration.InjecteeAssembly(
+                        GetTestProperty<string>(nameof(IntegrationTestsBase.InjecteeLibraryName)),
+                        null,
+                        GetStandardAssemblyReferenceWhitelist().AsReadOnly()),
+                }.AsReadOnly(),
+                new ReadOnlyCollection<InjectionConfiguration.InjectedMethod>(injectedMethods)
+            );
 
             return configuration;
+        }
+
+        public static List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> GetStandardAssemblyReferenceWhitelist() {
+            return new List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> {
+                new InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilterInclude(@"TestData\Common\RuntimeAssembliesWhitelist.xml")
+            };
         }
 
         public static void ExecuteInjection(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
@@ -160,13 +177,15 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 _injecteeMethodNames = injecteeMethodNames;
             }
 
-            protected override List<MethodDefinition> FilterInjecteeMethods(List<MethodDefinition> injecteeMethods) {
-                List<MethodDefinition> overrideMethodDefinitions =
-                    injecteeMethods
+            protected override List<MethodDefinition> GetFilteredInjecteeMethods(AssemblyDefinitionData assemblyDefinitionData, List<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter> MemberReferenceBlacklistFilters) {
+                List<MethodDefinition> filteredInjecteeMethods =
+                    base.GetFilteredInjecteeMethods(assemblyDefinitionData, MemberReferenceBlacklistFilters);
+                filteredInjecteeMethods =
+                    filteredInjecteeMethods
                         .Where(method => _injecteeMethodNames.Contains(method.GetFullName()))
                         .ToList();
 
-                return base.FilterInjecteeMethods(overrideMethodDefinitions);
+                return filteredInjecteeMethods;
             }
         }
     }

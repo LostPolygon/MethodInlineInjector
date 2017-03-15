@@ -1,18 +1,16 @@
-﻿using System;
-using System.IO;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using TestInjectedLibrary;
 using TestInjecteeLibrary;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]
-    public abstract class InjectorTestsBase : IntegrationTestMainBase {
+    public abstract class InjectorIntegrationTestsBase : IntegrationTestMainBase {
         protected abstract InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition { get; }
         protected abstract InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour { get; }
 
         [Test]
         [ValidReferenceOutput]
-        public void SingleStatementToSingleStatement() {
+        public virtual void SingleStatementToSingleStatement() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SingleStatement)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}"
@@ -21,7 +19,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SingleStatementToComplex() {
+        public virtual void SingleStatementToComplex() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SingleStatement)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.Complex)}"
@@ -30,7 +28,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void TryCatchToComplex() {
+        public virtual void TryCatchToComplex() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.TryCatch)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.Complex)}"
@@ -39,7 +37,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void TryCatchToSingleStatement() {
+        public virtual void TryCatchToSingleStatement() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.TryCatch)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}"
@@ -48,7 +46,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SingleStatementToReturnValue() {
+        public virtual void SingleStatementToReturnValue() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SingleStatement)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.ReturnValue)}"
@@ -57,7 +55,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SingleStatementToCallResultReturnValue() {
+        public virtual void SingleStatementToCallResultReturnValue() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SingleStatement)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.CallResultReturnValue)}"
@@ -66,7 +64,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SimpleReturnToReturnValue() {
+        public virtual void SimpleReturnToReturnValue() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.ReturnValue)}"
@@ -75,7 +73,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void DeepReturnToReturnValue() {
+        public virtual void DeepReturnToReturnValue() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.DeepReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.ReturnValue)}"
@@ -84,7 +82,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SimpleReturnToWithParameters() {
+        public virtual void SimpleReturnToWithParameters() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithParameters)}"
@@ -93,7 +91,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void DeepReturnToWithParameters() {
+        public virtual void DeepReturnToWithParameters() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.DeepReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithParameters)}"
@@ -102,9 +100,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void ComplexToWithParameters() {
+        public virtual void ComplexToWithParameters() {
             ExecuteSimpleTest(
-                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.ComplexMethod)}"),
+                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.Complex)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithParameters)}"
             );
         }
@@ -113,7 +111,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SimpleReturnToWithRefParameter() {
+        public virtual void SimpleReturnToWithRefParameter() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithRefParameter)}"
@@ -122,7 +120,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void DeepReturnToWithRefParameter() {
+        public virtual void DeepReturnToWithRefParameter() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.DeepReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithRefParameter)}"
@@ -131,9 +129,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void ComplexToWithRefParameter() {
+        public virtual void ComplexToWithRefParameter() {
             ExecuteSimpleTest(
-                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.ComplexMethod)}"),
+                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.Complex)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithRefParameter)}"
             );
         }
@@ -142,7 +140,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void SimpleReturnToWithOutParameter() {
+        public virtual void SimpleReturnToWithOutParameter() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithOutParameter)}"
@@ -151,7 +149,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void DeepReturnToWithOutParameter() {
+        public virtual void DeepReturnToWithOutParameter() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.DeepReturn)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithOutParameter)}"
@@ -160,9 +158,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
-        public void ComplexToWithOutParameter() {
+        public virtual void ComplexToWithOutParameter() {
             ExecuteSimpleTest(
-                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.ComplexMethod)}"),
+                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.Complex)}"),
                 $"{InjecteeClassName}.{nameof(TestInjectee.WithOutParameter)}"
             );
         }

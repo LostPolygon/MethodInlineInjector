@@ -11,37 +11,42 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public abstract string InjectedLibraryPath { get; }
         public abstract string InjecteeLibraryPath { get; }
 
-        protected abstract string[] CommonFiles { get; }
-
         protected TestEnvironmentConfig TestEnvironmentConfig { get; set; }
 
-        protected static ResolvedInjectionConfiguration ExecuteSimpleTest(InjectionConfiguration.InjectedMethod injectedMethod, string injecteeMethodName) {
-            return ExecuteSimpleTest(new[] { injectedMethod }, new[] { injecteeMethodName });
+        protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
+            InjectionConfiguration.InjectedMethod injectedMethod,
+            string injecteeMethodName,
+            bool assertFirstMethodMatch = true) {
+            return ExecuteSimpleTest(new[] { injectedMethod }, new[] { injecteeMethodName }, assertFirstMethodMatch);
         }
 
         protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
             InjectionConfiguration.InjectedMethod[] injectedMethods,
-            string[] injecteeMethodNames) {
+            string[] injecteeMethodNames,
+            bool assertFirstMethodMatch = true) {
             InjectionConfiguration configuration = IntegrationTestsHelper.GetBasicInjectionConfiguration(injectedMethods);
-            ResolvedInjectionConfiguration resolvedConfiguration = IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
+            ResolvedInjectionConfiguration resolvedConfiguration = 
+                IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
 
-            ExecuteSimpleTest(resolvedConfiguration);
+            ExecuteSimpleTest(resolvedConfiguration, assertFirstMethodMatch);
 
             return resolvedConfiguration;
         }
 
-        protected static void ExecuteSimpleTest(ResolvedInjectionConfiguration resolvedConfiguration) {
+        protected static void ExecuteSimpleTest(ResolvedInjectionConfiguration resolvedConfiguration, bool assertFirstMethodMatch = true) {
             IntegrationTestsHelper.ExecuteInjection(resolvedConfiguration);
             IntegrationTestsHelper.WriteModifiedAssembliesIfRequested(resolvedConfiguration);
 
-            bool validReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ValidReferenceOutputAttribute).RemoveAttribute()) is bool tmp1 && tmp1;
-            bool forceRegenerateReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ForceRegenerateReferenceOutputAttribute).RemoveAttribute()) is bool tmp2 && tmp2;
-            if (validReferenceOutput && !forceRegenerateReferenceOutput) {
-                IntegrationTestsHelper.AssertFirstMethod(resolvedConfiguration);
-            } else {
-                IntegrationTestsHelper.WriteReferenceOutputFile(resolvedConfiguration);
-                Console.WriteLine(IntegrationTestsHelper.GetFormattedReferenceOutputFile());
-                Assert.Fail("Reference output not validated");
+            if (assertFirstMethodMatch) {
+                bool validReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ValidReferenceOutputAttribute).RemoveAttribute()) is bool tmp1 && tmp1;
+                bool forceRegenerateReferenceOutput = TestContext.CurrentContext.Test.Properties.Get(nameof(ForceRegenerateReferenceOutputAttribute).RemoveAttribute()) is bool tmp2 && tmp2;
+                if (validReferenceOutput && !forceRegenerateReferenceOutput) {
+                    IntegrationTestsHelper.AssertFirstMethod(resolvedConfiguration);
+                } else {
+                    IntegrationTestsHelper.WriteReferenceOutputFile(resolvedConfiguration);
+                    Console.WriteLine(IntegrationTestsHelper.GetFormattedReferenceOutputFile());
+                    Assert.Fail("Reference output not validated");
+                }
             }
         }
 
@@ -73,7 +78,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             Directory.SetCurrentDirectory(TestContext.CurrentContext.TestDirectory);
             TestEnvironmentConfig.SetTestEnvironmentConfigPath("TestEnvironmentConfig.ini");
             TestEnvironmentConfig = TestEnvironmentConfig.Instance;
-            ItemDeployment.DeployItems(CommonFiles);
         }
 
         [OneTimeTearDown]

@@ -2,7 +2,7 @@
 
 namespace LostPolygon.MethodInlineInjector.Tests {
     internal class ValidReferenceOutputAttribute : PropertyAttribute {
-        public ValidReferenceOutputAttribute() 
+        public ValidReferenceOutputAttribute()
             : base(true) {
         }
 

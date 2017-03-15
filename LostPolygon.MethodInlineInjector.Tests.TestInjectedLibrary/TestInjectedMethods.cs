@@ -8,7 +8,7 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: This is injected code!");
         }
 
-        public static void ComplexMethod() {
+        public static void Complex() {
             Console.WriteLine("Injected: Begin");
 
             Regex regex = new Regex("foo");

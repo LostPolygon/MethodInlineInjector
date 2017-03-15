@@ -22,7 +22,7 @@ namespace TestInjecteeLibrary {
             Console.WriteLine("Injectee: End");
         }
 
-        public void SingleStatement() {
+        public virtual void SingleStatement() {
             Console.WriteLine("Injectee: SingleStatement");
         }
 

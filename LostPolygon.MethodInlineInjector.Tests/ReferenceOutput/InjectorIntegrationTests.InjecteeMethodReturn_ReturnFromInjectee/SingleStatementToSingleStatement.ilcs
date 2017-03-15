@@ -1,17 +1,17 @@
-.method public hidebysig
+.method public hidebysig newslot virtual
     instance void SingleStatement () cil managed
 {
-    // Method begins at RVA 0x20f5
+    // Method begins at RVA 0x211d
     // Code size 13 (0xd)
     .maxstack 8
 
     IL_0000: nop
-    IL_0001: ldstr "Injected: This is injected code!"
+    IL_0001: ldstr "Injectee: SingleStatement"
     IL_0006: call void [mscorlib]System.Console::WriteLine(string)
     IL_000b: nop
     IL_000c: nop
     IL_000d: nop
-    IL_000e: ldstr "Injectee: SingleStatement"
+    IL_000e: ldstr "Injected: This is injected code!"
     IL_0013: call void [mscorlib]System.Console::WriteLine(string)
     IL_0018: nop
     IL_0019: ret
@@ -19,8 +19,8 @@
 
 // End of IL code
 
-public void SingleStatement()
+public virtual void SingleStatement()
 {
-    Console.WriteLine("Injected: This is injected code!");
     Console.WriteLine("Injectee: SingleStatement");
+    Console.WriteLine("Injected: This is injected code!");
 }

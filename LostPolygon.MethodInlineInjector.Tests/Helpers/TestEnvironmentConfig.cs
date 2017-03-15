@@ -1,8 +1,6 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using IniParser;
 using IniParser.Model;
-using IniParser.Parser;
 using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {

@@ -1,0 +1,72 @@
+.method public hidebysig
+    instance int32 ReturnValue () cil managed
+{
+    // Method begins at RVA 0x21d0
+    // Code size 8 (0x8)
+    .maxstack 1
+    .locals init (
+        [0] class [mscorlib]System.Random,
+        [1] bool,
+        [2] bool,
+        [3] int32
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injected: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_0011: stloc.0
+    IL_0012: ldloc.0
+    IL_0013: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0018: ldc.r8 0.5
+    IL_0021: cgt
+    IL_0023: stloc.1
+    IL_0024: ldloc.1
+    IL_0025: brfalse.s IL_0056
+    IL_0027: nop
+    IL_0028: ldstr "Injected: Bad luck :("
+    IL_002d: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0032: nop
+    IL_0033: ldloc.0
+    IL_0034: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0039: ldc.r8 0.5
+    IL_0042: cgt
+    IL_0044: stloc.2
+    IL_0045: ldloc.2
+    IL_0046: brfalse.s IL_0055
+    IL_0048: nop
+    IL_0049: ldstr "Injected: Super bad luck :("
+    IL_004e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0053: nop
+    IL_0054: ret
+    IL_0055: nop
+    IL_0056: ldstr "Injected: End"
+    IL_005b: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0060: nop
+    IL_0061: nop
+    IL_0062: nop
+    IL_0063: ldc.i4.s -3
+    IL_0065: stloc.3
+    IL_0066: br.s IL_0068
+    IL_0068: ldloc.3
+    IL_0069: ret
+} // end of method TestInjectee::ReturnValue
+
+// End of IL code
+
+ICSharpCode.Decompiler.DecompilerException: Error decompiling System.Int32 TestInjecteeLibrary.TestInjectee::ReturnValue()
+ ---> System.OverflowException: Array dimensions exceeded supported range.
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.StackSlot.ModifyStack(StackSlot[] stack, Int32 popCount, Int32 pushCount, ByteCode pushDefinition)
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.StackAnalysis(MethodDefinition methodDef)
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.Build(MethodDefinition methodDef, Boolean optimize, DecompilerContext context)
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(IEnumerable`1 parameters)
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(MethodDefinition methodDef, DecompilerContext context, IEnumerable`1 parameters)
+   --- End of inner exception stack trace ---
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(MethodDefinition methodDef, DecompilerContext context, IEnumerable`1 parameters)
+   at ICSharpCode.Decompiler.Ast.AstBuilder.CreateMethod(MethodDefinition methodDef)
+   at ICSharpCode.Decompiler.Ast.AstBuilder.AddMethod(MethodDefinition method)
+   at ICSharpCode.ILSpy.CSharpLanguage.DecompileMethod(MethodDefinition method, ITextOutput output, DecompilerSettings options) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\CSharpLanguage.cs:line 78
+   at LostPolygon.MethodInlineInjector.Tests.DecompilationHelpers.GetMethodDecompiledCSharpCode(PlainTextOutput textOutput, MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\DecompilationHelpers.cs:line 26
+   at LostPolygon.MethodInlineInjector.Tests.DecompilationHelpers.GetMethodDecompiledCSharpCode(MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\DecompilationHelpers.cs:line 14
+   at LostPolygon.MethodInlineInjector.Tests.IntegrationTestsHelper.CreateCombinedDecompiledILAndCSharpCode(MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\TestsBase\IntegrationTestsHelper.cs:line 107

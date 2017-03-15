@@ -1,53 +1,72 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Collections.ObjectModel;
 using System.Xml.Serialization;
+using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Configuration")]
     public class InjectionConfiguration : SimpleXmlSerializable {
-        public List<InjectedMethod> InjectedMethods { get; } = new List<InjectedMethod>();
-        public List<InjecteeAssembly> InjecteeAssemblies { get; } = new List<InjecteeAssembly>();
+        public ReadOnlyCollection<InjecteeAssembly> InjecteeAssemblies { get; private set; } =
+            ReadOnlyCollectionUtility<InjecteeAssembly>.Empty;
+        public ReadOnlyCollection<InjectedMethod> InjectedMethods { get; private set; } =
+            ReadOnlyCollectionUtility<InjectedMethod>.Empty;
+
+        public InjectionConfiguration() {
+        }
+
+        public InjectionConfiguration(ReadOnlyCollection<InjecteeAssembly> injecteeAssemblies, ReadOnlyCollection<InjectedMethod> injectedMethods) {
+            InjecteeAssemblies = injecteeAssemblies ?? InjecteeAssemblies;
+            InjectedMethods = injectedMethods ?? InjectedMethods;
+        }
 
         #region Serialization
 
         public override void Serialize() {
             base.Serialize();
 
-            // Skip root element when reading
+            SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
             SerializationHelper.ProcessAdvanceOnRead();
-
-            SerializationHelper.ProcessWhileNotElementEnd(() => {
-                if (SerializationHelper.ProcessStartElement(nameof(InjectedMethods))) {
-                    SerializationHelper.ProcessAdvanceOnRead();
-                    {
-                        this.ProcessCollection(InjectedMethods);
+            {
+                SerializationHelper.ProcessWhileNotElementEnd(() => {
+                    if (SerializationHelper.ProcessStartElement(nameof(InjecteeAssemblies))) {
+                        SerializationHelper.ProcessAdvanceOnRead();
+                        {
+                            this.ProcessCollectionAsReadonly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
+                        }
+                        SerializationHelper.ProcessEndElement();
                     }
-                    SerializationHelper.ProcessEndElement();
-                }
 
-                if (SerializationHelper.ProcessStartElement(nameof(InjecteeAssemblies))) {
-                    SerializationHelper.ProcessAdvanceOnRead();
-                    {
-                        this.ProcessCollection(InjecteeAssemblies);
+                    if (SerializationHelper.ProcessStartElement(nameof(InjectedMethods))) {
+                        SerializationHelper.ProcessAdvanceOnRead();
+                        {
+                            this.ProcessCollectionAsReadonly(v => InjectedMethods = v, () => InjectedMethods);
+                        }
+                        SerializationHelper.ProcessEndElement();
                     }
-                    SerializationHelper.ProcessEndElement();
-                }
-            });
+                });
+            }
+            SerializationHelper.ProcessEndElement();
         }
 
         #endregion
 
         public class InjecteeAssembly : SimpleXmlSerializable {
             public string AssemblyPath { get; private set; }
-            public List<IMemberReferenceWhitelistItem> MemberReferenceWhitelist { get; } = new List<IMemberReferenceWhitelistItem>();
-            public List<IAssemblyWhitelistItem> AssemblyWhitelist { get; } = new List<IAssemblyWhitelistItem>();
+            public ReadOnlyCollection<IMemberReferenceBlacklistItem> MemberReferenceBlacklist { get; private set; } =
+                ReadOnlyCollectionUtility<IMemberReferenceBlacklistItem>.Empty;
+            public ReadOnlyCollection<IAssemblyReferenceWhitelistItem> AssemblyReferenceWhitelist { get; private set; } =
+                ReadOnlyCollectionUtility<IAssemblyReferenceWhitelistItem>.Empty;
 
             public InjecteeAssembly() {
             }
 
-            public InjecteeAssembly(string assemblyPath) {
+            public InjecteeAssembly(
+                string assemblyPath,
+                ReadOnlyCollection<IMemberReferenceBlacklistItem> memberReferenceBlacklist,
+                ReadOnlyCollection<IAssemblyReferenceWhitelistItem> assemblyReference) {
                 AssemblyPath = assemblyPath;
+                MemberReferenceBlacklist = memberReferenceBlacklist ?? MemberReferenceBlacklist;
+                AssemblyReferenceWhitelist = assemblyReference ?? AssemblyReferenceWhitelist;
             }
 
             #region Serialization
@@ -60,68 +79,74 @@ namespace LostPolygon.MethodInlineInjector {
                     SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                     SerializationHelper.ProcessAdvanceOnRead();
 
-                    SerializationHelper.ProcessStartElement(nameof(MemberReferenceWhitelist));
+                    SerializationHelper.ProcessStartElement(nameof(MemberReferenceBlacklist));
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        this.ProcessCollection(MemberReferenceWhitelist, () => {
-                            switch (SerializationHelper.XmlSerializationReader.Name) {
-                                case "Filter":
-                                    return new MemberReferenceWhitelistFilter();
-                                case "Include":
-                                    return new MemberReferenceWhitelistFilterInclude();
-                                default:
-                                    throw new InvalidEnumArgumentException();
-                            }
-                        });
+                        this.ProcessCollectionAsReadonly(
+                            v => MemberReferenceBlacklist = v,
+                            () => MemberReferenceBlacklist,
+                            () =>
+                                SimpleXmlSerializationHelper.CreateByXmlRootName<IMemberReferenceBlacklistItem>(
+                                    SerializationHelper.XmlSerializationReader.Name,
+                                    typeof(MemberReferenceBlacklistFilter),
+                                    typeof(MemberReferenceBlacklistFilterInclude)
+                        ));
                     }
                     SerializationHelper.ProcessEndElement();
 
-                    SerializationHelper.ProcessStartElement(nameof(AssemblyWhitelist));
+                    SerializationHelper.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
                     SerializationHelper.ProcessAdvanceOnRead();
                     {
-                        this.ProcessCollection(AssemblyWhitelist, () => {
-                            switch (SerializationHelper.XmlSerializationReader.Name) {
-                                case "Assembly":
-                                    return new AssemblyWhitelistFilter();
-                                case "Include":
-                                    return new AssemblyWhitelistFilterInclude();
-                                default:
-                                    throw new InvalidEnumArgumentException();
-                            }
-                        });
+                        this.ProcessCollectionAsReadonly(
+                            v => AssemblyReferenceWhitelist = v,
+                            () => AssemblyReferenceWhitelist,
+                            () =>
+                                SimpleXmlSerializationHelper.CreateByXmlRootName<IAssemblyReferenceWhitelistItem>(
+                                    SerializationHelper.XmlSerializationReader.Name,
+                                    typeof(AssemblyReferenceWhitelistFilter),
+                                    typeof(AssemblyReferenceWhitelistFilterInclude)
+                        ));
                     }
                     SerializationHelper.ProcessEndElement();
                 }
                 SerializationHelper.ProcessEndElement();
             }
 
+
             #endregion
 
-            #region MemberReferenceWhitelist
+            #region MemberReferenceBlacklist
 
-            public interface IMemberReferenceWhitelistItem : ISimpleXmlSerializable {
+            public interface IMemberReferenceBlacklistItem : ISimpleXmlSerializable {
             }
 
-            public class MemberReferenceWhitelistFilterInclude : FileInclude, IMemberReferenceWhitelistItem {
-            }
-
-            public class MemberReferenceWhitelistFilter : SimpleXmlSerializable, IMemberReferenceWhitelistItem {
-                private const FilterTypeFlags kDefaultFilterTypeFlags =
-                    FilterTypeFlags.SkipTypes |
-                    FilterTypeFlags.SkipMethods |
-                    FilterTypeFlags.SkipProperties;
-
-                public FilterTypeFlags FilterType { get; private set; } = kDefaultFilterTypeFlags;
-                public string Filter { get; private set; }
-                public bool IsRegex { get; private set; }
-
-                public MemberReferenceWhitelistFilter() {
+            [XmlRoot("Include")]
+            public class MemberReferenceBlacklistFilterInclude : FileInclude, IMemberReferenceBlacklistItem {
+                public MemberReferenceBlacklistFilterInclude() {
                 }
 
-                public MemberReferenceWhitelistFilter(FilterTypeFlags filterType, string filter, bool isRegex) {
-                    FilterType = filterType;
+                public MemberReferenceBlacklistFilterInclude(string path) : base(path) {
+                }
+            }
+
+            [XmlRoot("Filter")]
+            public class MemberReferenceBlacklistFilter : SimpleXmlSerializable, IMemberReferenceBlacklistItem {
+                private const FilterFlags kDefaultFilterOptions =
+                    FilterFlags.SkipTypes |
+                    FilterFlags.SkipMethods |
+                    FilterFlags.SkipProperties;
+
+                public string Filter { get; private set; }
+                public FilterFlags FilterOptions { get; private set; } = kDefaultFilterOptions;
+                public bool IsRegex => (FilterOptions & FilterFlags.IsRegex) != 0;
+                public bool MatchAncestors => (FilterOptions & FilterFlags.MatchAncestors) != 0;
+
+                public MemberReferenceBlacklistFilter() {
+                }
+
+                public MemberReferenceBlacklistFilter(string filter, FilterFlags filterOptions) {
                     Filter = filter;
-                    IsRegex = isRegex;
+                    FilterOptions = filterOptions;
                 }
 
                 #region Serialization
@@ -129,11 +154,10 @@ namespace LostPolygon.MethodInlineInjector {
                 public override void Serialize() {
                     base.Serialize();
 
-                    SerializationHelper.ProcessStartElement("Filter");
+                    SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
                     {
                         SerializationHelper.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                        SerializationHelper.ProcessAttributeString(nameof(IsRegex), s => IsRegex = Convert.ToBoolean(s), () => Convert.ToString(IsRegex));
-                        SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterTypeFlags, l => FilterType = l, () => FilterType);
+                        SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterOptions = s, () => FilterOptions);
                     }
                     SerializationHelper.ProcessAdvanceOnRead();
                     SerializationHelper.ProcessEndElement();
@@ -142,37 +166,46 @@ namespace LostPolygon.MethodInlineInjector {
                 #endregion
 
                 public override string ToString() {
-                    return $"{nameof(Filter)}: '{Filter}', {nameof(IsRegex)}: {IsRegex}, {nameof(FilterType)}: {FilterType}";
+                    return $"{nameof(Filter)}: '{Filter}', {nameof(FilterOptions)}: {FilterOptions}";
                 }
 
                 [Flags]
-                public enum FilterTypeFlags {
+                public enum FilterFlags {
                     SkipTypes = 1 << 0,
                     SkipMethods = 1 << 1,
-                    SkipProperties = 1 << 2
+                    SkipProperties = 1 << 2,
+                    IsRegex = 1 << 5,
+                    MatchAncestors = 1 << 6,
                 }
             }
 
             #endregion
 
-            #region AssemblyWhitelist
+            #region AssemblyReferenceWhitelist
 
-            public interface IAssemblyWhitelistItem : ISimpleXmlSerializable {
+            public interface IAssemblyReferenceWhitelistItem : ISimpleXmlSerializable {
             }
 
-            public class AssemblyWhitelistFilterInclude : FileInclude, IAssemblyWhitelistItem {
-            }
-
-            public class AssemblyWhitelistFilter : SimpleXmlSerializable, IAssemblyWhitelistItem {
-                public string Name { get; private set; }
-                public bool IsStrictCheck { get; private set; }
-
-                public AssemblyWhitelistFilter() {
+            [XmlRoot("Include")]
+            public class AssemblyReferenceWhitelistFilterInclude : FileInclude, IAssemblyReferenceWhitelistItem {
+                public AssemblyReferenceWhitelistFilterInclude() {
                 }
 
-                public AssemblyWhitelistFilter(string name, bool isStrictCheck) {
+                public AssemblyReferenceWhitelistFilterInclude(string path) : base(path) {
+                }
+            }
+
+            [XmlRoot("Assembly")]
+            public class AssemblyReferenceWhitelistFilter : SimpleXmlSerializable, IAssemblyReferenceWhitelistItem {
+                public string Name { get; private set; }
+                public bool IsStrictNameCheck { get; private set; }
+
+                public AssemblyReferenceWhitelistFilter() {
+                }
+
+                public AssemblyReferenceWhitelistFilter(string name, bool isStrictNameCheck) {
                     Name = name;
-                    IsStrictCheck = isStrictCheck;
+                    IsStrictNameCheck = isStrictNameCheck;
                 }
 
                 #region Serialization
@@ -180,10 +213,10 @@ namespace LostPolygon.MethodInlineInjector {
                 public override void Serialize() {
                     base.Serialize();
 
-                    SerializationHelper.ProcessStartElement("Assembly");
+                    SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
                     {
                         SerializationHelper.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
-                        SerializationHelper.ProcessAttributeString(nameof(IsStrictCheck), s => IsStrictCheck= Convert.ToBoolean(s), () => Convert.ToString(IsStrictCheck));
+                        SerializationHelper.ProcessAttributeString(nameof(IsStrictNameCheck), s => IsStrictNameCheck = Convert.ToBoolean(s), () => Convert.ToString(IsStrictNameCheck));
                     }
                     SerializationHelper.ProcessAdvanceOnRead();
                     SerializationHelper.ProcessEndElement();
@@ -192,7 +225,7 @@ namespace LostPolygon.MethodInlineInjector {
                 #endregion
 
                 public override string ToString() {
-                    return $"{nameof(Name)}: '{Name}', {nameof(IsStrictCheck)}: {IsStrictCheck}";
+                    return $"{nameof(Name)}: '{Name}', {nameof(IsStrictNameCheck)}: {IsStrictNameCheck}";
                 }
             }
 
@@ -209,7 +242,7 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             public InjectedMethod(
-                string assemblyPath, 
+                string assemblyPath,
                 string methodFullName,
                 MethodInjectionPosition injectionPosition = MethodInjectionPosition.InjecteeMethodStart,
                 MethodReturnBehaviour returnBehaviour = MethodReturnBehaviour.ReturnFromSelf
@@ -225,7 +258,7 @@ namespace LostPolygon.MethodInlineInjector {
             public override void Serialize() {
                 base.Serialize();
 
-                SerializationHelper.ProcessStartElement("InjectedMethod");
+                SerializationHelper.ProcessStartElement(nameof(InjectedMethod));
                 {
                     SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                     SerializationHelper.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
@@ -271,7 +304,7 @@ namespace LostPolygon.MethodInlineInjector {
             public override void Serialize() {
                 base.Serialize();
 
-                SerializationHelper.ProcessStartElement("Include");
+                SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
                 {
                     SerializationHelper.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
                 }

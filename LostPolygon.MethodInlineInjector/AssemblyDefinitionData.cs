@@ -13,7 +13,7 @@ namespace LostPolygon.MethodInlineInjector {
             AssemblyDefinition = assemblyDefinition;
 
             AllTypes = assemblyDefinition.MainModule.GetAllTypes().ToList().AsReadOnly();
-            AllMethods = AllTypes.SelectMany(typeDefinition => typeDefinition.Methods).ToList().AsReadOnly();
+            AllMethods = AllTypes.SelectMany(type => type.Methods).ToList().AsReadOnly();
         }
     }
 }

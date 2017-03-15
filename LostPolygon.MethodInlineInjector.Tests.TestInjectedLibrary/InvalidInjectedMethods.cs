@@ -20,6 +20,10 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: _intField = " + _intField);
         }
 
+        public static void FieldDependentValid() {
+            Console.WriteLine("Injected: String.Empty = " + String.Empty);
+        }
+
         public static void TypeDependent() {
             SomeOtherClass.AddInts(3, 8);
         }

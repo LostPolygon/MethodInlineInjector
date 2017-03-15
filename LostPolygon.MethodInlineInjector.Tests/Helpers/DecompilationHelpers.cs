@@ -7,7 +7,7 @@ using ICSharpCode.ILSpy;
 using Mono.Cecil;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
-    public class DecompilationHelpers {
+    public static class DecompilationHelpers {
         public static string GetMethodDecompiledCSharpCode(MethodDefinition method) {
             StringBuilder sb = new StringBuilder();
             PlainTextOutput textOutput = new PlainTextOutput(new StringWriter(sb));

@@ -2,14 +2,14 @@ using System;
 using System.Xml;
 using System.Xml.Schema;
 
-namespace LostPolygon.MethodInlineInjector {
+namespace LostPolygon.MethodInlineInjector.Serialization {
     public abstract class SimpleXmlSerializable : ISimpleXmlSerializable {
-        private readonly XmlSerializationHelper _serializationHelper;
+        private readonly SimpleXmlSerializationHelper _serializationHelper;
 
-        internal XmlSerializationHelper SerializationHelper => _serializationHelper;
+        protected internal SimpleXmlSerializationHelper SerializationHelper => _serializationHelper;
 
         public SimpleXmlSerializable() {
-            _serializationHelper = new XmlSerializationHelper(Serialize);
+            _serializationHelper = new SimpleXmlSerializationHelper(Serialize);
         }
 
         public XmlSchema GetSchema() {

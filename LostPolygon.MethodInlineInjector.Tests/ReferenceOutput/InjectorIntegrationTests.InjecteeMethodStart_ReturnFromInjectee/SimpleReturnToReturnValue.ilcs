@@ -1,0 +1,53 @@
+.method public hidebysig
+    instance int32 ReturnValue () cil managed
+{
+    // Method begins at RVA 0x21d0
+    // Code size 8 (0x8)
+    .maxstack 1
+    .locals init (
+        [0] bool,
+        [1] int32
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injected: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: call bool [mscorlib]System.Environment::get_UserInteractive()
+    IL_0011: stloc.0
+    IL_0012: ldloc.0
+    IL_0013: brfalse.s IL_0022
+    IL_0015: nop
+    IL_0016: ldstr "Injected: Environment.UserInteractive is true, returning"
+    IL_001b: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0020: nop
+    IL_0021: ret
+    IL_0022: ldstr "Injected: End"
+    IL_0027: call void [mscorlib]System.Console::WriteLine(string)
+    IL_002c: nop
+    IL_002d: nop
+    IL_002e: nop
+    IL_002f: ldc.i4.s -3
+    IL_0031: stloc.1
+    IL_0032: br.s IL_0034
+    IL_0034: ldloc.1
+    IL_0035: ret
+} // end of method TestInjectee::ReturnValue
+
+// End of IL code
+
+ICSharpCode.Decompiler.DecompilerException: Error decompiling System.Int32 TestInjecteeLibrary.TestInjectee::ReturnValue()
+ ---> System.OverflowException: Array dimensions exceeded supported range.
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.StackSlot.ModifyStack(StackSlot[] stack, Int32 popCount, Int32 pushCount, ByteCode pushDefinition)
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.StackAnalysis(MethodDefinition methodDef)
+   at ICSharpCode.Decompiler.ILAst.ILAstBuilder.Build(MethodDefinition methodDef, Boolean optimize, DecompilerContext context)
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(IEnumerable`1 parameters)
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(MethodDefinition methodDef, DecompilerContext context, IEnumerable`1 parameters)
+   --- End of inner exception stack trace ---
+   at ICSharpCode.Decompiler.Ast.AstMethodBodyBuilder.CreateMethodBody(MethodDefinition methodDef, DecompilerContext context, IEnumerable`1 parameters)
+   at ICSharpCode.Decompiler.Ast.AstBuilder.CreateMethod(MethodDefinition methodDef)
+   at ICSharpCode.Decompiler.Ast.AstBuilder.AddMethod(MethodDefinition method)
+   at ICSharpCode.ILSpy.CSharpLanguage.DecompileMethod(MethodDefinition method, ITextOutput output, DecompilerSettings options) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\CSharpLanguage.cs:line 78
+   at LostPolygon.MethodInlineInjector.Tests.DecompilationHelpers.GetMethodDecompiledCSharpCode(PlainTextOutput textOutput, MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\DecompilationHelpers.cs:line 26
+   at LostPolygon.MethodInlineInjector.Tests.DecompilationHelpers.GetMethodDecompiledCSharpCode(MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\Helpers\DecompilationHelpers.cs:line 14
+   at LostPolygon.MethodInlineInjector.Tests.IntegrationTestsHelper.CreateCombinedDecompiledILAndCSharpCode(MethodDefinition method) in G:\PROGRAMMING\Repos\BitBucket\LostPolygon.MethodInlineInjector\LostPolygon.MethodInlineInjector.Tests\TestsBase\IntegrationTestsHelper.cs:line 107

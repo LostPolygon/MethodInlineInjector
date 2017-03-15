@@ -1,0 +1,90 @@
+.method public hidebysig
+    instance void WithParameters (
+        int32 a,
+        float32 b
+    ) cil managed
+{
+    // Method begins at RVA 0x212b
+    // Code size 49 (0x31)
+    .maxstack 8
+    .locals (
+        [0] class [mscorlib]System.Random,
+        [1] bool,
+        [2] bool
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injected: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_0011: stloc.0
+    IL_0012: ldloc.0
+    IL_0013: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0018: ldc.r8 0.5
+    IL_0021: cgt
+    IL_0023: stloc.1
+    IL_0024: ldloc.1
+    IL_0025: brfalse.s IL_0056
+    IL_0027: nop
+    IL_0028: ldstr "Injected: Bad luck :("
+    IL_002d: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0032: nop
+    IL_0033: ldloc.0
+    IL_0034: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0039: ldc.r8 0.5
+    IL_0042: cgt
+    IL_0044: stloc.2
+    IL_0045: ldloc.2
+    IL_0046: brfalse.s IL_0055
+    IL_0048: nop
+    IL_0049: ldstr "Injected: Super bad luck :("
+    IL_004e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0053: nop
+    IL_0054: ret
+    IL_0055: nop
+    IL_0056: ldstr "Injected: End"
+    IL_005b: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0060: nop
+    IL_0061: nop
+    IL_0062: nop
+    IL_0063: ldstr "Injectee: Begin"
+    IL_0068: call void [mscorlib]System.Console::WriteLine(string)
+    IL_006d: nop
+    IL_006e: ldstr "Injectee: a + b = "
+    IL_0073: ldarg.1
+    IL_0074: conv.r4
+    IL_0075: ldarg.2
+    IL_0076: add
+    IL_0077: box [mscorlib]System.Single
+    IL_007c: call string [mscorlib]System.String::Concat(object, object)
+    IL_0081: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0086: nop
+    IL_0087: ldstr "Injectee: End"
+    IL_008c: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0091: nop
+    IL_0092: ret
+} // end of method TestInjectee::WithParameters
+
+// End of IL code
+
+public void WithParameters(int a, float b)
+{
+    Console.WriteLine("Injected: Begin");
+    Random random = new Random();
+    bool flag = random.NextDouble() > 0.5;
+    if (flag)
+    {
+        Console.WriteLine("Injected: Bad luck :(");
+        bool flag2 = random.NextDouble() > 0.5;
+        if (flag2)
+        {
+            Console.WriteLine("Injected: Super bad luck :(");
+            return;
+        }
+    }
+    Console.WriteLine("Injected: End");
+    Console.WriteLine("Injectee: Begin");
+    Console.WriteLine("Injectee: a + b = " + ((float)a + b));
+    Console.WriteLine("Injectee: End");
+}

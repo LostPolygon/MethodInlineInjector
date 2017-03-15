@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Mono.Cecil;
 
@@ -7,7 +6,9 @@ namespace LostPolygon.MethodInlineInjector {
         public ReadOnlyCollection<InjectedAssemblyMethods> InjectedMethods { get; }
         public ReadOnlyCollection<InjecteeAssembly> InjecteeAssemblies { get; }
 
-        public ResolvedInjectionConfiguration(ReadOnlyCollection<InjectedAssemblyMethods> injectedMethods, ReadOnlyCollection<InjecteeAssembly> injecteeAssemblies) {
+        public ResolvedInjectionConfiguration(
+            ReadOnlyCollection<InjectedAssemblyMethods> injectedMethods,
+            ReadOnlyCollection<InjecteeAssembly> injecteeAssemblies) {
             InjectedMethods = injectedMethods;
             InjecteeAssemblies = injecteeAssemblies;
         }
@@ -34,15 +35,19 @@ namespace LostPolygon.MethodInlineInjector {
 
         public class InjecteeAssembly {
             public InjectionConfiguration.InjecteeAssembly SourceInjecteeAssembly { get; }
-
             public AssemblyDefinitionData AssemblyDefinitionData { get; }
+            public ReadOnlyCollection<MethodDefinition> InjecteeMethodsDefinitions { get; }
+            public ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> AssemblyReferenceWhiteList { get; }
 
-            public List<MethodDefinition> InjecteeMethodsDefinitions { get; }
-
-            public InjecteeAssembly(InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly, AssemblyDefinitionData assemblyDefinitionData, List<MethodDefinition> injecteeMethodsDefinitions) {
+            public InjecteeAssembly(
+                InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly,
+                AssemblyDefinitionData assemblyDefinitionData,
+                ReadOnlyCollection<MethodDefinition> injecteeMethodsDefinitions,
+                ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> assemblyReferenceWhiteList) {
                 SourceInjecteeAssembly = sourceInjecteeAssembly;
                 AssemblyDefinitionData = assemblyDefinitionData;
                 InjecteeMethodsDefinitions = injecteeMethodsDefinitions;
+                AssemblyReferenceWhiteList = assemblyReferenceWhiteList;
             }
         }
     }
