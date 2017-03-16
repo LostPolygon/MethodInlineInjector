@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using devtm.Cecil.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -7,6 +9,7 @@ namespace LostPolygon.MethodInlineInjector {
     public class MethodDefinitionCloner {
         private readonly Dictionary<VariableDefinition, VariableDefinition> _variableMap = new Dictionary<VariableDefinition, VariableDefinition>();
         private readonly int[] _instructionOperandMap;
+        private readonly int[][] _instructionArrayOperandMap;
 
         public MethodDefinition SourceMethod { get; }
         public MethodDefinition TargetMethod { get; }
@@ -21,6 +24,8 @@ namespace LostPolygon.MethodInlineInjector {
             for (int i = 0; i < _instructionOperandMap.Length; i++) {
                 _instructionOperandMap[i] = -2;
             }
+
+            _instructionArrayOperandMap = new int[SourceMethod.Body.Instructions.Count][];
         }
 
         public void Clone() {
@@ -46,6 +51,16 @@ namespace LostPolygon.MethodInlineInjector {
                     continue;
 
                 TargetMethod.Body.Instructions[i].Operand = TargetMethod.Body.Instructions[_instructionOperandMap[i]];
+            }
+
+            for (int i = 0; i < _instructionArrayOperandMap.Length; i++) {
+                if (_instructionArrayOperandMap[i] == null)
+                    continue;
+
+                TargetMethod.Body.Instructions[i].Operand =
+                    _instructionArrayOperandMap[i]
+                    .Select(instructionIndex => TargetMethod.Body.Instructions[instructionIndex])
+                    .ToArray();
             }
 
             // Clone exception handlers
@@ -106,6 +121,8 @@ namespace LostPolygon.MethodInlineInjector {
                 cloneInstruction = CloneVariableDefinitionOperandInstruction(instruction, variableDefinitionOperand);
             } else if (operand is Instruction instructionOperand) {
                 cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand, instructionIndex);
+            } else if (operand is Instruction[] instructionArrayOperand) {
+                cloneInstruction = CloneInstructionOperandInstructionArray(instruction, instructionArrayOperand, instructionIndex);
             } else {
                 throw new MethodInlineInjectorException($"Unknown operand type {operand.GetType()}");
             }
@@ -173,6 +190,15 @@ namespace LostPolygon.MethodInlineInjector {
         protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand, int instructionIndex) {
             _instructionOperandMap[instructionIndex] = SourceMethod.Body.Instructions.IndexOf(operand);
             return Instruction.Create(sourceInstruction.OpCode, Instruction.Create(OpCodes.Nop));
+        }
+
+        private Instruction CloneInstructionOperandInstructionArray(Instruction sourceInstruction, Instruction[] operand, int instructionIndex) {
+            _instructionArrayOperandMap[instructionIndex] =
+                operand
+                .Select(operandInstruction => SourceMethod.Body.Instructions.IndexOf(operandInstruction))
+                .ToArray();
+
+            return Instruction.Create(sourceInstruction.OpCode, Array.Empty<Instruction>());
         }
 
         private Instruction GetMatchingInstructionByIndex(Instruction sourceInstruction) {

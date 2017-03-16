@@ -17,7 +17,7 @@ namespace LostPolygon.MethodInlineInjector {
 
         public void Inject() {
             foreach (ResolvedInjecteeAssembly injecteeAssembly in _resolvedInjectionConfiguration.InjecteeAssemblies) {
-                var assemblyMethodsGroupings = 
+                var assemblyMethodsGroupings =
                     _resolvedInjectionConfiguration
                     .InjectedMethods
                     .GroupBy(method => method.MethodDefinition.Module.Assembly);
@@ -29,7 +29,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private static void InjectToAssembly(
-            ResolvedInjecteeAssembly resolvedInjecteeAssembly, 
+            ResolvedInjecteeAssembly resolvedInjecteeAssembly,
             IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
             AssemblyDefinition injectedMethodsAssembly) {
             Collection<AssemblyNameReference> injecteeAssemblyNameReferences =

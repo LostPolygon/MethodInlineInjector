@@ -64,5 +64,17 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: End");
         }
 
+        public static void Switch() {
+            Console.WriteLine("Injected: Start");
+
+            switch (new Random().Next(0, 5)) {
+                case 0: Console.WriteLine("Injected: 0"); break;
+                case 1: Console.WriteLine("Injected: 1"); break;
+                case 2: Console.WriteLine("Injected: 2"); break;
+                case 3: Console.WriteLine("Injected: 3"); break;
+            }
+
+            Console.WriteLine("Injected: End");
+        }
     }
 }

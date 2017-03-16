@@ -1,0 +1,72 @@
+.method public hidebysig newslot virtual
+    instance void SingleStatement () cil managed
+{
+    // Method begins at RVA 0x211d
+    // Code size 13 (0xd)
+    .maxstack 8
+    .locals (
+        [0] int32
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injectee: SingleStatement"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: nop
+    IL_000d: nop
+    IL_000e: ldstr "Injected: Start"
+    IL_0013: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0018: nop
+    IL_0019: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_001e: ldc.i4.0
+    IL_001f: ldc.i4.5
+    IL_0020: callvirt instance int32 [mscorlib]System.Random::Next(int32, int32)
+    IL_0025: stloc.0
+    IL_0026: ldloc.0
+    IL_0027: switch (IL_003e, IL_004b, IL_0058, IL_0065)
+    IL_003c: br.s IL_0072
+    IL_003e: ldstr "Injected: 0"
+    IL_0043: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0048: nop
+    IL_0049: br.s IL_0072
+    IL_004b: ldstr "Injected: 1"
+    IL_0050: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0055: nop
+    IL_0056: br.s IL_0072
+    IL_0058: ldstr "Injected: 2"
+    IL_005d: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0062: nop
+    IL_0063: br.s IL_0072
+    IL_0065: ldstr "Injected: 3"
+    IL_006a: call void [mscorlib]System.Console::WriteLine(string)
+    IL_006f: nop
+    IL_0070: br.s IL_0072
+    IL_0072: ldstr "Injected: End"
+    IL_0077: call void [mscorlib]System.Console::WriteLine(string)
+    IL_007c: nop
+    IL_007d: ret
+} // end of method TestInjectee::SingleStatement
+
+// End of IL code
+
+public virtual void SingleStatement()
+{
+    Console.WriteLine("Injectee: SingleStatement");
+    Console.WriteLine("Injected: Start");
+    switch (new Random().Next(0, 5))
+    {
+    case 0:
+        Console.WriteLine("Injected: 0");
+        break;
+    case 1:
+        Console.WriteLine("Injected: 1");
+        break;
+    case 2:
+        Console.WriteLine("Injected: 2");
+        break;
+    case 3:
+        Console.WriteLine("Injected: 3");
+        break;
+    }
+    Console.WriteLine("Injected: End");
+}

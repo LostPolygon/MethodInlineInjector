@@ -165,6 +165,15 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             );
         }
 
+        [Test]
+        [ValidReferenceOutput]
+        public virtual void SwitchToSingleStatement() {
+            ExecuteSimpleTest(
+                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.Switch)}"),
+                $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
         protected InjectedMethod CreateInjectedMethod(string injectedMethodName) {
             return
                 new InjectedMethod(
