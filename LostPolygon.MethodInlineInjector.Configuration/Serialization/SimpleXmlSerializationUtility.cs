@@ -32,7 +32,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     xmlReader.Read();
                 }
 
-                result = Activator.CreateInstance<T>();
+                result = (T) Activator.CreateInstance(typeof(T), true);
                 result.ReadXml(xmlReader);
             }
 

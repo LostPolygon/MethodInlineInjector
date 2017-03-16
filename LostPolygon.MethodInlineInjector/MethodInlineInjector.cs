@@ -107,8 +107,8 @@ namespace LostPolygon.MethodInlineInjector {
         private static void InjectMethod(
             MethodDefinition injectedMethod,
             MethodDefinition injecteeMethod,
-            InjectionConfiguration.InjectedMethod.MethodInjectionPosition injectionPosition,
-            InjectionConfiguration.InjectedMethod.MethodReturnBehaviour returnBehaviour
+            MethodInjectionPosition injectionPosition,
+            MethodReturnBehaviour returnBehaviour
             ) {
             // TODO: implement ReturnFromInjectee
             //if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
@@ -122,7 +122,7 @@ namespace LostPolygon.MethodInlineInjector {
             injecteeMethod.Body.InitLocals |= injectedMethod.Body.InitLocals;
 
             ILProcessor injecteeIlProcessor = injecteeMethod.Body.GetILProcessor();
-            if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart) {
+            if (injectionPosition == MethodInjectionPosition.InjecteeMethodStart) {
                 // Inject variables to the beginning of the variable list
                 injecteeMethod.Body.Variables.InsertRangeToStart(injectedMethod.Body.Variables);
 
@@ -130,7 +130,7 @@ namespace LostPolygon.MethodInlineInjector {
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
                 Instruction injectedLastInstruction = injectedMethod.Body.Instructions.Last();
 
-                if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee) {
+                if (returnBehaviour == MethodReturnBehaviour.ReturnFromInjectee) {
                     for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
                         Instruction instruction = injectedMethod.Body.Instructions[i];
                         if (instruction.Operand == injectedLastInstruction) {
@@ -152,7 +152,7 @@ namespace LostPolygon.MethodInlineInjector {
                 // Replace Ret from the end of the injected method with Nop,
                 // so the execution could go to injectee code after the injected method end
                 injectedLastInstruction = injecteeIlProcessor.ReplaceAndFixReferences(injectedLastInstruction, Instruction.Create(OpCodes.Nop));
-            } else if (injectionPosition == InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn) {
+            } else if (injectionPosition == MethodInjectionPosition.InjecteeMethodReturn) {
                 // Inject variables to the end of the variable list
                 injecteeMethod.Body.Variables.AddRange(injectedMethod.Body.Variables);
 

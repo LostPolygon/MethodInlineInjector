@@ -15,15 +15,15 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             File.Copy(sourceAssemblyName, targetAssemblyName, true);
 
             InjectionConfiguration configuration = new InjectionConfiguration(
-                new List<InjectionConfiguration.InjecteeAssembly> {
-                    new InjectionConfiguration.InjecteeAssembly(
+                new List<InjecteeAssembly> {
+                    new InjecteeAssembly(
                         targetAssemblyName, 
                         null, 
                         IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
                     )
                 }.AsReadOnly(),
-                new List<InjectionConfiguration.InjectedMethod> {
-                    new InjectionConfiguration.InjectedMethod(
+                new List<InjectedMethod> {
+                    new InjectedMethod(
                         InjectedLibraryPath,
                         $"{InjectedClassName}.{nameof(TestInjectedMethods.Complex)}"
                     )
@@ -42,18 +42,18 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             File.Copy(sourceAssemblyName, targetAssemblyName, true);
 
             InjectionConfiguration configuration = new InjectionConfiguration(
-                new List<InjectionConfiguration.InjecteeAssembly> {
-                    new InjectionConfiguration.InjecteeAssembly(
+                new List<InjecteeAssembly> {
+                    new InjecteeAssembly(
                         targetAssemblyName, 
                         null, 
                         IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
                     )
                 }.AsReadOnly(),
-                new List<InjectionConfiguration.InjectedMethod> {
-                    new InjectionConfiguration.InjectedMethod(
+                new List<InjectedMethod> {
+                    new InjectedMethod(
                         InjectedLibraryPath,
                         $"{InjectedClassName}.{nameof(TestInjectedMethods.Complex)}",
-                        InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn
+                        MethodInjectionPosition.InjecteeMethodReturn
                     )
                 }.AsReadOnly()
             );

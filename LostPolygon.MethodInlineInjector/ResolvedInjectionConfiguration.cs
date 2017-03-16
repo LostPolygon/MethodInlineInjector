@@ -24,23 +24,23 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public class InjectedMethod {
-            public InjectionConfiguration.InjectedMethod SourceInjectedMethod { get; }
+            public LostPolygon.MethodInlineInjector.InjectedMethod SourceInjectedMethod { get; }
             public MethodDefinition MethodDefinition { get; }
 
-            public InjectedMethod(InjectionConfiguration.InjectedMethod sourceInjectedMethod, MethodDefinition methodDefinition) {
+            public InjectedMethod(LostPolygon.MethodInlineInjector.InjectedMethod sourceInjectedMethod, MethodDefinition methodDefinition) {
                 SourceInjectedMethod = sourceInjectedMethod;
                 MethodDefinition = methodDefinition;
             }
         }
 
         public class InjecteeAssembly {
-            public InjectionConfiguration.InjecteeAssembly SourceInjecteeAssembly { get; }
+            public LostPolygon.MethodInlineInjector.InjecteeAssembly SourceInjecteeAssembly { get; }
             public AssemblyDefinitionData AssemblyDefinitionData { get; }
             public ReadOnlyCollection<MethodDefinition> InjecteeMethodsDefinitions { get; }
             public ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> AssemblyReferenceWhiteList { get; }
 
             public InjecteeAssembly(
-                InjectionConfiguration.InjecteeAssembly sourceInjecteeAssembly,
+                LostPolygon.MethodInlineInjector.InjecteeAssembly sourceInjecteeAssembly,
                 AssemblyDefinitionData assemblyDefinitionData,
                 ReadOnlyCollection<MethodDefinition> injecteeMethodsDefinitions,
                 ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> assemblyReferenceWhiteList) {

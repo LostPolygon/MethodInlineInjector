@@ -112,23 +112,23 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return (ilCode, cSharpCode, sb.ToString());
         }
 
-        public static InjectionConfiguration GetBasicInjectionConfiguration(params InjectionConfiguration.InjectedMethod[] injectedMethods) {
+        public static InjectionConfiguration GetBasicInjectionConfiguration(params InjectedMethod[] injectedMethods) {
             InjectionConfiguration configuration = new InjectionConfiguration(
-                new List<InjectionConfiguration.InjecteeAssembly> {
-                    new InjectionConfiguration.InjecteeAssembly(
+                new List<InjecteeAssembly> {
+                    new InjecteeAssembly(
                         GetTestProperty<string>(nameof(IntegrationTestsBase.InjecteeLibraryName)),
                         null,
                         GetStandardAssemblyReferenceWhitelist().AsReadOnly()),
                 }.AsReadOnly(),
-                new ReadOnlyCollection<InjectionConfiguration.InjectedMethod>(injectedMethods)
+                new ReadOnlyCollection<InjectedMethod>(injectedMethods)
             );
 
             return configuration;
         }
 
-        public static List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> GetStandardAssemblyReferenceWhitelist() {
-            return new List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> {
-                new InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilterInclude(@"TestData\Common\RuntimeAssembliesWhitelist.xml")
+        public static List<IAssemblyReferenceWhitelistItem> GetStandardAssemblyReferenceWhitelist() {
+            return new List<IAssemblyReferenceWhitelistItem> {
+                new AssemblyReferenceWhitelistFilterInclude(@"TestData\Common\RuntimeAssembliesWhitelist.xml")
             };
         }
 
@@ -177,7 +177,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 _injecteeMethodNames = injecteeMethodNames;
             }
 
-            protected override List<MethodDefinition> GetFilteredInjecteeMethods(AssemblyDefinitionData assemblyDefinitionData, List<InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter> MemberReferenceBlacklistFilters) {
+            protected override List<MethodDefinition> GetFilteredInjecteeMethods(AssemblyDefinitionData assemblyDefinitionData, List<MemberReferenceBlacklistFilter> MemberReferenceBlacklistFilters) {
                 List<MethodDefinition> filteredInjecteeMethods =
                     base.GetFilteredInjecteeMethods(assemblyDefinitionData, MemberReferenceBlacklistFilters);
                 filteredInjecteeMethods =

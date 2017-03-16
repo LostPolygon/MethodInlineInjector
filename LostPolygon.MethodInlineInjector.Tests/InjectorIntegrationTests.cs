@@ -6,31 +6,31 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ApplyChildFixtureName]
         //[ForceRegenerateReferenceOutput]
         public class InjecteeMethodStart_ReturnFromSelf : InjectorIntegrationTestsBase {
-            protected override InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition =>
-                InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart;
+            protected override MethodInjectionPosition MethodInjectionPosition =>
+                MethodInjectionPosition.InjecteeMethodStart;
 
-            protected override InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour =>
-                InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromSelf;
+            protected override MethodReturnBehaviour MethodReturnBehaviour =>
+                MethodReturnBehaviour.ReturnFromSelf;
         }
 
         [ApplyChildFixtureName]
         //[ForceRegenerateReferenceOutput]
         public class InjecteeMethodReturn_ReturnFromSelf : InjectorIntegrationTestsBase {
-            protected override InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition =>
-                InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn;
+            protected override MethodInjectionPosition MethodInjectionPosition =>
+                MethodInjectionPosition.InjecteeMethodReturn;
 
-            protected override InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour =>
-                InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromSelf;
+            protected override MethodReturnBehaviour MethodReturnBehaviour =>
+                MethodReturnBehaviour.ReturnFromSelf;
         }
 
         [ApplyChildFixtureName]
         //[ForceRegenerateReferenceOutput]
         public class InjecteeMethodReturn_ReturnFromInjectee : InjectorIntegrationTestsBase {
-            protected override InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition =>
-                InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodReturn;
+            protected override MethodInjectionPosition MethodInjectionPosition =>
+                MethodInjectionPosition.InjecteeMethodReturn;
 
-            protected override InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour =>
-                InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee;
+            protected override MethodReturnBehaviour MethodReturnBehaviour =>
+                MethodReturnBehaviour.ReturnFromInjectee;
         }
 
 
@@ -38,11 +38,11 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ApplyChildFixtureName]
         [ForceRegenerateReferenceOutput]
         public class InjecteeMethodStart_ReturnFromInjectee : InjectorIntegrationTestsBase {
-            protected override InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition =>
-                InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart;
+            protected override MethodInjectionPosition MethodInjectionPosition =>
+                MethodInjectionPosition.InjecteeMethodStart;
 
-            protected override InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour =>
-                InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee;
+            protected override MethodReturnBehaviour MethodReturnBehaviour =>
+                MethodReturnBehaviour.ReturnFromInjectee;
 
             [Test]
             //[ValidReferenceOutput]

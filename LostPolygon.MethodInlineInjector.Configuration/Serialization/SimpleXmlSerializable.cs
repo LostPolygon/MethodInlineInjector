@@ -8,7 +8,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         protected internal SimpleXmlSerializationHelper SerializationHelper => _serializationHelper;
 
-        public SimpleXmlSerializable() {
+        protected SimpleXmlSerializable() {
             _serializationHelper = new SimpleXmlSerializationHelper(Serialize);
         }
 

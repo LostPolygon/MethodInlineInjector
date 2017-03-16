@@ -5,8 +5,8 @@ using TestInjecteeLibrary;
 namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]
     public abstract class InjectorIntegrationTestsBase : IntegrationTestMainBase {
-        protected abstract InjectionConfiguration.InjectedMethod.MethodInjectionPosition MethodInjectionPosition { get; }
-        protected abstract InjectionConfiguration.InjectedMethod.MethodReturnBehaviour MethodReturnBehaviour { get; }
+        protected abstract MethodInjectionPosition MethodInjectionPosition { get; }
+        protected abstract MethodReturnBehaviour MethodReturnBehaviour { get; }
 
         [Test]
         [ValidReferenceOutput]
@@ -165,9 +165,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             );
         }
 
-        protected InjectionConfiguration.InjectedMethod CreateInjectedMethod(string injectedMethodName) {
+        protected InjectedMethod CreateInjectedMethod(string injectedMethodName) {
             return
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     injectedMethodName,
                     MethodInjectionPosition,

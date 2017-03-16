@@ -20,45 +20,45 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         protected InjectionConfiguration GetInjectionConfiguration(
-            List<InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem> memberReferenceBlacklist = null,
-            List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist = null
+            List<IMemberReferenceBlacklistItem> memberReferenceBlacklist = null,
+            List<IAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist = null
             ) {
             if (memberReferenceBlacklist == null) {
-                memberReferenceBlacklist = new List<InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem> {
-                    new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+                memberReferenceBlacklist = new List<IMemberReferenceBlacklistItem> {
+                    new MemberReferenceBlacklistFilter(
                         "SomeFilterString",
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipProperties |
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipMethods |
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.IsRegex
+                        MemberReferenceFilterFlags.SkipProperties |
+                        MemberReferenceFilterFlags.SkipMethods |
+                        MemberReferenceFilterFlags.IsRegex
                     ),
-                    new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+                    new MemberReferenceBlacklistFilter(
                         "SomeOtherFilterString",
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                        MemberReferenceFilterFlags.SkipTypes |
+                        MemberReferenceFilterFlags.MatchAncestors
                     )
                 };
             }
 
             if (assemblyReferenceWhitelist == null) {
-                assemblyReferenceWhitelist = new List<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem> {
-                    new InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter("mscorlib", true),
-                    new InjectionConfiguration.InjecteeAssembly.AssemblyReferenceWhitelistFilter("System", false),
+                assemblyReferenceWhitelist = new List<IAssemblyReferenceWhitelistItem> {
+                    new AssemblyReferenceWhitelistFilter("mscorlib", true),
+                    new AssemblyReferenceWhitelistFilter("System", false),
                 };
             }
 
             InjectionConfiguration configuration = new InjectionConfiguration(
-                new List<InjectionConfiguration.InjecteeAssembly> {
-                    new InjectionConfiguration.InjecteeAssembly(
+                new List<InjecteeAssembly> {
+                    new InjecteeAssembly(
                         InjecteeLibraryName,
-                        new ReadOnlyCollection<InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem>(memberReferenceBlacklist),
-                        new ReadOnlyCollection<InjectionConfiguration.InjecteeAssembly.IAssemblyReferenceWhitelistItem>(assemblyReferenceWhitelist))
+                        new ReadOnlyCollection<IMemberReferenceBlacklistItem>(memberReferenceBlacklist),
+                        new ReadOnlyCollection<IAssemblyReferenceWhitelistItem>(assemblyReferenceWhitelist))
                 }.AsReadOnly(),
-                new ReadOnlyCollection<InjectionConfiguration.InjectedMethod>(new List<InjectionConfiguration.InjectedMethod> {
-                    new InjectionConfiguration.InjectedMethod(
+                new ReadOnlyCollection<InjectedMethod>(new List<InjectedMethod> {
+                    new InjectedMethod(
                         InjectedLibraryName,
                         $"{typeof(TestInjectedMethods).FullName}.{nameof(TestInjectedMethods.SingleStatement)}",
-                        InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart,
-                        InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromSelf)
+                        MethodInjectionPosition.InjecteeMethodStart,
+                        MethodReturnBehaviour.ReturnFromSelf)
                 })
             );
             return configuration;

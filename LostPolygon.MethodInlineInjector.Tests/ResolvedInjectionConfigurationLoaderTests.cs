@@ -9,7 +9,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectNonStatic() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.NonStatic)}"
                 ),
@@ -21,7 +21,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectFieldDependent() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.FieldDependent)}"
                 ),
@@ -32,7 +32,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [Test]
         public void AttemptInjectFieldDependentValid() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.FieldDependentValid)}"
                 ),
@@ -45,7 +45,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectTypeDependent() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.TypeDependent)}"
                 ),
@@ -57,7 +57,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectWithParameters() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.WithParameters)}"
                 ),
@@ -69,7 +69,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectWithGenericParameters() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.WithGenericParameters)}"
                 ),
@@ -81,7 +81,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptInjectWithReturnValue() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(InvalidInjectedMethods.WithReturnValue)}"
                 ),
@@ -93,11 +93,11 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [ExpectedException(typeof(MethodInlineInjectorException))]
         public void AttemptIncompatibleInjectedMethodOptions() {
             ExecuteSimpleTest(
-                new InjectionConfiguration.InjectedMethod(
+                new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}",
-                    InjectionConfiguration.InjectedMethod.MethodInjectionPosition.InjecteeMethodStart,
-                    InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee
+                    MethodInjectionPosition.InjecteeMethodStart,
+                    MethodReturnBehaviour.ReturnFromInjectee
                 ),
                 null
             );
@@ -113,11 +113,11 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public void BlacklistTypeByRegexTest() {
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ExecuteBlacklistTest(
-                    new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+                    new MemberReferenceBlacklistFilter(
                         "Injecte[ed]",
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.IsRegex |
-                        InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                        MemberReferenceFilterFlags.SkipTypes |
+                        MemberReferenceFilterFlags.IsRegex |
+                        MemberReferenceFilterFlags.MatchAncestors
                     )
                 );
 
@@ -131,8 +131,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ExecuteSimpleBlacklistTypeTest(
                     typeof(TestInjectee).FullName,
-                    InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
-                    InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                    MemberReferenceFilterFlags.SkipTypes |
+                    MemberReferenceFilterFlags.MatchAncestors
                 );
 
             Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(ChildTestInjectee).FullName));
@@ -142,18 +142,18 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public void BlacklistStructTypeTest() {
             ExecuteSimpleBlacklistTypeTest(
                 typeof(StructTestInjectee).FullName,
-                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes |
-                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.MatchAncestors
+                MemberReferenceFilterFlags.SkipTypes |
+                MemberReferenceFilterFlags.MatchAncestors
             );
         }
 
         private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTypeTest(
             string blacklistedTypeFullName,
-            InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags filterFlags =
-                InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter.FilterFlags.SkipTypes
+            MemberReferenceFilterFlags filterFlags =
+                MemberReferenceFilterFlags.SkipTypes
         ) {
-            var memberReferenceBlacklist = new InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem[] {
-                new InjectionConfiguration.InjecteeAssembly.MemberReferenceBlacklistFilter(
+            var memberReferenceBlacklist = new IMemberReferenceBlacklistItem[] {
+                new MemberReferenceBlacklistFilter(
                     blacklistedTypeFullName,
                     filterFlags
                 ),
@@ -166,7 +166,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         private ResolvedInjectionConfiguration ExecuteBlacklistTest(
-            params InjectionConfiguration.InjecteeAssembly.IMemberReferenceBlacklistItem[] memberReferenceBlacklist) {
+            params IMemberReferenceBlacklistItem[] memberReferenceBlacklist) {
             InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist: memberReferenceBlacklist.ToList());
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(configuration);
@@ -183,7 +183,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         #region Setup
 
-        public override string InjectedClassName => typeof(TestInjectedLibrary.InvalidInjectedMethods).FullName;
+        public override string InjectedClassName => typeof(InvalidInjectedMethods).FullName;
 
         #endregion
     }
