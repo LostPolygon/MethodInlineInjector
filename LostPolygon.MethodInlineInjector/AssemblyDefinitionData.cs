@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
@@ -10,7 +11,7 @@ namespace LostPolygon.MethodInlineInjector {
         public IReadOnlyList<MethodDefinition> AllMethods { get; }
 
         public AssemblyDefinitionData(AssemblyDefinition assemblyDefinition) {
-            AssemblyDefinition = assemblyDefinition;
+            AssemblyDefinition = assemblyDefinition ?? throw new ArgumentNullException(nameof(assemblyDefinition));
 
             AllTypes = assemblyDefinition.MainModule.GetAllTypes().ToList();
             AllMethods = AllTypes.SelectMany(type => type.Methods).ToList();

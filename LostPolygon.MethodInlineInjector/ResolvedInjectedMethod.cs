@@ -1,3 +1,4 @@
+using System;
 using Mono.Cecil;
 
 namespace LostPolygon.MethodInlineInjector {
@@ -6,8 +7,8 @@ namespace LostPolygon.MethodInlineInjector {
         public MethodDefinition MethodDefinition { get; }
 
         public ResolvedInjectedMethod(InjectedMethod sourceInjectedMethod, MethodDefinition methodDefinition) {
-            SourceInjectedMethod = sourceInjectedMethod;
-            MethodDefinition = methodDefinition;
+            SourceInjectedMethod = sourceInjectedMethod ?? throw new ArgumentNullException(nameof(sourceInjectedMethod));
+            MethodDefinition = methodDefinition ?? throw new ArgumentNullException(nameof(methodDefinition));
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using Mono.Cecil;
 
 namespace LostPolygon.MethodInlineInjector {
@@ -5,8 +6,8 @@ namespace LostPolygon.MethodInlineInjector {
         public AssemblyNameReference AssemblyNameReference { get; }
         public bool IsStrictCheck { get; }
 
-        public ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference assemblyNameReference, bool isStrictCheck) {
-            AssemblyNameReference = assemblyNameReference;
+        public ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference assemblyNameReference, bool isStrictCheck = false) {
+            AssemblyNameReference = assemblyNameReference ?? throw new ArgumentNullException(nameof(assemblyNameReference));
             IsStrictCheck = isStrictCheck;
         }
 
