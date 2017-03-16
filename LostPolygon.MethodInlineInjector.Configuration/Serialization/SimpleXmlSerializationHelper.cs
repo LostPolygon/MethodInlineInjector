@@ -189,7 +189,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public static T CreateByXmlRootName<T>(string name, params Type[] types) where T : ISimpleXmlSerializable {
             foreach (Type type in types) {
                 if (GetXmlRootName(type) == name)
-                    return (T) Activator.CreateInstance(type);
+                    return (T) Activator.CreateInstance(type, true);
             }
 
             throw new NotSupportedException($"Unknown element name {name}");
@@ -207,7 +207,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             foreach (Type type in knownInheritors) {
                 isEmpty = false;
                 if (GetXmlRootName(type) == name)
-                    return (T) Activator.CreateInstance(type);
+                    return (T) Activator.CreateInstance(type, true);
             }
 
             if (isEmpty)

@@ -12,7 +12,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             where T : class, ISimpleXmlSerializable {
             if (simpleXmlSerializable.SerializationHelper.IsXmlSerializationReading) {
                 while (simpleXmlSerializable.SerializationHelper.XmlSerializationReader.NodeType != XmlNodeType.EndElement) {
-                    T value = createItemFunc?.Invoke() ?? Activator.CreateInstance<T>();
+                    T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
                     value.SerializeWithInheritedMode(simpleXmlSerializable);
                     collection.Add(value);
                 }
