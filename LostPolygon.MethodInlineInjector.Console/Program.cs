@@ -19,7 +19,7 @@ namespace LostPolygon.MethodInlineInjector {
             MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);
             assemblyMethodInjector.Inject();
 
-            foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
+            foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
                 injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
             }
         }

@@ -33,7 +33,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         public static void AssertFirstMethod(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
-            AssertMethod(resolvedInjectionConfiguration.InjecteeAssemblies[0].InjecteeMethodsDefinitions[0]);
+            AssertMethod(resolvedInjectionConfiguration.InjecteeAssemblies[0].InjecteeMethods[0]);
         }
 
         public static void AssertMethod(MethodDefinition methodDefinition) {
@@ -78,7 +78,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         public static void WriteReferenceOutputFile(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
-            WriteReferenceOutputFile(resolvedInjectionConfiguration.InjecteeAssemblies[0].InjecteeMethodsDefinitions[0]);
+            WriteReferenceOutputFile(resolvedInjectionConfiguration.InjecteeAssemblies[0].InjecteeMethods[0]);
         }
 
         public static void WriteReferenceOutputFile(MethodDefinition methodDefinition) {
@@ -139,7 +139,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         public static void WriteModifiedAssembliesIfRequested(ResolvedInjectionConfiguration resolvedConfiguration) {
             if (TestContext.CurrentContext.Test.Properties.Get(nameof(SaveModifiedAssembliesAttribute).RemoveAttribute()) is bool saveModifiedAssemblies && saveModifiedAssemblies) {
-                foreach (ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
+                foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
                     injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
                 }
             }

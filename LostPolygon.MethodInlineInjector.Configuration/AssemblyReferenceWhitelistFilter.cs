@@ -12,7 +12,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public AssemblyReferenceWhitelistFilter(string name, bool isStrictNameCheck) {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             IsStrictNameCheck = isStrictNameCheck;
         }
 
@@ -20,9 +20,16 @@ namespace LostPolygon.MethodInlineInjector {
             return $"{nameof(Name)}: '{Name}', {nameof(IsStrictNameCheck)}: {IsStrictNameCheck}";
         }
 
-        #region Serialization
+        #region With.Fody
 
-        public override void Serialize() {
+        public AssemblyReferenceWhitelistFilter WithName(string value) => null;
+        public AssemblyReferenceWhitelistFilter WithIsStrictNameCheck(bool value) => null;
+
+        #endregion
+
+        #region ISimpleXmlSerializable
+
+        void ISimpleXmlSerializable.Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));

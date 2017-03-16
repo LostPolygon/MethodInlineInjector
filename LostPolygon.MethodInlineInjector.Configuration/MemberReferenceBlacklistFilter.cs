@@ -1,46 +1,53 @@
+using System;
 using System.Xml.Serialization;
 using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Filter")]
     public class MemberReferenceBlacklistFilter : SimpleXmlSerializable, IMemberReferenceBlacklistItem {
-        private const MemberReferenceFilterFlags kDefaultFilterOptions =
-            MemberReferenceFilterFlags.SkipTypes |
-            MemberReferenceFilterFlags.SkipMethods |
-            MemberReferenceFilterFlags.SkipProperties;
+        private const MemberReferenceBlacklistFilterFlags kDefaultFilterOptions =
+            MemberReferenceBlacklistFilterFlags.SkipTypes |
+            MemberReferenceBlacklistFilterFlags.SkipMethods |
+            MemberReferenceBlacklistFilterFlags.SkipProperties;
 
         public string Filter { get; private set; }
-        public MemberReferenceFilterFlags FilterOptions { get; private set; } = kDefaultFilterOptions;
-        public bool IsRegex => (FilterOptions & MemberReferenceFilterFlags.IsRegex) != 0;
-        public bool MatchAncestors => (FilterOptions & MemberReferenceFilterFlags.MatchAncestors) != 0;
+        public MemberReferenceBlacklistFilterFlags FilterFlags { get; private set; } = kDefaultFilterOptions;
+        public bool IsRegex => (FilterFlags & MemberReferenceBlacklistFilterFlags.IsRegex) != 0;
+        public bool MatchAncestors => (FilterFlags & MemberReferenceBlacklistFilterFlags.MatchAncestors) != 0;
 
         private MemberReferenceBlacklistFilter() {
         }
 
-        public MemberReferenceBlacklistFilter(string filter, MemberReferenceFilterFlags filterOptions) {
-            Filter = filter;
-            FilterOptions = filterOptions;
+        public MemberReferenceBlacklistFilter(string filter, MemberReferenceBlacklistFilterFlags filterFlags = kDefaultFilterOptions) {
+            Filter = filter ?? throw new ArgumentNullException(nameof(filter));
+            FilterFlags = filterFlags;
         }
+
+        public override string ToString() {
+            return $"{nameof(Filter)}: '{Filter}', {nameof(FilterFlags)}: {FilterFlags}";
+        }
+
+        #region With.Fody
+
+        public MemberReferenceBlacklistFilter WithFilter(string value) => null;
+        public MemberReferenceBlacklistFilter WithFilterFlags(MemberReferenceBlacklistFilterFlags value) => null;
+
+        #endregion
 
         #region Serialization
 
-        public override void Serialize() {
+        protected override void Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
             {
                 SerializationHelper.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterOptions = s, () => FilterOptions);
+                SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
             }
             SerializationHelper.ProcessAdvanceOnRead();
             SerializationHelper.ProcessEndElement();
         }
 
         #endregion
-
-        public override string ToString() {
-            return $"{nameof(Filter)}: '{Filter}', {nameof(FilterOptions)}: {FilterOptions}";
-        }
-
     }
 }

@@ -13,17 +13,17 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             if (simpleXmlSerializable.SerializationHelper.IsXmlSerializationReading) {
                 while (simpleXmlSerializable.SerializationHelper.XmlSerializationReader.NodeType != XmlNodeType.EndElement) {
                     T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
-                    value.SerializeWithInheritedMode(simpleXmlSerializable);
+                    value.ReadXml(simpleXmlSerializable.SerializationHelper.XmlSerializationReader);
                     collection.Add(value);
                 }
             } else {
                 foreach (T value in collection) {
-                    value.SerializeWithInheritedMode(simpleXmlSerializable);
+                    value.WriteXml(simpleXmlSerializable.SerializationHelper.XmlSerializationWriter);
                 }
             }
         }
 
-        public static void ProcessCollectionAsReadonly<T>(
+        public static void ProcessCollectionAsReadOnly<T>(
             this SimpleXmlSerializable simpleXmlSerializable,
             Action<ReadOnlyCollection<T>> collectionSetAction,
             Func<ReadOnlyCollection<T>> collectionGetFunc,

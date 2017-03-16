@@ -22,9 +22,16 @@ namespace LostPolygon.MethodInlineInjector {
             InjectedMethods = injectedMethods ?? InjectedMethods;
         }
 
+        #region With.Fody
+
+        public InjectionConfiguration WithInjecteeAssemblies(ReadOnlyCollection<InjecteeAssembly> value) => null;
+        public InjectionConfiguration WithInjectedMethods(ReadOnlyCollection<InjectedMethod> value) => null;
+
+        #endregion
+
         #region Serialization
 
-        public override void Serialize() {
+        protected override void Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
@@ -34,7 +41,7 @@ namespace LostPolygon.MethodInlineInjector {
                     if (SerializationHelper.ProcessStartElement(nameof(InjecteeAssemblies))) {
                         SerializationHelper.ProcessAdvanceOnRead();
                         {
-                            this.ProcessCollectionAsReadonly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
+                            this.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
                         }
                         SerializationHelper.ProcessEndElement();
                     }
@@ -42,7 +49,7 @@ namespace LostPolygon.MethodInlineInjector {
                     if (SerializationHelper.ProcessStartElement(nameof(InjectedMethods))) {
                         SerializationHelper.ProcessAdvanceOnRead();
                         {
-                            this.ProcessCollectionAsReadonly(v => InjectedMethods = v, () => InjectedMethods);
+                            this.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
                         }
                         SerializationHelper.ProcessEndElement();
                     }

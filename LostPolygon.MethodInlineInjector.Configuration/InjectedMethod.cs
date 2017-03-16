@@ -1,3 +1,4 @@
+using System;
 using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
@@ -16,8 +17,8 @@ namespace LostPolygon.MethodInlineInjector {
             MethodInjectionPosition injectionPosition = MethodInjectionPosition.InjecteeMethodStart,
             MethodReturnBehaviour returnBehaviour = MethodReturnBehaviour.ReturnFromSelf
         ) {
-            AssemblyPath = assemblyPath;
-            MethodFullName = methodFullName;
+            AssemblyPath = assemblyPath ?? throw new ArgumentNullException(nameof(assemblyPath));
+            MethodFullName = methodFullName ?? throw new ArgumentNullException(nameof(methodFullName));
             InjectionPosition = injectionPosition;
             ReturnBehaviour = returnBehaviour;
         }
@@ -29,9 +30,18 @@ namespace LostPolygon.MethodInlineInjector {
                    $"{nameof(ReturnBehaviour)}: {ReturnBehaviour}";
         }
 
+        #region With.Fody
+
+        public InjectionConfiguration WithAssemblyPath(string value) => null;
+        public InjectionConfiguration WithMethodFullName(string value) => null;
+        public InjectionConfiguration WithInjectionPosition(MethodInjectionPosition value) => null;
+        public InjectionConfiguration WithReturnBehaviour(MethodReturnBehaviour value) => null;
+
+        #endregion
+
         #region Serialization
 
-        public override void Serialize() {
+        protected override void Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(nameof(InjectedMethod));

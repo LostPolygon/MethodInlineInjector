@@ -1,54 +1,23 @@
-using System.Collections.ObjectModel;
-using Mono.Cecil;
+using System;
+using System.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedInjectionConfiguration {
-        public ReadOnlyCollection<InjectedAssemblyMethods> InjectedMethods { get; }
-        public ReadOnlyCollection<InjecteeAssembly> InjecteeAssemblies { get; }
+        public IReadOnlyList<ResolvedInjectedMethod> InjectedMethods { get; }
+        public IReadOnlyList<ResolvedInjecteeAssembly> InjecteeAssemblies { get; }
 
         public ResolvedInjectionConfiguration(
-            ReadOnlyCollection<InjectedAssemblyMethods> injectedMethods,
-            ReadOnlyCollection<InjecteeAssembly> injecteeAssemblies) {
-            InjectedMethods = injectedMethods;
-            InjecteeAssemblies = injecteeAssemblies;
+            IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
+            IReadOnlyList<ResolvedInjecteeAssembly> injecteeAssemblies) {
+            InjectedMethods = injectedMethods ?? throw new ArgumentNullException(nameof(injectedMethods));
+            InjecteeAssemblies = injecteeAssemblies ?? throw new ArgumentNullException(nameof(injecteeAssemblies));
         }
 
-        public class InjectedAssemblyMethods {
-            public AssemblyDefinition AssemblyDefinition { get; }
-            public ReadOnlyCollection<InjectedMethod> Methods { get; }
+        #region With.Fody
 
-            public InjectedAssemblyMethods(AssemblyDefinition assemblyDefinition, ReadOnlyCollection<InjectedMethod> methods) {
-                AssemblyDefinition = assemblyDefinition;
-                Methods = methods;
-            }
-        }
+        public ResolvedInjectionConfiguration WithInjectedMethods(IReadOnlyList<ResolvedInjectedMethod> value) => null;
+        public ResolvedInjectionConfiguration WithInjecteeAssemblies(IReadOnlyList<ResolvedInjecteeAssembly> value) => null;
 
-        public class InjectedMethod {
-            public LostPolygon.MethodInlineInjector.InjectedMethod SourceInjectedMethod { get; }
-            public MethodDefinition MethodDefinition { get; }
-
-            public InjectedMethod(LostPolygon.MethodInlineInjector.InjectedMethod sourceInjectedMethod, MethodDefinition methodDefinition) {
-                SourceInjectedMethod = sourceInjectedMethod;
-                MethodDefinition = methodDefinition;
-            }
-        }
-
-        public class InjecteeAssembly {
-            public LostPolygon.MethodInlineInjector.InjecteeAssembly SourceInjecteeAssembly { get; }
-            public AssemblyDefinitionData AssemblyDefinitionData { get; }
-            public ReadOnlyCollection<MethodDefinition> InjecteeMethodsDefinitions { get; }
-            public ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> AssemblyReferenceWhiteList { get; }
-
-            public InjecteeAssembly(
-                LostPolygon.MethodInlineInjector.InjecteeAssembly sourceInjecteeAssembly,
-                AssemblyDefinitionData assemblyDefinitionData,
-                ReadOnlyCollection<MethodDefinition> injecteeMethodsDefinitions,
-                ReadOnlyCollection<(AssemblyNameReference assemblyNameReference, bool isStrictCheck)> assemblyReferenceWhiteList) {
-                SourceInjecteeAssembly = sourceInjecteeAssembly;
-                AssemblyDefinitionData = assemblyDefinitionData;
-                InjecteeMethodsDefinitions = injecteeMethodsDefinitions;
-                AssemblyReferenceWhiteList = assemblyReferenceWhiteList;
-            }
-        }
+        #endregion
     }
 }

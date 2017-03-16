@@ -8,7 +8,7 @@ using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
-    public partial class MethodInlineInjector {
+    public class MethodInlineInjector {
         private readonly ResolvedInjectionConfiguration _resolvedInjectionConfiguration;
 
         public MethodInlineInjector(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
@@ -16,19 +16,27 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public void Inject() {
-            foreach (var injecteeAssembly in _resolvedInjectionConfiguration.InjecteeAssemblies) {
-                foreach (var injectedAssemblyMethodsTuple in _resolvedInjectionConfiguration.InjectedMethods) {
-                    InjectToAssembly(injecteeAssembly, injectedAssemblyMethodsTuple);
+            foreach (ResolvedInjecteeAssembly injecteeAssembly in _resolvedInjectionConfiguration.InjecteeAssemblies) {
+                var assemblyMethodsGroupings = 
+                    _resolvedInjectionConfiguration
+                    .InjectedMethods
+                    .GroupBy(method => method.MethodDefinition.Module.Assembly);
+
+                foreach (var assemblyMethodsGrouping in assemblyMethodsGroupings) {
+                    InjectToAssembly(injecteeAssembly, assemblyMethodsGrouping.ToArray(), assemblyMethodsGrouping.Key);
                 }
             }
         }
 
-        private static void InjectToAssembly(ResolvedInjectionConfiguration.InjecteeAssembly injecteeAssembly, ResolvedInjectionConfiguration.InjectedAssemblyMethods injectedAssemblyMethodsTuple) {
+        private static void InjectToAssembly(
+            ResolvedInjecteeAssembly resolvedInjecteeAssembly, 
+            IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
+            AssemblyDefinition injectedMethodsAssembly) {
             Collection<AssemblyNameReference> injecteeAssemblyNameReferences =
-                injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences;
+                resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences;
 
             IEnumerable<TypeReference> injectedTypeReferences =
-                injectedAssemblyMethodsTuple.AssemblyDefinition.MainModule.GetTypeReferences();
+                injectedMethodsAssembly.MainModule.GetTypeReferences();
 
             foreach (TypeReference injectedTypeReference in injectedTypeReferences) {
                 AssemblyNameReference injectedAssemblyNameReference = injectedTypeReference.Scope as AssemblyNameReference;
@@ -50,13 +58,13 @@ namespace LostPolygon.MethodInlineInjector {
                     }
 
                     bool isWhitelisted =
-                        injecteeAssembly
+                        resolvedInjecteeAssembly
                         .AssemblyReferenceWhiteList
                         .Any(tuple =>
                                 IsAssemblyReferenceWhitelisted(
                                     injectedAssemblyNameReference,
-                                    tuple.assemblyNameReference,
-                                    tuple.isStrictCheck
+                                    tuple.AssemblyNameReference,
+                                    tuple.IsStrictCheck
                                 ));
 
                     if (!isWhitelisted)
@@ -66,7 +74,7 @@ namespace LostPolygon.MethodInlineInjector {
                         );
 
                     Console.WriteLine(
-                        $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
+                        $"Injectee assembly '{resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
                         $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
                         $"the reference will be added"
                     );
@@ -75,12 +83,12 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            foreach (MethodDefinition injecteeMethod in injecteeAssembly.InjecteeMethodsDefinitions) {
-                foreach (ResolvedInjectionConfiguration.InjectedMethod injectedMethod in injectedAssemblyMethodsTuple.Methods) {
+            foreach (MethodDefinition injecteeMethod in resolvedInjecteeAssembly.InjecteeMethods) {
+                foreach (ResolvedInjectedMethod injectedMethod in injectedMethods) {
                     MethodDefinition importedInjectedMethod =
                         CloneAndImportMethod(
                             injectedMethod.MethodDefinition,
-                            injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition
+                            resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition
                         );
                     InjectMethod(
                         importedInjectedMethod,

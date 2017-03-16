@@ -17,8 +17,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjectionConfiguration configuration = new InjectionConfiguration(
                 new List<InjecteeAssembly> {
                     new InjecteeAssembly(
-                        targetAssemblyName, 
-                        null, 
+                        targetAssemblyName,
+                        null,
                         IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
                     )
                 }.AsReadOnly(),
@@ -44,8 +44,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjectionConfiguration configuration = new InjectionConfiguration(
                 new List<InjecteeAssembly> {
                     new InjecteeAssembly(
-                        targetAssemblyName, 
-                        null, 
+                        targetAssemblyName,
+                        null,
                         IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
                     )
                 }.AsReadOnly(),

@@ -115,9 +115,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 ExecuteBlacklistTest(
                     new MemberReferenceBlacklistFilter(
                         "Injecte[ed]",
-                        MemberReferenceFilterFlags.SkipTypes |
-                        MemberReferenceFilterFlags.IsRegex |
-                        MemberReferenceFilterFlags.MatchAncestors
+                        MemberReferenceBlacklistFilterFlags.SkipTypes |
+                        MemberReferenceBlacklistFilterFlags.IsRegex |
+                        MemberReferenceBlacklistFilterFlags.MatchAncestors
                     )
                 );
 
@@ -131,8 +131,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ExecuteSimpleBlacklistTypeTest(
                     typeof(TestInjectee).FullName,
-                    MemberReferenceFilterFlags.SkipTypes |
-                    MemberReferenceFilterFlags.MatchAncestors
+                    MemberReferenceBlacklistFilterFlags.SkipTypes |
+                    MemberReferenceBlacklistFilterFlags.MatchAncestors
                 );
 
             Assert.True(IsTypeSkipped(resolvedConfiguration, typeof(ChildTestInjectee).FullName));
@@ -142,20 +142,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public void BlacklistStructTypeTest() {
             ExecuteSimpleBlacklistTypeTest(
                 typeof(StructTestInjectee).FullName,
-                MemberReferenceFilterFlags.SkipTypes |
-                MemberReferenceFilterFlags.MatchAncestors
+                MemberReferenceBlacklistFilterFlags.SkipTypes |
+                MemberReferenceBlacklistFilterFlags.MatchAncestors
             );
         }
 
         private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTypeTest(
             string blacklistedTypeFullName,
-            MemberReferenceFilterFlags filterFlags =
-                MemberReferenceFilterFlags.SkipTypes
+            MemberReferenceBlacklistFilterFlags blacklistFilterFlags =
+                MemberReferenceBlacklistFilterFlags.SkipTypes
         ) {
             var memberReferenceBlacklist = new IMemberReferenceBlacklistItem[] {
                 new MemberReferenceBlacklistFilter(
                     blacklistedTypeFullName,
-                    filterFlags
+                    blacklistFilterFlags
                 ),
             };
 
@@ -177,7 +177,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         private static bool IsTypeSkipped(ResolvedInjectionConfiguration resolvedConfiguration, string skippedTypeFullName) {
             return resolvedConfiguration
                        .InjecteeAssemblies
-                       .SelectMany(assembly => assembly.InjecteeMethodsDefinitions)
+                       .SelectMany(assembly => assembly.InjecteeMethods)
                        .FirstOrDefault(method => method.DeclaringType.FullName == skippedTypeFullName) == null;
         }
 

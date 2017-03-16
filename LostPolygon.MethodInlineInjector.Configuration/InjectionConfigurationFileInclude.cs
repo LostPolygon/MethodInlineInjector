@@ -1,4 +1,5 @@
-﻿using LostPolygon.MethodInlineInjector.Serialization;
+﻿using System;
+using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     public abstract class InjectionConfigurationFileInclude : SimpleXmlSerializable {
@@ -8,12 +9,16 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected InjectionConfigurationFileInclude(string path) {
-            Path = path;
+            Path = path ?? throw new ArgumentNullException(nameof(path));
+        }
+
+        public override string ToString() {
+            return $"{nameof(Path)}: '{Path}'";
         }
 
         #region Serialization
 
-        public override void Serialize() {
+        protected override void Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
@@ -25,9 +30,5 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         #endregion
-
-        public override string ToString() {
-            return $"{nameof(Path)}: '{Path}'";
-        }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using LostPolygon.MethodInlineInjector.Serialization;
 
@@ -14,17 +15,25 @@ namespace LostPolygon.MethodInlineInjector {
 
         public InjecteeAssembly(
             string assemblyPath,
-            ReadOnlyCollection<IMemberReferenceBlacklistItem> memberReferenceBlacklist,
-            ReadOnlyCollection<IAssemblyReferenceWhitelistItem> assemblyReference
+            ReadOnlyCollection<IMemberReferenceBlacklistItem> memberReferenceBlacklist = null,
+            ReadOnlyCollection<IAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist = null
         ) {
-            AssemblyPath = assemblyPath;
+            AssemblyPath = assemblyPath ?? throw new ArgumentNullException(nameof(assemblyPath));
             MemberReferenceBlacklist = memberReferenceBlacklist ?? MemberReferenceBlacklist;
-            AssemblyReferenceWhitelist = assemblyReference ?? AssemblyReferenceWhitelist;
+            AssemblyReferenceWhitelist = assemblyReferenceWhitelist ?? AssemblyReferenceWhitelist;
         }
+
+        #region With.Fody
+
+        public InjecteeAssembly WithAssemblyPath(string value) => null;
+        public InjecteeAssembly WithMemberReferenceBlacklist(ReadOnlyCollection<IMemberReferenceBlacklistItem> value) => null;
+        public InjecteeAssembly WithAssemblyReferenceWhitelist(ReadOnlyCollection<IAssemblyReferenceWhitelistItem> value) => null;
+
+        #endregion
 
         #region Serialization
 
-        public override void Serialize() {
+        protected override void Serialize() {
             base.Serialize();
 
             SerializationHelper.ProcessStartElement(nameof(InjecteeAssembly));
@@ -35,7 +44,7 @@ namespace LostPolygon.MethodInlineInjector {
                 SerializationHelper.ProcessStartElement(nameof(MemberReferenceBlacklist));
                 SerializationHelper.ProcessAdvanceOnRead();
                 {
-                    this.ProcessCollectionAsReadonly(
+                    this.ProcessCollectionAsReadOnly(
                         v => MemberReferenceBlacklist = v,
                         () => MemberReferenceBlacklist,
                         () =>
@@ -49,7 +58,7 @@ namespace LostPolygon.MethodInlineInjector {
                 SerializationHelper.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
                 SerializationHelper.ProcessAdvanceOnRead();
                 {
-                    this.ProcessCollectionAsReadonly(
+                    this.ProcessCollectionAsReadOnly(
                         v => AssemblyReferenceWhitelist = v,
                         () => AssemblyReferenceWhitelist,
                         () =>

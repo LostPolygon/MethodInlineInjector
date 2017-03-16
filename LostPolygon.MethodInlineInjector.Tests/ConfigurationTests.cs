@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using LostPolygon.MethodInlineInjector.Serialization;
 using NUnit.Framework;
@@ -16,6 +17,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
 
+            Console.WriteLine(configurationSerializedAgain);
             Assert.AreEqual(configurationSerialized, configurationSerializedAgain);
         }
 
@@ -27,14 +29,14 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 memberReferenceBlacklist = new List<IMemberReferenceBlacklistItem> {
                     new MemberReferenceBlacklistFilter(
                         "SomeFilterString",
-                        MemberReferenceFilterFlags.SkipProperties |
-                        MemberReferenceFilterFlags.SkipMethods |
-                        MemberReferenceFilterFlags.IsRegex
+                        MemberReferenceBlacklistFilterFlags.SkipProperties |
+                        MemberReferenceBlacklistFilterFlags.SkipMethods |
+                        MemberReferenceBlacklistFilterFlags.IsRegex
                     ),
                     new MemberReferenceBlacklistFilter(
                         "SomeOtherFilterString",
-                        MemberReferenceFilterFlags.SkipTypes |
-                        MemberReferenceFilterFlags.MatchAncestors
+                        MemberReferenceBlacklistFilterFlags.SkipTypes |
+                        MemberReferenceBlacklistFilterFlags.MatchAncestors
                     )
                 };
             }
@@ -61,6 +63,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                         MethodReturnBehaviour.ReturnFromSelf)
                 })
             );
+
             return configuration;
         }
     }
