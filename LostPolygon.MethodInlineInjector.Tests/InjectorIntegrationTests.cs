@@ -33,7 +33,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee;
         }
 
-        /*
+
+        [Explicit("not yet ready for CI")]
         [ApplyChildFixtureName]
         [ForceRegenerateReferenceOutput]
         public class InjecteeMethodStart_ReturnFromInjectee : InjectorIntegrationTestsBase {
@@ -145,6 +146,5 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 base.ComplexToWithOutParameter();
             }
         }
-        */
     }
 }
