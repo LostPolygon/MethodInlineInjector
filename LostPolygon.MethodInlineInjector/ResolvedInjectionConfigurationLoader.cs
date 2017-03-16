@@ -96,8 +96,10 @@ namespace LostPolygon.MethodInlineInjector {
                 if (matchingMethodDefinitions.Length > 2)
                     throw new MethodInlineInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
 
-                List<ResolvedInjectionConfiguration.InjectedMethod> methodDefinitions;
-                if (!injectedAssemblyToMethodsMap.TryGetValue(assemblyDefinitionData.AssemblyDefinition, out methodDefinitions)) {
+                if (!injectedAssemblyToMethodsMap.TryGetValue(
+                    assemblyDefinitionData.AssemblyDefinition, 
+                    out List<ResolvedInjectionConfiguration.InjectedMethod> methodDefinitions)
+                    ) {
                     methodDefinitions = new List<ResolvedInjectionConfiguration.InjectedMethod>();
                     injectedAssemblyToMethodsMap.Add(assemblyDefinitionData.AssemblyDefinition, methodDefinitions);
                 }
@@ -211,8 +213,7 @@ namespace LostPolygon.MethodInlineInjector {
             return injecteeMethods;
 
             Regex GetFilterRegex(MemberReferenceBlacklistFilter blacklistFilter) {
-                Regex filterRegex;
-                if (!regexCache.TryGetValue(blacklistFilter.Filter, out filterRegex)) {
+                if (!regexCache.TryGetValue(blacklistFilter.Filter, out Regex filterRegex)) {
                     filterRegex = new Regex(blacklistFilter.Filter, RegexOptions.Compiled);
                     regexCache[blacklistFilter.Filter] = filterRegex;
                 }

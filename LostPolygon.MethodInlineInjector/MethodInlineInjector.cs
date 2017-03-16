@@ -52,7 +52,12 @@ namespace LostPolygon.MethodInlineInjector {
                     bool isWhitelisted =
                         injecteeAssembly
                         .AssemblyReferenceWhiteList
-                        .Any(tuple => IsAssemblyReferenceWhitelisted(injectedAssemblyNameReference, tuple.Item1, tuple.Item2));
+                        .Any(tuple =>
+                                IsAssemblyReferenceWhitelisted(
+                                    injectedAssemblyNameReference,
+                                    tuple.assemblyNameReference,
+                                    tuple.isStrictCheck
+                                ));
 
                     if (!isWhitelisted)
                         throw new MethodInlineInjectorException(
