@@ -31,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Cecil, Version=0.9.6.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
@@ -69,7 +70,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjecteeLibrary\bin\$(ConfigurationName)\TestInjecteeLibrary.dll TestInjecteeLibrary.dll
-copy $(SolutionDir)\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary\bin\$(ConfigurationName)\TestInjectedLibrary.dll TestInjectedLibrary.dll</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
