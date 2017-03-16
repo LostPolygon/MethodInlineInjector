@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using devtm.Cecil.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 

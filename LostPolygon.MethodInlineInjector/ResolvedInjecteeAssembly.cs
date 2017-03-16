@@ -20,7 +20,7 @@ namespace LostPolygon.MethodInlineInjector {
             InjecteeMethods = injecteeMethods ?? throw new ArgumentNullException(nameof(assemblyReferenceWhiteList));
             AssemblyReferenceWhiteList =
                 assemblyReferenceWhiteList ??
-                ReadOnlyCollectionUtility<ResolvedAssemblyReferenceWhitelistItem>.Empty ;
+                ReadOnlyCollectionUtility<ResolvedAssemblyReferenceWhitelistItem>.Empty;
         }
 
         #region With.Fody

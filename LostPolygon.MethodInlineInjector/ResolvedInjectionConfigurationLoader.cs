@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Mono.Cecil;
-using devtm.Cecil.Extensions;
 using LostPolygon.MethodInlineInjector.Serialization;
 using Mono.Collections.Generic;
 

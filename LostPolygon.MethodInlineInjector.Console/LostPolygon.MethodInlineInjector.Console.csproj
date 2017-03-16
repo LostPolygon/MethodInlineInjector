@@ -55,9 +55,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Configuration\LostPolygon.MethodInlineInjector.Configuration.csproj">
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
@@ -66,6 +63,9 @@
       <Project>{bf09e2f7-78ec-4ab3-8a14-e2e98729c196}</Project>
       <Name>LostPolygon.MethodInlineInjector</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
