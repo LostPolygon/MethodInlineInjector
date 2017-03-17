@@ -62,6 +62,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GlobalAssemblyInfo.cs">
+      <Link>Properties\GlobalAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="MethodDefinitionCloner.cs" />
     <Compile Include="MethodInlineInjector.cs" />
     <Compile Include="MethodInlineInjectorException.cs" />
