@@ -16,9 +16,13 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
+#pragma warning disable 0436
+
 [assembly: AssemblyVersion(Version.kVersion)]
 [assembly: AssemblyFileVersion(Version.kVersion)]
 [assembly: AssemblyInformationalVersion(Version.kVersion)]
+
+#pragma warning restore 0436
 
 internal static class Version {
     internal const string kVersion = "0.1.0.0";

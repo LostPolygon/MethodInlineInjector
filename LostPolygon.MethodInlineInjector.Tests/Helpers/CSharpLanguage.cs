@@ -38,34 +38,12 @@ namespace ICSharpCode.ILSpy
     /// </summary>
     public class CSharpLanguage
     {
-        string name = "C#";
         bool showAllMembers = false;
         Predicate<IAstTransform> transformAbortCondition = null;
 
         public CSharpLanguage()
         {
         }
-
-        #if DEBUG
-        internal static IEnumerable<CSharpLanguage> GetDebugLanguages()
-        {
-            DecompilerContext context = new DecompilerContext(ModuleDefinition.CreateModule("dummy", ModuleKind.Dll));
-            string lastTransformName = "no transforms";
-            foreach (Type _transformType in TransformationPipeline.CreatePipeline(context).Select(v => v.GetType()).Distinct()) {
-                Type transformType = _transformType; // copy for lambda
-                yield return new CSharpLanguage {
-                    transformAbortCondition = v => transformType.IsInstanceOfType(v),
-                    name = "C# - " + lastTransformName,
-                    showAllMembers = true
-                };
-                lastTransformName = "after " + transformType.Name;
-            }
-            yield return new CSharpLanguage {
-                name = "C# - " + lastTransformName,
-                showAllMembers = true
-            };
-        }
-        #endif
 
         public void DecompileMethod(MethodDefinition method, ITextOutput output, DecompilerSettings options)
         {
