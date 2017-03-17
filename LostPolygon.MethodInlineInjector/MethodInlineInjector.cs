@@ -32,7 +32,7 @@ namespace LostPolygon.MethodInlineInjector {
             IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
             AssemblyDefinition injectedMethodsAssembly) {
             Collection<AssemblyNameReference> injecteeAssemblyNameReferences =
-                resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.AssemblyReferences;
+                resolvedInjecteeAssembly.AssemblyDefinition.MainModule.AssemblyReferences;
 
             IEnumerable<TypeReference> injectedTypeReferences =
                 injectedMethodsAssembly.MainModule.GetTypeReferences();
@@ -63,7 +63,7 @@ namespace LostPolygon.MethodInlineInjector {
                                 IsAssemblyReferenceWhitelisted(
                                     injectedAssemblyNameReference,
                                     tuple.AssemblyNameReference,
-                                    tuple.IsStrictCheck
+                                    tuple.StrictNameCheck
                                 ));
 
                     if (!isWhitelisted)
@@ -73,7 +73,7 @@ namespace LostPolygon.MethodInlineInjector {
                         );
 
                     Console.WriteLine(
-                        $"Injectee assembly '{resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition} ' " +
+                        $"Injectee assembly '{resolvedInjecteeAssembly.AssemblyDefinition} ' " +
                         $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
                         $"the reference will be added"
                     );
@@ -87,13 +87,13 @@ namespace LostPolygon.MethodInlineInjector {
                     MethodDefinition importedInjectedMethod =
                         CloneAndImportMethod(
                             injectedMethod.MethodDefinition,
-                            resolvedInjecteeAssembly.AssemblyDefinitionData.AssemblyDefinition
+                            resolvedInjecteeAssembly.AssemblyDefinition
                         );
                     InjectMethod(
                         importedInjectedMethod,
                         injecteeMethod,
-                        injectedMethod.SourceInjectedMethod.InjectionPosition,
-                        injectedMethod.SourceInjectedMethod.ReturnBehaviour
+                        injectedMethod.InjectionPosition,
+                        injectedMethod.ReturnBehaviour
                     );
                 }
             }

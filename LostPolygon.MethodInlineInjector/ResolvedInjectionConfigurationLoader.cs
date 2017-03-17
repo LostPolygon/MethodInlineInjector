@@ -6,12 +6,13 @@ using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Mono.Cecil;
 using LostPolygon.MethodInlineInjector.Serialization;
+using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedInjectionConfigurationLoader {
-        private readonly Dictionary<string, AssemblyDefinitionData> _assemblyPathToAssemblyDefinitionMap =
-            new Dictionary<string, AssemblyDefinitionData>();
+        private readonly Dictionary<string, AssemblyDefinitionCachedData> _assemblyPathToAssemblyDefinitionMap =
+            new Dictionary<string, AssemblyDefinitionCachedData>();
         private readonly InjectionConfiguration _injectionConfiguration;
 
         public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(InjectionConfiguration injectionConfiguration) {
@@ -57,7 +58,7 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             foreach (ResolvedInjecteeAssembly injecteeAssembly in injecteeAssemblies) {
-                AssemblyDefinition assemblyDefinition = injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition;
+                AssemblyDefinition assemblyDefinition = injecteeAssembly.AssemblyDefinition;
                 TargetRuntime targetRuntime = assemblyDefinition.MainModule.Runtime;
                 if (minInjecteeTargetRuntimeAssemblyDefinition == null || targetRuntime > minInjecteeTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
                     minInjecteeTargetRuntimeAssemblyDefinition = assemblyDefinition;
@@ -68,10 +69,10 @@ namespace LostPolygon.MethodInlineInjector {
                 throw new InvalidOperationException(nameof(maxInjectedTargetRuntimeAssemblyDefinition) + " == null");
 
             foreach (ResolvedInjecteeAssembly injecteeAssembly in injecteeAssemblies) {
-                if (injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
+                if (injecteeAssembly.AssemblyDefinition.MainModule.Runtime < maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime) {
                     throw new MethodInlineInjectorException(
-                        $"Injectee assembly '{injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition}' " +
-                        $"uses runtime version {injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.MainModule.Runtime}, " +
+                        $"Injectee assembly '{injecteeAssembly.AssemblyDefinition}' " +
+                        $"uses runtime version {injecteeAssembly.AssemblyDefinition.MainModule.Runtime}, " +
                         $"but assembly '{maxInjectedTargetRuntimeAssemblyDefinition}' used in injection uses runtime " +
                         $"version {maxInjectedTargetRuntimeAssemblyDefinition.MainModule.Runtime}."
                     );
@@ -82,9 +83,9 @@ namespace LostPolygon.MethodInlineInjector {
         private Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> GetInjectedMethods() {
             var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>>();
             foreach (InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
-                AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
+                AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
                 MethodDefinition[] matchingMethodDefinitions =
-                    assemblyDefinitionData
+                    assemblyDefinitionCachedData
                     .AllMethods
                     .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
                     .ToArray();
@@ -96,27 +97,33 @@ namespace LostPolygon.MethodInlineInjector {
                     throw new MethodInlineInjectorException($"More than 1 matching method found for {sourceInjectedMethod.MethodFullName}");
 
                 if (!injectedAssemblyToMethodsMap.TryGetValue(
-                    assemblyDefinitionData.AssemblyDefinition,
+                    assemblyDefinitionCachedData.AssemblyDefinition,
                     out List<ResolvedInjectedMethod> methodDefinitions)
                     ) {
                     methodDefinitions = new List<ResolvedInjectedMethod>();
-                    injectedAssemblyToMethodsMap.Add(assemblyDefinitionData.AssemblyDefinition, methodDefinitions);
+                    injectedAssemblyToMethodsMap.Add(assemblyDefinitionCachedData.AssemblyDefinition, methodDefinitions);
                 }
 
                 MethodDefinition matchedMethodDefinition = matchingMethodDefinitions[0];
                 ValidateInjectedMethod(matchedMethodDefinition);
 
-                methodDefinitions.Add(new ResolvedInjectedMethod(sourceInjectedMethod, matchedMethodDefinition));
+                methodDefinitions.Add(
+                    new ResolvedInjectedMethod(
+                        matchedMethodDefinition,
+                        sourceInjectedMethod.InjectionPosition,
+                        sourceInjectedMethod.ReturnBehaviour
+                    )
+                );
             }
 
             return injectedAssemblyToMethodsMap;
         }
 
-        private AssemblyDefinitionData GetAssemblyDefinitionData(string assemblyPath) {
+        private AssemblyDefinitionCachedData GetAssemblyDefinitionData(string assemblyPath) {
             assemblyPath = Path.GetFullPath(assemblyPath);
-            if (!_assemblyPathToAssemblyDefinitionMap.TryGetValue(assemblyPath, out AssemblyDefinitionData assemblyDefinitionData)) {
+            if (!_assemblyPathToAssemblyDefinitionMap.TryGetValue(assemblyPath, out AssemblyDefinitionCachedData assemblyDefinitionData)) {
                 AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath);
-                assemblyDefinitionData = new AssemblyDefinitionData(assemblyDefinition);
+                assemblyDefinitionData = new AssemblyDefinitionCachedData(assemblyDefinition);
                 _assemblyPathToAssemblyDefinitionMap.Add(assemblyPath, assemblyDefinitionData);
             }
 
@@ -172,20 +179,19 @@ namespace LostPolygon.MethodInlineInjector {
             LoadMemberReferenceBlacklistFilters(sourceInjecteeAssembly.MemberReferenceBlacklist);
             LoadAssemblyReferenceWhitelistFilters(sourceInjecteeAssembly.AssemblyReferenceWhitelist);
 
-            AssemblyDefinitionData assemblyDefinitionData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
+            AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
 
             List<MethodDefinition> filteredInjecteeMethods =
-                GetFilteredInjecteeMethods(assemblyDefinitionData, memberReferenceBlacklistFilters);
+                GetFilteredInjecteeMethods(assemblyDefinitionCachedData, memberReferenceBlacklistFilters);
 
             List<ResolvedAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist =
                 assemblyReferenceWhitelistFilters
-                .Select(item => new ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference.Parse(item.Name), item.IsStrictNameCheck))
+                .Select(item => new ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference.Parse(item.Name), item.StrictNameCheck))
                 .ToList();
 
             ResolvedInjecteeAssembly resolvedInjecteeAssembly =
                 new ResolvedInjecteeAssembly(
-                    sourceInjecteeAssembly,
-                    assemblyDefinitionData,
+                    assemblyDefinitionCachedData.AssemblyDefinition,
                     filteredInjecteeMethods,
                     assemblyReferenceWhitelist);
 
@@ -193,12 +199,12 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual List<MethodDefinition> GetFilteredInjecteeMethods(
-            AssemblyDefinitionData assemblyDefinitionData,
+            AssemblyDefinitionCachedData assemblyDefinitionCachedData,
             List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters) {
             Dictionary<string, Regex> regexCache = new Dictionary<string, Regex>();
 
             TypeDefinition[] types =
-                assemblyDefinitionData
+                assemblyDefinitionCachedData
                 .AllTypes
                 .Where(TestType)
                 .ToArray();
@@ -318,6 +324,19 @@ namespace LostPolygon.MethodInlineInjector {
 
         protected static string CreateInvalidInjectedMethodMessage(MethodDefinition method, string message) {
             return $"Injected method {method.GetFullName()} is not valid, reason: {message}";
+        }
+
+        protected class AssemblyDefinitionCachedData {
+            public AssemblyDefinition AssemblyDefinition { get; }
+            public IReadOnlyList<TypeDefinition> AllTypes { get; }
+            public IReadOnlyList<MethodDefinition> AllMethods { get; }
+
+            public AssemblyDefinitionCachedData(AssemblyDefinition assemblyDefinition) {
+                AssemblyDefinition = assemblyDefinition ?? throw new ArgumentNullException(nameof(assemblyDefinition));
+
+                AllTypes = assemblyDefinition.MainModule.GetAllTypes().ToList();
+                AllMethods = AllTypes.SelectMany(type => type.Methods).ToList();
+            }
         }
 
         private class FileIncludeLoader<TItem> : SimpleXmlSerializable where TItem : class, ISimpleXmlSerializable {

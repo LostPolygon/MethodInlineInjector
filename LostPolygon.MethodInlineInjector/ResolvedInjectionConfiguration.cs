@@ -8,7 +8,8 @@ namespace LostPolygon.MethodInlineInjector {
 
         public ResolvedInjectionConfiguration(
             IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
-            IReadOnlyList<ResolvedInjecteeAssembly> injecteeAssemblies) {
+            IReadOnlyList<ResolvedInjecteeAssembly> injecteeAssemblies
+        ) {
             InjectedMethods = injectedMethods ?? throw new ArgumentNullException(nameof(injectedMethods));
             InjecteeAssemblies = injecteeAssemblies ?? throw new ArgumentNullException(nameof(injecteeAssemblies));
         }

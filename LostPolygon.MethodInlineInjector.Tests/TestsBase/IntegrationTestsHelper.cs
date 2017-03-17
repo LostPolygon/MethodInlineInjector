@@ -140,7 +140,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         public static void WriteModifiedAssembliesIfRequested(ResolvedInjectionConfiguration resolvedConfiguration) {
             if (TestContext.CurrentContext.Test.Properties.Get(nameof(SaveModifiedAssembliesAttribute).RemoveAttribute()) is bool saveModifiedAssemblies && saveModifiedAssemblies) {
                 foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedConfiguration.InjecteeAssemblies) {
-                    injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
+                    injecteeAssembly.AssemblyDefinition.Write(injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName);
                 }
             }
         }
@@ -177,9 +177,13 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 _injecteeMethodNames = injecteeMethodNames;
             }
 
-            protected override List<MethodDefinition> GetFilteredInjecteeMethods(AssemblyDefinitionData assemblyDefinitionData, List<MemberReferenceBlacklistFilter> MemberReferenceBlacklistFilters) {
+            protected override List<MethodDefinition> GetFilteredInjecteeMethods(
+                AssemblyDefinitionCachedData assemblyDefinitionCachedData,
+                List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters
+            ) {
                 List<MethodDefinition> filteredInjecteeMethods =
-                    base.GetFilteredInjecteeMethods(assemblyDefinitionData, MemberReferenceBlacklistFilters);
+                    base.GetFilteredInjecteeMethods(assemblyDefinitionCachedData, memberReferenceBlacklistFilters);
+
                 filteredInjecteeMethods =
                     filteredInjecteeMethods
                         .Where(method => _injecteeMethodNames.Contains(method.GetFullName()))

@@ -20,7 +20,7 @@ namespace LostPolygon.MethodInlineInjector {
             assemblyMethodInjector.Inject();
 
             foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
-                injecteeAssembly.AssemblyDefinitionData.AssemblyDefinition.Write(injecteeAssembly.SourceInjecteeAssembly.AssemblyPath);
+                injecteeAssembly.AssemblyDefinition.Write(injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName);
             }
         }
     }

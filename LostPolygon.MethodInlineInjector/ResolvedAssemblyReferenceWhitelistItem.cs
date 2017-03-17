@@ -4,11 +4,11 @@ using Mono.Cecil;
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedAssemblyReferenceWhitelistItem {
         public AssemblyNameReference AssemblyNameReference { get; }
-        public bool IsStrictCheck { get; }
+        public bool StrictNameCheck { get; }
 
-        public ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference assemblyNameReference, bool isStrictCheck = false) {
+        public ResolvedAssemblyReferenceWhitelistItem(AssemblyNameReference assemblyNameReference, bool strictNameCheck = false) {
             AssemblyNameReference = assemblyNameReference ?? throw new ArgumentNullException(nameof(assemblyNameReference));
-            IsStrictCheck = isStrictCheck;
+            StrictNameCheck = strictNameCheck;
         }
 
         #region With.Fody

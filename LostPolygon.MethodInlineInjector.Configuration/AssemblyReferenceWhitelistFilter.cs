@@ -6,18 +6,18 @@ namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Assembly")]
     public class AssemblyReferenceWhitelistFilter : SimpleXmlSerializable, IAssemblyReferenceWhitelistItem {
         public string Name { get; private set; }
-        public bool IsStrictNameCheck { get; private set; }
+        public bool StrictNameCheck { get; private set; }
 
         private AssemblyReferenceWhitelistFilter() {
         }
 
-        public AssemblyReferenceWhitelistFilter(string name, bool isStrictNameCheck) {
+        public AssemblyReferenceWhitelistFilter(string name, bool strictNameCheck) {
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            IsStrictNameCheck = isStrictNameCheck;
+            StrictNameCheck = strictNameCheck;
         }
 
         public override string ToString() {
-            return $"{nameof(Name)}: '{Name}', {nameof(IsStrictNameCheck)}: {IsStrictNameCheck}";
+            return $"{nameof(Name)}: '{Name}', {nameof(StrictNameCheck)}: {StrictNameCheck}";
         }
 
         #region With.Fody
@@ -35,7 +35,7 @@ namespace LostPolygon.MethodInlineInjector {
             SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
             {
                 SerializationHelper.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
-                SerializationHelper.ProcessAttributeString(nameof(IsStrictNameCheck), s => IsStrictNameCheck = Convert.ToBoolean(s), () => Convert.ToString(IsStrictNameCheck));
+                SerializationHelper.ProcessAttributeString(nameof(StrictNameCheck), s => StrictNameCheck = Convert.ToBoolean(s), () => Convert.ToString(StrictNameCheck));
             }
             SerializationHelper.ProcessAdvanceOnRead();
             SerializationHelper.ProcessEndElement();

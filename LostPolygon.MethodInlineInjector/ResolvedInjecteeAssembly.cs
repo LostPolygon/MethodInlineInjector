@@ -4,19 +4,16 @@ using Mono.Cecil;
 
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedInjecteeAssembly {
-        public InjecteeAssembly SourceInjecteeAssembly { get; }
-        public AssemblyDefinitionData AssemblyDefinitionData { get; }
+        public AssemblyDefinition AssemblyDefinition { get; }
         public IReadOnlyList<MethodDefinition> InjecteeMethods { get; }
         public IReadOnlyList<ResolvedAssemblyReferenceWhitelistItem> AssemblyReferenceWhiteList { get; }
 
         public ResolvedInjecteeAssembly(
-            InjecteeAssembly sourceInjecteeAssembly,
-            AssemblyDefinitionData assemblyDefinitionData,
+            AssemblyDefinition assemblyDefinition,
             IReadOnlyList<MethodDefinition> injecteeMethods,
             IReadOnlyList<ResolvedAssemblyReferenceWhitelistItem> assemblyReferenceWhiteList = null
         ) {
-            SourceInjecteeAssembly = sourceInjecteeAssembly ?? throw new ArgumentNullException(nameof(sourceInjecteeAssembly));
-            AssemblyDefinitionData = assemblyDefinitionData ?? throw new ArgumentNullException(nameof(assemblyDefinitionData));
+            AssemblyDefinition = assemblyDefinition ?? throw new ArgumentNullException(nameof(assemblyDefinition));
             InjecteeMethods = injecteeMethods ?? throw new ArgumentNullException(nameof(assemblyReferenceWhiteList));
             AssemblyReferenceWhiteList =
                 assemblyReferenceWhiteList ??

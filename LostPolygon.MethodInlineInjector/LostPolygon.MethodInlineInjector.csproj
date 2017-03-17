@@ -62,7 +62,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyDefinitionData.cs" />
     <Compile Include="MethodDefinitionCloner.cs" />
     <Compile Include="MethodInlineInjector.cs" />
     <Compile Include="MethodInlineInjectorException.cs" />
