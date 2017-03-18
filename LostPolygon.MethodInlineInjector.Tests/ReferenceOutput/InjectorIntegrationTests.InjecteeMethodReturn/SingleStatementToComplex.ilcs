@@ -1,0 +1,96 @@
+.method public hidebysig
+    instance void Complex () cil managed
+{
+    // Method begins at RVA 0x2050
+    // Code size 153 (0x99)
+    .maxstack 3
+    .locals init (
+        [0] float32,
+        [1] float32,
+        [2] class [mscorlib]System.Random,
+        [3] bool,
+        [4] bool
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injectee: Begin"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: ldc.r4 -59
+    IL_0011: call float32 [mscorlib]System.Math::Abs(float32)
+    IL_0016: stloc.0
+    IL_0017: ldc.r4 300
+    IL_001c: stloc.1
+    IL_001d: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_0022: stloc.2
+    IL_0023: ldloc.2
+    IL_0024: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0029: ldc.r8 0.5
+    IL_0032: cgt
+    IL_0034: stloc.3
+    IL_0035: ldloc.3
+    IL_0036: brfalse.s IL_0075
+    IL_0038: nop
+    IL_0039: ldstr "Injectee: Random > 0.5!"
+    IL_003e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0043: nop
+    IL_0044: ldloc.2
+    IL_0045: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_004a: ldc.r8 0.5
+    IL_0053: cgt
+    IL_0055: stloc.s 4
+    IL_0057: ldloc.s 4
+    IL_0059: brfalse.s IL_0069
+    IL_005b: nop
+    IL_005c: ldstr "Injectee: Random still > 0.5!"
+    IL_0061: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0066: nop
+    IL_0067: br.s IL_0098
+    IL_0069: ldstr "Injectee: First Random was > 0.5!"
+    IL_006e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0073: nop
+    IL_0074: nop
+    IL_0075: ldstr "Injectee: a * b = "
+    IL_007a: ldloc.0
+    IL_007b: ldloc.1
+    IL_007c: mul
+    IL_007d: box [mscorlib]System.Single
+    IL_0082: call string [mscorlib]System.String::Concat(object, object)
+    IL_0087: call void [mscorlib]System.Console::WriteLine(string)
+    IL_008c: nop
+    IL_008d: ldstr "Injectee: End"
+    IL_0092: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0097: nop
+    IL_0098: nop
+    IL_0099: nop
+    IL_009a: ldstr "Injected: This is injected code!"
+    IL_009f: call void [mscorlib]System.Console::WriteLine(string)
+    IL_00a4: nop
+    IL_00a5: ret
+} // end of method TestInjectee::Complex
+
+// End of IL code
+
+public void Complex()
+{
+    Console.WriteLine("Injectee: Begin");
+    float num = Math.Abs(-59f);
+    float num2 = 300f;
+    Random random = new Random();
+    bool flag = random.NextDouble() > 0.5;
+    if (flag)
+    {
+        Console.WriteLine("Injectee: Random > 0.5!");
+        bool flag2 = random.NextDouble() > 0.5;
+        if (flag2)
+        {
+            Console.WriteLine("Injectee: Random still > 0.5!");
+            goto IL_98;
+        }
+        Console.WriteLine("Injectee: First Random was > 0.5!");
+    }
+    Console.WriteLine("Injectee: a * b = " + num * num2);
+    Console.WriteLine("Injectee: End");
+    IL_98:
+    Console.WriteLine("Injected: This is injected code!");
+}

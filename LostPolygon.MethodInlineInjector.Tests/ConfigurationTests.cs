@@ -59,8 +59,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     new InjectedMethod(
                         InjectedLibraryName,
                         $"{typeof(TestInjectedMethods).FullName}.{nameof(TestInjectedMethods.SingleStatement)}",
-                        MethodInjectionPosition.InjecteeMethodStart,
-                        MethodReturnBehaviour.ReturnFromSelf)
+                        MethodInjectionPosition.InjecteeMethodStart
+                    )
                 })
             );
 

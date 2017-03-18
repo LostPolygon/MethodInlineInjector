@@ -1,0 +1,77 @@
+.method public hidebysig
+    instance int32 ReturnValue () cil managed
+{
+    // Method begins at RVA 0x2138
+    // Code size 8 (0x8)
+    .maxstack 1
+    .locals init (
+        [0] int32,
+        [1] class [mscorlib]System.Random,
+        [2] bool,
+        [3] bool
+    )
+
+    IL_0000: nop
+    IL_0001: ldc.i4.s -3
+    IL_0003: stloc.0
+    IL_0004: br.s IL_0006
+    IL_0006: ldloc.0
+    IL_0007: nop
+    IL_0008: nop
+    IL_0009: ldstr "Injected: Begin"
+    IL_000e: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0013: nop
+    IL_0014: newobj instance void [mscorlib]System.Random::.ctor()
+    IL_0019: stloc.1
+    IL_001a: ldloc.1
+    IL_001b: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0020: ldc.r8 0.5
+    IL_0029: cgt
+    IL_002b: stloc.2
+    IL_002c: ldloc.2
+    IL_002d: brfalse.s IL_005f
+    IL_002f: nop
+    IL_0030: ldstr "Injected: Bad luck :("
+    IL_0035: call void [mscorlib]System.Console::WriteLine(string)
+    IL_003a: nop
+    IL_003b: ldloc.1
+    IL_003c: callvirt instance float64 [mscorlib]System.Random::NextDouble()
+    IL_0041: ldc.r8 0.5
+    IL_004a: cgt
+    IL_004c: stloc.3
+    IL_004d: ldloc.3
+    IL_004e: brfalse.s IL_005e
+    IL_0050: nop
+    IL_0051: ldstr "Injected: Super bad luck :("
+    IL_0056: call void [mscorlib]System.Console::WriteLine(string)
+    IL_005b: nop
+    IL_005c: br.s IL_006a
+    IL_005e: nop
+    IL_005f: ldstr "Injected: End"
+    IL_0064: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0069: nop
+    IL_006a: ret
+} // end of method TestInjectee::ReturnValue
+
+// End of IL code
+
+public int ReturnValue()
+{
+    int num = -3;
+    int arg_6A_0 = num;
+    Console.WriteLine("Injected: Begin");
+    Random random = new Random();
+    bool flag = random.NextDouble() > 0.5;
+    if (flag)
+    {
+        Console.WriteLine("Injected: Bad luck :(");
+        bool flag2 = random.NextDouble() > 0.5;
+        if (flag2)
+        {
+            Console.WriteLine("Injected: Super bad luck :(");
+            return arg_6A_0;
+        }
+    }
+    Console.WriteLine("Injected: End");
+    return arg_6A_0;
+}

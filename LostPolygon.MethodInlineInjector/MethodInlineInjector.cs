@@ -92,8 +92,7 @@ namespace LostPolygon.MethodInlineInjector {
                     InjectMethod(
                         importedInjectedMethod,
                         injecteeMethod,
-                        injectedMethod.InjectionPosition,
-                        injectedMethod.ReturnBehaviour
+                        injectedMethod.InjectionPosition
                     );
                 }
             }
@@ -119,8 +118,7 @@ namespace LostPolygon.MethodInlineInjector {
         private static void InjectMethod(
             MethodDefinition injectedMethod,
             MethodDefinition injecteeMethod,
-            MethodInjectionPosition injectionPosition,
-            MethodReturnBehaviour returnBehaviour
+            MethodInjectionPosition injectionPosition
             ) {
             // TODO: implement ReturnFromInjectee
             //if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
@@ -141,16 +139,6 @@ namespace LostPolygon.MethodInlineInjector {
                 // First instruction of the injectee method. Instruction of the injected methods are inserted before it
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
                 Instruction injectedLastInstruction = injectedMethod.Body.Instructions.Last();
-
-                if (returnBehaviour == MethodReturnBehaviour.ReturnFromInjectee) {
-                    for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
-                        Instruction instruction = injectedMethod.Body.Instructions[i];
-                        if (instruction.Operand == injectedLastInstruction) {
-                            instruction.OpCode = OpCodes.Ret;
-                            instruction.Operand = null;
-                        }
-                    }
-                }
 
                 // Insert injected method to the beginning
                 for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {

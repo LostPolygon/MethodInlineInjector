@@ -6,7 +6,6 @@ namespace LostPolygon.MethodInlineInjector {
         public string AssemblyPath { get; private set; }
         public string MethodFullName { get; private set; }
         public MethodInjectionPosition InjectionPosition { get; private set; } = MethodInjectionPosition.InjecteeMethodStart;
-        public MethodReturnBehaviour ReturnBehaviour { get; private set; } = MethodReturnBehaviour.ReturnFromSelf;
 
         private InjectedMethod() {
         }
@@ -14,20 +13,17 @@ namespace LostPolygon.MethodInlineInjector {
         public InjectedMethod(
             string assemblyPath,
             string methodFullName,
-            MethodInjectionPosition injectionPosition = MethodInjectionPosition.InjecteeMethodStart,
-            MethodReturnBehaviour returnBehaviour = MethodReturnBehaviour.ReturnFromSelf
+            MethodInjectionPosition injectionPosition = MethodInjectionPosition.InjecteeMethodStart
         ) {
             AssemblyPath = assemblyPath ?? throw new ArgumentNullException(nameof(assemblyPath));
             MethodFullName = methodFullName ?? throw new ArgumentNullException(nameof(methodFullName));
             InjectionPosition = injectionPosition;
-            ReturnBehaviour = returnBehaviour;
         }
 
         public override string ToString() {
             return $"{nameof(AssemblyPath)}: '{AssemblyPath}', " +
                    $"{nameof(MethodFullName)}: '{MethodFullName}', " +
-                   $"{nameof(InjectionPosition)}: {InjectionPosition}, " +
-                   $"{nameof(ReturnBehaviour)}: {ReturnBehaviour}";
+                   $"{nameof(InjectionPosition)}: {InjectionPosition}";
         }
 
         #region With.Fody
@@ -35,7 +31,6 @@ namespace LostPolygon.MethodInlineInjector {
         public InjectionConfiguration WithAssemblyPath(string value) => null;
         public InjectionConfiguration WithMethodFullName(string value) => null;
         public InjectionConfiguration WithInjectionPosition(MethodInjectionPosition value) => null;
-        public InjectionConfiguration WithReturnBehaviour(MethodReturnBehaviour value) => null;
 
         #endregion
 
@@ -49,7 +44,6 @@ namespace LostPolygon.MethodInlineInjector {
                 SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                 SerializationHelper.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
                 SerializationHelper.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
-                SerializationHelper.ProcessEnumAttribute(nameof(ReturnBehaviour), s => ReturnBehaviour = s, () => ReturnBehaviour);
             }
             SerializationHelper.ProcessAdvanceOnRead();
             SerializationHelper.ProcessEndElement();

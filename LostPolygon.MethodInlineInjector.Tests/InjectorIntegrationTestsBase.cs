@@ -6,7 +6,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]
     public abstract class InjectorIntegrationTestsBase : IntegrationTestMainBase {
         protected abstract MethodInjectionPosition MethodInjectionPosition { get; }
-        protected abstract MethodReturnBehaviour MethodReturnBehaviour { get; }
 
         [Test]
         [ValidReferenceOutput]
@@ -179,8 +178,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 new InjectedMethod(
                     InjectedLibraryPath,
                     injectedMethodName,
-                    MethodInjectionPosition,
-                    MethodReturnBehaviour
+                    MethodInjectionPosition
                 );
         }
     }

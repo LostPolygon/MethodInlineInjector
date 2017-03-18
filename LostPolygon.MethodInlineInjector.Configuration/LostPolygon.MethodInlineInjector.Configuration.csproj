@@ -54,7 +54,6 @@
     <Compile Include="MemberReferenceBlacklistFilterInclude.cs" />
     <Compile Include="MemberReferenceBlacklistFilterFlags.cs" />
     <Compile Include="MethodInjectionPosition.cs" />
-    <Compile Include="MethodReturnBehaviour.cs" />
     <Compile Include="Serialization\ISimpleXmlSerializable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\ReadOnlyCollectionUtility.cs" />

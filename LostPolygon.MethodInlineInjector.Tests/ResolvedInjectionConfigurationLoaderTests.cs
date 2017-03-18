@@ -96,8 +96,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 new InjectedMethod(
                     InjectedLibraryPath,
                     $"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}",
-                    MethodInjectionPosition.InjecteeMethodStart,
-                    MethodReturnBehaviour.ReturnFromInjectee
+                    MethodInjectionPosition.InjecteeMethodStart
                 ),
                 null
             );
@@ -152,7 +151,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             MemberReferenceBlacklistFilterFlags blacklistFilterFlags =
                 MemberReferenceBlacklistFilterFlags.SkipTypes
         ) {
-            var memberReferenceBlacklist = new IMemberReferenceBlacklistItem[] {
+            IMemberReferenceBlacklistItem[] memberReferenceBlacklist = {
                 new MemberReferenceBlacklistFilter(
                     blacklistedTypeFullName,
                     blacklistFilterFlags
@@ -166,8 +165,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         private ResolvedInjectionConfiguration ExecuteBlacklistTest(
-            params IMemberReferenceBlacklistItem[] memberReferenceBlacklist) {
-            InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist: memberReferenceBlacklist.ToList());
+            params IMemberReferenceBlacklistItem[] memberReferenceBlacklist
+        ) {
+            InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist.ToList());
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(configuration);
             ExecuteSimpleTest(resolvedConfiguration, false);
@@ -178,7 +178,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return resolvedConfiguration
                        .InjecteeAssemblies
                        .SelectMany(assembly => assembly.InjecteeMethods)
-                       .FirstOrDefault(method => method.DeclaringType.FullName == skippedTypeFullName) == null;
+                       .All(method => method.DeclaringType.FullName != skippedTypeFullName);
         }
 
         #region Setup

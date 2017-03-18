@@ -69,7 +69,7 @@
     <Compile Include="MethodInlineInjector.cs" />
     <Compile Include="MethodInlineInjectorException.cs" />
     <Compile Include="CecilExtensions.cs" />
-    <Compile Include="ResolvedAssemblyReferenceWhitelistItem.cs" />
+    <Compile Include="ResolvedAssemblyReferenceWhitelistFilter.cs" />
     <Compile Include="ResolvedInjectedMethod.cs" />
     <Compile Include="ResolvedInjecteeAssembly.cs" />
     <Compile Include="ResolvedInjectionConfiguration.cs" />

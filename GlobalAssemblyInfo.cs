@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("Lost Polygon")]
 [assembly: AssemblyCopyright("© Lost Polygon")]
-[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 #if DEBUG
