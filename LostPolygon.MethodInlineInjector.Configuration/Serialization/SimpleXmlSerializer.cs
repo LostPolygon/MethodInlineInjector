@@ -7,39 +7,37 @@ using System.Xml;
 using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
-    public class SimpleXmlSerializer {
+    public class SimpleXmlSerializer : SimpleXmlSerializerBase {
         private readonly Stack<String> _readStartedElementNamesStack = new Stack<string>();
-        private readonly ISimpleXmlSerializable _simpleXmlSerializable;
 
-        public XmlReader XmlSerializationReader { get; private set; }
-        public XmlWriter XmlSerializationWriter { get; private set; }
-        public bool IsXmlSerializationReading => XmlSerializationReader != null;
-
-        public SimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) {
-            _simpleXmlSerializable = simpleXmlSerializable;
+        public SimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) : base(simpleXmlSerializable) {
         }
 
-        public void ReadXml(XmlReader reader) {
+        public override SimpleXmlSerializer Clone(ISimpleXmlSerializable simpleXmlSerializable) {
+            return new SimpleXmlSerializer(simpleXmlSerializable);
+        }
+
+        public override void ReadXml(XmlReader reader) {
             try {
                 XmlSerializationWriter = null;
                 XmlSerializationReader = reader;
-                _simpleXmlSerializable.Serialize();
+                SimpleXmlSerializable.Serialize();
             } finally {
                 XmlSerializationReader = null;
             }
         }
 
-        public void WriteXml(XmlWriter writer) {
+        public override void WriteXml(XmlWriter writer) {
             try {
                 XmlSerializationReader = null;
                 XmlSerializationWriter = writer;
-                _simpleXmlSerializable.Serialize();
+                SimpleXmlSerializable.Serialize();
             } finally {
                 XmlSerializationWriter = null;
             }
         }
 
-        public bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc) {
+        public override bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc) {
             if (IsXmlSerializationReading) {
                 string xmlValue = XmlSerializationReader.ReadElementString(name);
                 if (xmlValue == null)
@@ -54,7 +52,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return true;
         }
 
-        public bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {
+        public override bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {
             if (IsXmlSerializationReading) {
                 string xmlValue = XmlSerializationReader.GetAttribute(name);
                 if (xmlValue == null)
@@ -69,7 +67,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return true;
         }
 
-        public bool ProcessStartElement(string name) {
+        public override bool ProcessStartElement(string name) {
             if (IsXmlSerializationReading) {
                 if (XmlSerializationReader.MoveToContent() != XmlNodeType.Element)
                     return false;
@@ -85,7 +83,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return true;
         }
 
-        public void ProcessEndElement(bool readEndElement = true) {
+        public override void ProcessEndElement(bool readEndElement = true) {
             if (IsXmlSerializationReading) {
                 string lastStartedElementName = _readStartedElementNamesStack.Pop();
                 if (readEndElement && XmlSerializationReader.MoveToContent() == XmlNodeType.EndElement && lastStartedElementName == XmlSerializationReader.Name) {
@@ -96,34 +94,34 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public void ProcessAdvanceOnRead() {
+        public override void ProcessAdvanceOnRead() {
             if (IsXmlSerializationReading) {
                 XmlSerializationReader.Read();
             }
         }
 
-        public void ProcessCollection<T>(
+        public override void ProcessCollection<T>(
             ICollection<T> collection,
-            Func<T> createItemFunc = null)
-            where T : class, ISimpleXmlSerializable {
+            Func<T> createItemFunc = null) {
             if (IsXmlSerializationReading) {
                 while (XmlSerializationReader.NodeType != XmlNodeType.EndElement) {
                     T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
+                    CloneAndAssignSerializer(value);
                     value.ReadXml(XmlSerializationReader);
                     collection.Add(value);
                 }
             } else {
                 foreach (T value in collection) {
+                    CloneAndAssignSerializer(value);
                     value.WriteXml(XmlSerializationWriter);
                 }
             }
         }
 
-        public void ProcessCollectionAsReadOnly<T>(
+        public override void ProcessCollectionAsReadOnly<T>(
             Action<ReadOnlyCollection<T>> collectionSetAction,
             Func<ReadOnlyCollection<T>> collectionGetFunc,
-            Func<T> createItemFunc = null)
-            where T : class, ISimpleXmlSerializable {
+            Func<T> createItemFunc = null) {
             if (IsXmlSerializationReading) {
                 List<T> list = new List<T>();
                 ProcessCollection(list, createItemFunc);
@@ -133,8 +131,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public bool ProcessEnumAttribute<T>(string name, Action<T> readAction, Func<T> writeFunc)
-            where T : struct, IConvertible {
+        public override bool ProcessEnumAttribute<T>(string name, Action<T> readAction, Func<T> writeFunc) {
             Type enumType = typeof(T);
             if (!enumType.IsEnum)
                 throw new SerializationException("value must be an Enum");
@@ -154,8 +151,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return true;
         }
 
-        public void ProcessFlagsEnumAttributes<T>(T defaultValue, Action<T> readAction, Func<T> writeFunc)
-            where T : struct, IConvertible {
+        public override void ProcessFlagsEnumAttributes<T>(T defaultValue, Action<T> readAction, Func<T> writeFunc) {
             Type enumType = typeof(T);
             if (!enumType.IsEnum)
                 throw new SerializationException("value must be an Enum");
@@ -196,7 +192,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public void ProcessWhileNotElementEnd(Action action) {
+        public override void ProcessWhileNotElementEnd(Action action) {
             if (IsXmlSerializationReading) {
                 while (XmlSerializationReader.NodeType != XmlNodeType.EndElement &&
                        XmlSerializationReader.NodeType != XmlNodeType.EndEntity) {
@@ -207,16 +203,19 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public static T CreateByXmlRootName<T>(string name, params Type[] types) where T : ISimpleXmlSerializable {
+        public override T CreateByXmlRootName<T>(string name, params Type[] types) {
             foreach (Type type in types) {
-                if (GetXmlRootName(type) == name)
-                    return (T) Activator.CreateInstance(type, true);
+                if (GetXmlRootName(type) == name) {
+                    T value = (T) Activator.CreateInstance(type, true);
+                    CloneAndAssignSerializer(value);
+                    return value;
+                }
             }
 
             throw new NotSupportedException($"Unknown element name {name}");
         }
 
-        public static T CreateByKnownInheritors<T>(string name) where T : ISimpleXmlSerializable {
+        public override T CreateByKnownInheritors<T>(string name) {
             IEnumerable<Type> knownInheritors =
                 Attribute
                 .GetCustomAttributes(typeof(T), typeof(KnownInheritorsAttribute))
@@ -227,8 +226,11 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             bool isEmpty = true;
             foreach (Type type in knownInheritors) {
                 isEmpty = false;
-                if (GetXmlRootName(type) == name)
-                    return (T) Activator.CreateInstance(type, true);
+                if (GetXmlRootName(type) == name) {
+                    T value = (T) Activator.CreateInstance(type, true);
+                    CloneAndAssignSerializer(value);
+                    return value;
+                }
             }
 
             if (isEmpty)

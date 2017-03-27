@@ -396,7 +396,7 @@ namespace LostPolygon.MethodInlineInjector {
 
                 Serializer.ProcessCollection(
                     Items,
-                    () => SimpleXmlSerializer.CreateByKnownInheritors<TItem>(
+                    () => Serializer.CreateByKnownInheritors<TItem>(
                               Serializer.XmlSerializationReader.Name
                           ));
             }

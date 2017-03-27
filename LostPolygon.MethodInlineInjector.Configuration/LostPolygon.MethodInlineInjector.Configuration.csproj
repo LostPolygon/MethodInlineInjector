@@ -56,6 +56,7 @@
     <Compile Include="MethodInjectionPosition.cs" />
     <Compile Include="Serialization\ISimpleXmlSerializable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializerBase.cs" />
     <Compile Include="Utility\ReadOnlyCollectionUtility.cs" />
     <Compile Include="Serialization\KnownInheritorsAttribute.cs" />
     <Compile Include="Serialization\SimpleXmlSerializable.cs" />

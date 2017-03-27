@@ -5,21 +5,19 @@ using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public abstract class SimpleXmlSerializable : ISimpleXmlSerializable {
-        private readonly SimpleXmlSerializer _serializer;
-
-        protected SimpleXmlSerializer Serializer => _serializer;
-
-        protected SimpleXmlSerializable() {
-            _serializer = new SimpleXmlSerializer(this);
-        }
+        protected SimpleXmlSerializerBase Serializer { get; private set; }
 
         #region ISimpleXmlSerializable
 
         protected virtual void Serialize() {
-            if (_serializer.XmlSerializationReader == null && _serializer.XmlSerializationWriter == null ||
-                _serializer.XmlSerializationReader != null && _serializer.XmlSerializationWriter != null) {
+            if (Serializer.XmlSerializationReader == null && Serializer.XmlSerializationWriter == null ||
+                Serializer.XmlSerializationReader != null && Serializer.XmlSerializationWriter != null) {
                 throw new InvalidOperationException();
             }
+        }
+
+        void ISimpleXmlSerializable.SetSerializer(SimpleXmlSerializerBase serializer) {
+            Serializer = serializer;
         }
 
         void ISimpleXmlSerializable.Serialize() {
@@ -35,11 +33,11 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         }
 
         void IXmlSerializable.ReadXml(XmlReader reader) {
-            _serializer.ReadXml(reader);
+            Serializer.ReadXml(reader);
         }
 
         void IXmlSerializable.WriteXml(XmlWriter writer) {
-            _serializer.WriteXml(writer);
+            Serializer.WriteXml(writer);
         }
 
         #endregion

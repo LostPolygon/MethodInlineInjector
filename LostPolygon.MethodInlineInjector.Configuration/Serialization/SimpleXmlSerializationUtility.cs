@@ -13,6 +13,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     xmlTextWriter.IndentChar = ' ';
                     xmlTextWriter.Indentation = 4;
                     xmlTextWriter.Namespaces = false;
+                    objectInstance.SetSerializer(new SimpleXmlSerializer(objectInstance));
                     objectInstance.WriteXml(xmlTextWriter);
                 }
             }
@@ -33,6 +34,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 }
 
                 result = (T) Activator.CreateInstance(typeof(T), true);
+                result.SetSerializer(new SimpleXmlSerializer(result));
                 result.ReadXml(xmlReader);
             }
 

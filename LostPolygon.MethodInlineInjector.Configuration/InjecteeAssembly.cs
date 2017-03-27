@@ -48,7 +48,7 @@ namespace LostPolygon.MethodInlineInjector {
                         v => MemberReferenceBlacklist = v,
                         () => MemberReferenceBlacklist,
                         () =>
-                            SimpleXmlSerializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                            Serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
                                 Serializer.XmlSerializationReader.Name
                             )
                     );
@@ -62,7 +62,7 @@ namespace LostPolygon.MethodInlineInjector {
                         v => AssemblyReferenceWhitelist = v,
                         () => AssemblyReferenceWhitelist,
                         () =>
-                            SimpleXmlSerializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                            Serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
                                 Serializer.XmlSerializationReader.Name
                             )
                     );
