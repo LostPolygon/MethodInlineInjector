@@ -88,6 +88,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleTests.cs" />
     <Compile Include="ConfigurationTests.cs" />
     <Compile Include="Helpers\CodeAssert.cs" />
     <Compile Include="Helpers\CSharpLanguage.cs" />
@@ -118,6 +119,10 @@
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Configuration\LostPolygon.MethodInlineInjector.Configuration.csproj">
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Console\LostPolygon.MethodInlineInjector.Console.csproj">
+      <Project>{7870A46D-285E-49CF-8A96-7DA7FB05CBD1}</Project>
+      <Name>LostPolygon.MethodInlineInjector.Console</Name>
     </ProjectReference>
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary\LostPolygon.MethodInlineInjector.Tests.TestInjectedLibrary.csproj">
       <Project>{46054333-8706-4412-980b-659df83891f8}</Project>

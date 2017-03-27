@@ -5,5 +5,8 @@ namespace LostPolygon.MethodInlineInjector {
     public class MethodInlineInjectorException : Exception {
         public MethodInlineInjectorException(string message) : base(message) {
         }
+
+        public MethodInlineInjectorException(string message, Exception innerException) : base(message, innerException) {
+        }
     }
 }

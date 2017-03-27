@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyCompany("Lost Polygon")]
-[assembly: AssemblyCopyright("© Lost Polygon")]
+[assembly: AssemblyCopyright("© Lost Polygon, 2017")]
 [assembly: AssemblyCulture("")]
 
 #if DEBUG
@@ -24,5 +24,5 @@ using System.Runtime.InteropServices;
 #pragma warning restore 0436
 
 internal static class Version {
-    internal const string kVersion = "0.1.0.0";
+    internal const string kVersion = "0.9.0.0";
 }

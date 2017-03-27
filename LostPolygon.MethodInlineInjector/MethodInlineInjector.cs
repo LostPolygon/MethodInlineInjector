@@ -8,7 +8,12 @@ using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
     public class MethodInlineInjector {
+        private static readonly log4net.ILog Log =
+            log4net.LogManager.GetLogger(nameof(MethodInlineInjector));
+
         private readonly ResolvedInjectionConfiguration _resolvedInjectionConfiguration;
+
+        public event Action<(ResolvedInjectedMethod injectedMethod, MethodDefinition injecteeMethod)> BeforeMethodInjected;
 
         public MethodInlineInjector(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
             _resolvedInjectionConfiguration = resolvedInjectionConfiguration;
@@ -27,10 +32,11 @@ namespace LostPolygon.MethodInlineInjector {
             }
         }
 
-        private static void InjectToAssembly(
+        private void InjectToAssembly(
             ResolvedInjecteeAssembly resolvedInjecteeAssembly,
             IReadOnlyList<ResolvedInjectedMethod> injectedMethods,
-            AssemblyDefinition injectedMethodsAssembly) {
+            AssemblyDefinition injectedMethodsAssembly
+        ) {
             Collection<AssemblyNameReference> injecteeAssemblyNameReferences =
                 resolvedInjecteeAssembly.AssemblyDefinition.MainModule.AssemblyReferences;
 
@@ -58,8 +64,8 @@ namespace LostPolygon.MethodInlineInjector {
 
                     bool isWhitelisted =
                         resolvedInjecteeAssembly
-                        .AssemblyReferenceWhiteList
-                        .Any(tuple =>
+                            .AssemblyReferenceWhiteList
+                            .Any(tuple =>
                                 IsAssemblyReferenceWhitelisted(
                                     injectedAssemblyNameReference,
                                     tuple.AssemblyNameReference,
@@ -72,7 +78,7 @@ namespace LostPolygon.MethodInlineInjector {
                             $"and cannot be added as a reference"
                         );
 
-                    Console.WriteLine(
+                    Log.Info(
                         $"Injectee assembly '{resolvedInjecteeAssembly.AssemblyDefinition} ' " +
                         $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
                         $"the reference will be added"
@@ -84,6 +90,14 @@ namespace LostPolygon.MethodInlineInjector {
 
             foreach (MethodDefinition injecteeMethod in resolvedInjecteeAssembly.InjecteeMethods) {
                 foreach (ResolvedInjectedMethod injectedMethod in injectedMethods) {
+                    Log.DebugFormat(
+                        "Injecting method '{0}' to method {1} at {2}",
+                        injectedMethod.MethodDefinition.GetFullName(),
+                        injecteeMethod.GetFullName(),
+                        injectedMethod.InjectionPosition
+                    );
+
+                    BeforeMethodInjected?.Invoke((injectedMethod, injecteeMethod));
                     MethodDefinition importedInjectedMethod =
                         CloneAndImportMethod(
                             injectedMethod.MethodDefinition,
@@ -101,7 +115,8 @@ namespace LostPolygon.MethodInlineInjector {
         private static AssemblyNameReference GetMatchingAssemblyNameReference(
             AssemblyNameReference injectedAssemblyNameReference,
             IEnumerable<AssemblyNameReference> injecteeAssemblyNameReferences,
-            bool isStrictCheck) {
+            bool isStrictCheck
+        ) {
             foreach (AssemblyNameReference injecteeAssemblyNameReference in injecteeAssemblyNameReferences) {
                 if (isStrictCheck) {
                     if (injectedAssemblyNameReference.FullName == injecteeAssemblyNameReference.FullName)
@@ -120,10 +135,6 @@ namespace LostPolygon.MethodInlineInjector {
             MethodDefinition injecteeMethod,
             MethodInjectionPosition injectionPosition
             ) {
-            // TODO: implement ReturnFromInjectee
-            //if (returnBehaviour == InjectionConfiguration.InjectedMethod.MethodReturnBehaviour.ReturnFromInjectee)
-            //    throw new NotImplementedException("ReturnFromInjectee");
-
             // Unroll short form instructions so they can be auto-fixed by Cecil
             // automatically when new instructions are inserted
             injectedMethod.Body.SimplifyMacros();

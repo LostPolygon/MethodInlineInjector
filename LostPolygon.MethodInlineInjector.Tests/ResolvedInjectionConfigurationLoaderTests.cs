@@ -90,19 +90,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
-        [ExpectedException(typeof(MethodInlineInjectorException))]
-        public void AttemptIncompatibleInjectedMethodOptions() {
-            ExecuteSimpleTest(
-                new InjectedMethod(
-                    InjectedLibraryPath,
-                    $"{InjectedClassName}.{nameof(TestInjectedMethods.SimpleReturn)}",
-                    MethodInjectionPosition.InjecteeMethodStart
-                ),
-                null
-            );
-        }
-
-        [Test]
         public void BlacklistTypeTest() {
             string blacklistedTypeFullName = typeof(TestInjectee).FullName;
             ExecuteSimpleBlacklistTypeTest(blacklistedTypeFullName);

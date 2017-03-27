@@ -8,9 +8,12 @@ using Mono.Cecil;
 using LostPolygon.MethodInlineInjector.Serialization;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using log4net;
 
 namespace LostPolygon.MethodInlineInjector {
     public class ResolvedInjectionConfigurationLoader {
+        private static readonly ILog Log = LogManager.GetLogger(nameof(ResolvedInjectionConfigurationLoader));
+
         private readonly Dictionary<string, AssemblyDefinitionCachedData> _assemblyPathToAssemblyMap =
             new Dictionary<string, AssemblyDefinitionCachedData>();
         private readonly InjectionConfiguration _injectionConfiguration;
@@ -24,22 +27,28 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public ResolvedInjectionConfiguration Load() {
-            Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
+            try {
+                Log.Debug("Calculating filtered list of injected methods");
+                Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
 
-            List<ResolvedInjectedMethod> injectedMethods = new List<ResolvedInjectedMethod>();
-            foreach (KeyValuePair<AssemblyDefinition, List<ResolvedInjectedMethod>> pair in injectedAssemblyToMethodsMap) {
-                injectedMethods.AddRange(pair.Value);
-            }
+                List<ResolvedInjectedMethod> injectedMethods = new List<ResolvedInjectedMethod>();
+                foreach (KeyValuePair<AssemblyDefinition, List<ResolvedInjectedMethod>> pair in injectedAssemblyToMethodsMap) {
+                    injectedMethods.AddRange(pair.Value);
+                }
 
-            List<ResolvedInjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
-            Validate(injectedMethods, injecteeAssemblies);
+                Log.Debug("Calculating list of injectee assemblies");
+                List<ResolvedInjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
+                Validate(injectedMethods, injecteeAssemblies);
 
-            ResolvedInjectionConfiguration resolvedInjectionConfiguration =
-                new ResolvedInjectionConfiguration(
-                    injectedMethods,
-                    injecteeAssemblies
+                ResolvedInjectionConfiguration resolvedInjectionConfiguration =
+                    new ResolvedInjectionConfiguration(
+                        injectedMethods,
+                        injecteeAssemblies
                     );
-            return resolvedInjectionConfiguration;
+                return resolvedInjectionConfiguration;
+            } catch (Exception e) {
+                throw new MethodInlineInjectorException("Unknown exception", e);
+            }
         }
 
         private void Validate(
@@ -120,8 +129,15 @@ namespace LostPolygon.MethodInlineInjector {
         private AssemblyDefinitionCachedData GetAssemblyDefinitionData(string assemblyPath) {
             assemblyPath = Path.GetFullPath(assemblyPath);
             if (!_assemblyPathToAssemblyMap.TryGetValue(assemblyPath, out AssemblyDefinitionCachedData assemblyDefinitionData)) {
+                Log.DebugFormat("Loading assembly at path '{0}'", assemblyPath);
                 AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath);
                 assemblyDefinitionData = new AssemblyDefinitionCachedData(assemblyDefinition);
+                Log.DebugFormat(
+                    "Loaded assembly at path '{0}': {1} types, {2} methods",
+                    assemblyPath,
+                    assemblyDefinitionData.AllTypes.Count,
+                    assemblyDefinitionData.AllMethods.Count
+                    );
                 _assemblyPathToAssemblyMap.Add(assemblyPath, assemblyDefinitionData);
             }
 
@@ -150,10 +166,19 @@ namespace LostPolygon.MethodInlineInjector {
                     }
 
                     if (memberReferenceBlacklistItem is MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterInclude) {
-                        string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
-                        MemberReferenceBlacklistFilterIncludeLoader memberReferenceBlacklistFilterIncludedList =
-                            SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterIncludeLoader>(whiteListIncludeXml);
-                        LoadMemberReferenceBlacklistFilters(memberReferenceBlacklistFilterIncludedList.Items);
+                        try {
+                            Log.DebugFormat("Loading member reference blacklist filter include at '{0}'", memberReferenceBlacklistFilterInclude.Path);
+                            string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
+                            MemberReferenceBlacklistFilterIncludeLoader memberReferenceBlacklistFilterIncludedList =
+                                SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterIncludeLoader>(whiteListIncludeXml);
+                            LoadMemberReferenceBlacklistFilters(memberReferenceBlacklistFilterIncludedList.Items);
+                        } catch (Exception e) {
+                            Console.WriteLine(e);
+                            throw new MethodInlineInjectorException(
+                                $"Unable to load member reference blacklist filter include at '{memberReferenceBlacklistFilterInclude.Path}'",
+                                e
+                            );
+                        }
                     }
                 }
             }
@@ -166,10 +191,18 @@ namespace LostPolygon.MethodInlineInjector {
                     }
 
                     if (assemblyReferenceWhitelistItem is AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterInclude) {
-                        string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
-                        AssemblyReferenceWhitelistFilterIncludeLoader assemblyReferenceWhitelistFilterIncludedList =
-                            SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterIncludeLoader>(whiteListIncludeXml);
-                        LoadAssemblyReferenceWhitelistFilters(assemblyReferenceWhitelistFilterIncludedList.Items);
+                        Log.DebugFormat("Loading assembly reference whitelists filter include at '{0}'", assemblyReferenceWhitelistFilterInclude.Path);
+                        try {
+                            string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
+                            AssemblyReferenceWhitelistFilterIncludeLoader assemblyReferenceWhitelistFilterIncludedList =
+                                SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterIncludeLoader>(whiteListIncludeXml);
+                            LoadAssemblyReferenceWhitelistFilters(assemblyReferenceWhitelistFilterIncludedList.Items);
+                        } catch (Exception e) {
+                            throw new MethodInlineInjectorException(
+                                $"Unable to load assembly reference whitelist filter include at '{assemblyReferenceWhitelistFilterInclude.Path}'",
+                                e
+                            );
+                        }
                     }
                 }
             }
@@ -178,6 +211,10 @@ namespace LostPolygon.MethodInlineInjector {
             LoadAssemblyReferenceWhitelistFilters(sourceInjecteeAssembly.AssemblyReferenceWhitelist);
 
             AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
+
+            Log.DebugFormat(
+                "Calculating injectee methods in assembly '{0}'",
+                assemblyDefinitionCachedData.AssemblyDefinition.MainModule.FullyQualifiedName);
 
             List<MethodDefinition> filteredInjecteeMethods =
                 GetFilteredInjecteeMethods(assemblyDefinitionCachedData, memberReferenceBlacklistFilters);
@@ -202,17 +239,20 @@ namespace LostPolygon.MethodInlineInjector {
             List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters) {
             Dictionary<string, Regex> regexCache = new Dictionary<string, Regex>();
 
+            Log.DebugFormat("Number of types before filtering: {0}", assemblyDefinitionCachedData.AllTypes.Count);
             TypeDefinition[] types =
                 assemblyDefinitionCachedData
                 .AllTypes
                 .Where(TestType)
                 .ToArray();
+            Log.DebugFormat("Number of types after filtering: {0}", types.Length);
 
             List<MethodDefinition> injecteeMethods =
                 types
                 .SelectMany(GetTestedMethodsFromType)
                 .Where(ValidateInjecteeMethod)
                 .ToList();
+            Log.DebugFormat("Number of methods after filtering: {0}", injecteeMethods.Count);
 
             return injecteeMethods;
 
@@ -243,8 +283,10 @@ namespace LostPolygon.MethodInlineInjector {
                         continue;
 
                     while (true) {
-                        if (!TestString(blacklistFilter, type.FullName))
+                        if (!TestString(blacklistFilter, type.FullName)) {
+                            Log.DebugFormat("Blacklisted type '{0}'", type.FullName);
                             return false;
+                        }
 
                         if (!blacklistFilter.MatchAncestors || type.BaseType == null)
                             break;
@@ -267,13 +309,16 @@ namespace LostPolygon.MethodInlineInjector {
                         continue;
 
                     foreach (PropertyDefinition property in properties) {
-                        if (TestString(blacklistFilter, property.FullName)) {
-                            if (property.GetMethod != null) {
-                                blacklistedMethods.Add(property.GetMethod);
-                            }
-                            if (property.SetMethod != null) {
-                                blacklistedMethods.Add(property.SetMethod);
-                            }
+                        if (!TestString(blacklistFilter, property.FullName)) {
+                            Log.DebugFormat("Blacklisted property '{0}.{1}'", property.DeclaringType.FullName, property.FullName);
+                            continue;
+                        }
+
+                        if (property.GetMethod != null) {
+                            blacklistedMethods.Add(property.GetMethod);
+                        }
+                        if (property.SetMethod != null) {
+                            blacklistedMethods.Add(property.SetMethod);
                         }
                     }
                 }
@@ -283,15 +328,17 @@ namespace LostPolygon.MethodInlineInjector {
                         continue;
 
                     foreach (MethodDefinition method in methods) {
-                        if (TestString(blacklistFilter, method.FullName)) {
-                            blacklistedMethods.Add(method);
+                        string methodFullName = method.GetFullName();
+                        if (!TestString(blacklistFilter, methodFullName)) {
+                            Log.DebugFormat("Blacklisted method '{0}'", methodFullName);
+                            continue;
                         }
+
+                        blacklistedMethods.Add(method);
                     }
                 }
 
-                return
-                    methods
-                    .Except(blacklistedMethods);
+                return methods.Except(blacklistedMethods);
             }
         }
 

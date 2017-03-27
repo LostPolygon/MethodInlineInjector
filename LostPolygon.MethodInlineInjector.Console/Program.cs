@@ -1,27 +1,41 @@
-﻿using System.Globalization;
-using System.IO;
+﻿using System;
+using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using System.Threading;
-using LostPolygon.MethodInlineInjector.Serialization;
+using System.Xml;
+using log4net;
+using log4net.Config;
 
-namespace LostPolygon.MethodInlineInjector {
+namespace LostPolygon.MethodInlineInjector.ConsoleApp {
     internal class Program {
-        public static void Main(string[] args) {
+        private static readonly ILog Log = LogManager.GetLogger("ConsoleInjector");
+
+        public static void Main(params string[] args) {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+            Console.OutputEncoding = Encoding.Unicode;
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            SetupLog4Net();
 
-            // TODO: args validation, stdin config input
-            string serializedInjectorConfiguration = File.ReadAllText(args[0]);
-            InjectionConfiguration injectionConfiguration =
-                SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
+            ConsoleInjector.Run(args);
+        }
 
-            ResolvedInjectionConfiguration resolvedInjectionConfiguration =
-                ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(injectionConfiguration);
+        private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
+            Log.Fatal(
+                "Fatal error:" + Environment.NewLine +
+                (Exception) e.ExceptionObject + Environment.NewLine +
+                ((Exception) e.ExceptionObject).InnerException
+            );
+            Console.ReadLine();
+            Environment.Exit(1);
+        }
 
-            MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);
-            assemblyMethodInjector.Inject();
+        private static void SetupLog4Net() {
+            XmlDocument objDocument = new XmlDocument();
+            objDocument.LoadXml(Resources.log4netConfiguration);
+            XmlElement objElement = objDocument.DocumentElement;
 
-            foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
-                injecteeAssembly.AssemblyDefinition.Write(injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName);
-            }
+            XmlConfigurator.Configure(objElement);
         }
     }
 }
