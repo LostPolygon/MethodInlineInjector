@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace LostPolygon.MethodInlineInjector.ConsoleApp {
+namespace LostPolygon.MethodInlineInjector.Cli {
     internal static class AssemblyUtility {
         public static DateTime? GetBuildDateTime(this Assembly assembly) {
             try {

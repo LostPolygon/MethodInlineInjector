@@ -24,7 +24,7 @@
     <layout type="log4net.Layout.PatternLayout">
       <converter>
         <name value="delta" />
-        <type value="LostPolygon.MethodInlineInjector.ConsoleApp.DeltaPatternConverter" />
+        <type value="LostPolygon.MethodInlineInjector.Cli.DeltaPatternConverter" />
       </converter>
       <conversionpattern value="[%-6delta] %logger: %message%newline" />
     </layout>

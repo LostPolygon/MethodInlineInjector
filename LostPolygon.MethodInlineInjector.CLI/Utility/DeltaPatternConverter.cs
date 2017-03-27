@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using log4net.Layout.Pattern;
 
-namespace LostPolygon.MethodInlineInjector.ConsoleApp {
+namespace LostPolygon.MethodInlineInjector.Cli {
     internal class DeltaPatternConverter : PatternLayoutConverter {
         private Stopwatch _stopwatch;
         private long _lastMs = -1;

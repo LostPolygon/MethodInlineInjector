@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LostPolygon.MethodInlineInjector.ConsoleApp {
+namespace LostPolygon.MethodInlineInjector.Cli {
     using System;
     
     

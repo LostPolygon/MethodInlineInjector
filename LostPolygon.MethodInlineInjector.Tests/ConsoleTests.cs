@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using LostPolygon.MethodInlineInjector.ConsoleApp;
-using LostPolygon.MethodInlineInjector.Serialization;
-using NUnit.Framework;
-using TestInjectedLibrary;
+﻿using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
     [TestFixture]

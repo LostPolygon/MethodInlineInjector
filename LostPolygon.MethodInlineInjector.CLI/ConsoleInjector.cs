@@ -6,10 +6,9 @@ using CommandLine;
 using CommandLine.Text;
 using log4net;
 using log4net.Core;
-using log4net.Repository;
 using LostPolygon.MethodInlineInjector.Serialization;
 
-namespace LostPolygon.MethodInlineInjector.ConsoleApp {
+namespace LostPolygon.MethodInlineInjector.Cli {
     internal class ConsoleInjector {
         private static readonly ILog Log = LogManager.GetLogger("ConsoleInjector");
 
