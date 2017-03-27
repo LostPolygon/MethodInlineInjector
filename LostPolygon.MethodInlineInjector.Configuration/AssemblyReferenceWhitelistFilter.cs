@@ -32,13 +32,13 @@ namespace LostPolygon.MethodInlineInjector {
         void ISimpleXmlSerializable.Serialize() {
             base.Serialize();
 
-            SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
             {
-                SerializationHelper.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
-                SerializationHelper.ProcessAttributeString(nameof(StrictNameCheck), s => StrictNameCheck = Convert.ToBoolean(s), () => Convert.ToString(StrictNameCheck));
+                Serializer.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
+                Serializer.ProcessAttributeString(nameof(StrictNameCheck), s => StrictNameCheck = Convert.ToBoolean(s), () => Convert.ToString(StrictNameCheck));
             }
-            SerializationHelper.ProcessAdvanceOnRead();
-            SerializationHelper.ProcessEndElement();
+            Serializer.ProcessAdvanceOnRead();
+            Serializer.ProcessEndElement();
         }
 
         #endregion

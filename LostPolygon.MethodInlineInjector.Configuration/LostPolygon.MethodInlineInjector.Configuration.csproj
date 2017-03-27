@@ -59,8 +59,7 @@
     <Compile Include="Utility\ReadOnlyCollectionUtility.cs" />
     <Compile Include="Serialization\KnownInheritorsAttribute.cs" />
     <Compile Include="Serialization\SimpleXmlSerializable.cs" />
-    <Compile Include="Serialization\SimpleXmlSerializableExtensions.cs" />
-    <Compile Include="Serialization\SimpleXmlSerializationHelper.cs" />
+    <Compile Include="Serialization\SimpleXmlSerializer.cs" />
     <Compile Include="Serialization\SimpleXmlSerializationUtility.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -9,7 +9,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected InjectionConfigurationFileInclude(string path) {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
+            Path = String.IsNullOrEmpty(path) ? throw new ArgumentNullException(nameof(path)) : path;
         }
 
         public override string ToString() {
@@ -21,12 +21,12 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
             {
-                SerializationHelper.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
+                Serializer.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
             }
-            SerializationHelper.ProcessAdvanceOnRead();
-            SerializationHelper.ProcessEndElement();
+            Serializer.ProcessAdvanceOnRead();
+            Serializer.ProcessEndElement();
         }
 
         #endregion

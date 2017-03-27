@@ -1,28 +1,29 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
-    public class SimpleXmlSerializationHelper {
-        private readonly Action _serializeAction;
+    public class SimpleXmlSerializer {
         private readonly Stack<String> _readStartedElementNamesStack = new Stack<string>();
+        private readonly ISimpleXmlSerializable _simpleXmlSerializable;
 
         public XmlReader XmlSerializationReader { get; private set; }
         public XmlWriter XmlSerializationWriter { get; private set; }
         public bool IsXmlSerializationReading => XmlSerializationReader != null;
 
-        public SimpleXmlSerializationHelper(Action serializeAction) {
-            _serializeAction = serializeAction;
+        public SimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) {
+            _simpleXmlSerializable = simpleXmlSerializable;
         }
 
         public void ReadXml(XmlReader reader) {
             try {
                 XmlSerializationWriter = null;
                 XmlSerializationReader = reader;
-                _serializeAction();
+                _simpleXmlSerializable.Serialize();
             } finally {
                 XmlSerializationReader = null;
             }
@@ -32,19 +33,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             try {
                 XmlSerializationReader = null;
                 XmlSerializationWriter = writer;
-                _serializeAction();
+                _simpleXmlSerializable.Serialize();
             } finally {
-                XmlSerializationWriter = null;
-            }
-        }
-
-        public void SerializeWithInheritedMode(XmlReader reader, XmlWriter writer) {
-            try {
-                XmlSerializationReader = reader;
-                XmlSerializationWriter = writer;
-                _serializeAction();
-            } finally {
-                XmlSerializationReader = null;
                 XmlSerializationWriter = null;
             }
         }
@@ -109,6 +99,37 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public void ProcessAdvanceOnRead() {
             if (IsXmlSerializationReading) {
                 XmlSerializationReader.Read();
+            }
+        }
+
+        public void ProcessCollection<T>(
+            ICollection<T> collection,
+            Func<T> createItemFunc = null)
+            where T : class, ISimpleXmlSerializable {
+            if (IsXmlSerializationReading) {
+                while (XmlSerializationReader.NodeType != XmlNodeType.EndElement) {
+                    T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
+                    value.ReadXml(XmlSerializationReader);
+                    collection.Add(value);
+                }
+            } else {
+                foreach (T value in collection) {
+                    value.WriteXml(XmlSerializationWriter);
+                }
+            }
+        }
+
+        public void ProcessCollectionAsReadOnly<T>(
+            Action<ReadOnlyCollection<T>> collectionSetAction,
+            Func<ReadOnlyCollection<T>> collectionGetFunc,
+            Func<T> createItemFunc = null)
+            where T : class, ISimpleXmlSerializable {
+            if (IsXmlSerializationReading) {
+                List<T> list = new List<T>();
+                ProcessCollection(list, createItemFunc);
+                collectionSetAction(list.AsReadOnly());
+            } else {
+                ProcessCollection(collectionGetFunc(), createItemFunc);
             }
         }
 

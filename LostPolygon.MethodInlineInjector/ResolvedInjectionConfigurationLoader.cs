@@ -392,12 +392,12 @@ namespace LostPolygon.MethodInlineInjector {
                 base.Serialize();
 
                 // Skip root element when reading
-                SerializationHelper.ProcessAdvanceOnRead();
+                Serializer.ProcessAdvanceOnRead();
 
-                this.ProcessCollection(
+                Serializer.ProcessCollection(
                     Items,
-                    () => SimpleXmlSerializationHelper.CreateByKnownInheritors<TItem>(
-                              SerializationHelper.XmlSerializationReader.Name
+                    () => SimpleXmlSerializer.CreateByKnownInheritors<TItem>(
+                              Serializer.XmlSerializationReader.Name
                           ));
             }
         }

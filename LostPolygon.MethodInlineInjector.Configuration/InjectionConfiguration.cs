@@ -34,28 +34,28 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
-            SerializationHelper.ProcessAdvanceOnRead();
+            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
+            Serializer.ProcessAdvanceOnRead();
             {
-                SerializationHelper.ProcessWhileNotElementEnd(() => {
-                    if (SerializationHelper.ProcessStartElement(nameof(InjecteeAssemblies))) {
-                        SerializationHelper.ProcessAdvanceOnRead();
+                Serializer.ProcessWhileNotElementEnd(() => {
+                    if (Serializer.ProcessStartElement(nameof(InjecteeAssemblies))) {
+                        Serializer.ProcessAdvanceOnRead();
                         {
-                            this.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
+                            Serializer.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
                         }
-                        SerializationHelper.ProcessEndElement();
+                        Serializer.ProcessEndElement();
                     }
 
-                    if (SerializationHelper.ProcessStartElement(nameof(InjectedMethods))) {
-                        SerializationHelper.ProcessAdvanceOnRead();
+                    if (Serializer.ProcessStartElement(nameof(InjectedMethods))) {
+                        Serializer.ProcessAdvanceOnRead();
                         {
-                            this.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
+                            Serializer.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
                         }
-                        SerializationHelper.ProcessEndElement();
+                        Serializer.ProcessEndElement();
                     }
                 });
             }
-            SerializationHelper.ProcessEndElement();
+            Serializer.ProcessEndElement();
         }
 
         #endregion

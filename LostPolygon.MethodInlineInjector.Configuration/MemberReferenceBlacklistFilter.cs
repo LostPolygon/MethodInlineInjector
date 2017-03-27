@@ -19,7 +19,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public MemberReferenceBlacklistFilter(string filter, MemberReferenceBlacklistFilterFlags filterFlags = kDefaultFilterOptions) {
-            Filter = filter ?? throw new ArgumentNullException(nameof(filter));
+            Filter = String.IsNullOrEmpty(filter) ? throw new ArgumentNullException(nameof(filter)) : filter;
             FilterFlags = filterFlags;
         }
 
@@ -39,13 +39,13 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            SerializationHelper.ProcessStartElement(SimpleXmlSerializationHelper.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
             {
-                SerializationHelper.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                SerializationHelper.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
+                Serializer.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
+                Serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
             }
-            SerializationHelper.ProcessAdvanceOnRead();
-            SerializationHelper.ProcessEndElement();
+            Serializer.ProcessAdvanceOnRead();
+            Serializer.ProcessEndElement();
         }
 
         #endregion

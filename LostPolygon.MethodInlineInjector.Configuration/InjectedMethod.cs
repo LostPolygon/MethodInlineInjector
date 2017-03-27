@@ -39,14 +39,14 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            SerializationHelper.ProcessStartElement(nameof(InjectedMethod));
+            Serializer.ProcessStartElement(nameof(InjectedMethod));
             {
-                SerializationHelper.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
-                SerializationHelper.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
-                SerializationHelper.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
+                Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
+                Serializer.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
+                Serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
             }
-            SerializationHelper.ProcessAdvanceOnRead();
-            SerializationHelper.ProcessEndElement();
+            Serializer.ProcessAdvanceOnRead();
+            Serializer.ProcessEndElement();
         }
 
         #endregion

@@ -5,19 +5,19 @@ using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public abstract class SimpleXmlSerializable : ISimpleXmlSerializable {
-        private readonly SimpleXmlSerializationHelper _serializationHelper;
+        private readonly SimpleXmlSerializer _serializer;
 
-        protected internal SimpleXmlSerializationHelper SerializationHelper => _serializationHelper;
+        protected SimpleXmlSerializer Serializer => _serializer;
 
         protected SimpleXmlSerializable() {
-            _serializationHelper = new SimpleXmlSerializationHelper(((ISimpleXmlSerializable) this).Serialize);
+            _serializer = new SimpleXmlSerializer(this);
         }
 
         #region ISimpleXmlSerializable
 
         protected virtual void Serialize() {
-            if (_serializationHelper.XmlSerializationReader == null && _serializationHelper.XmlSerializationWriter == null ||
-                _serializationHelper.XmlSerializationReader != null && _serializationHelper.XmlSerializationWriter != null) {
+            if (_serializer.XmlSerializationReader == null && _serializer.XmlSerializationWriter == null ||
+                _serializer.XmlSerializationReader != null && _serializer.XmlSerializationWriter != null) {
                 throw new InvalidOperationException();
             }
         }
@@ -35,11 +35,11 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         }
 
         void IXmlSerializable.ReadXml(XmlReader reader) {
-            _serializationHelper.ReadXml(reader);
+            _serializer.ReadXml(reader);
         }
 
         void IXmlSerializable.WriteXml(XmlWriter writer) {
-            _serializationHelper.WriteXml(writer);
+            _serializer.WriteXml(writer);
         }
 
         #endregion
