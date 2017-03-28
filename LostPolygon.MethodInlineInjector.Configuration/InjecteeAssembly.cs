@@ -41,33 +41,35 @@ namespace LostPolygon.MethodInlineInjector {
                 Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                 Serializer.ProcessAdvanceOnRead();
 
-                Serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
-                Serializer.ProcessAdvanceOnRead();
-                {
-                    Serializer.ProcessCollectionAsReadOnly(
-                        v => MemberReferenceBlacklist = v,
-                        () => MemberReferenceBlacklist,
-                        () =>
-                            Serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
-                                Serializer.XmlSerializationReader.Name
-                            )
-                    );
-                }
-                Serializer.ProcessEndElement();
+                Serializer.ProcessOptional(() => {
+                    Serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
+                    Serializer.ProcessAdvanceOnRead();
+                    {
+                        Serializer.ProcessCollectionAsReadOnly(
+                            v => MemberReferenceBlacklist = v,
+                            () => MemberReferenceBlacklist,
+                            () =>
+                                Serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                                    Serializer.XmlSerializationReader.Name
+                                )
+                        );
+                    }
+                    Serializer.ProcessEndElement();
 
-                Serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
-                Serializer.ProcessAdvanceOnRead();
-                {
-                    Serializer.ProcessCollectionAsReadOnly(
-                        v => AssemblyReferenceWhitelist = v,
-                        () => AssemblyReferenceWhitelist,
-                        () =>
-                            Serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
-                                Serializer.XmlSerializationReader.Name
-                            )
-                    );
-                }
-                Serializer.ProcessEndElement();
+                    Serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
+                    Serializer.ProcessAdvanceOnRead();
+                    {
+                        Serializer.ProcessCollectionAsReadOnly(
+                            v => AssemblyReferenceWhitelist = v,
+                            () => AssemblyReferenceWhitelist,
+                            () =>
+                                Serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                                    Serializer.XmlSerializationReader.Name
+                                )
+                        );
+                    }
+                    Serializer.ProcessEndElement();
+                });
             }
             Serializer.ProcessEndElement();
         }

@@ -21,7 +21,7 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             {
                 Serializer.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
             }

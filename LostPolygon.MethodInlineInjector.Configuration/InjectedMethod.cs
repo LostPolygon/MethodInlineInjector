@@ -43,7 +43,9 @@ namespace LostPolygon.MethodInlineInjector {
             {
                 Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                 Serializer.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
-                Serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
+                Serializer.ProcessOptional(() => {
+                    Serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
+                });
             }
             Serializer.ProcessAdvanceOnRead();
             Serializer.ProcessEndElement();

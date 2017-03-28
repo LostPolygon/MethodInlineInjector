@@ -13,28 +13,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public SimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) : base(simpleXmlSerializable) {
         }
 
-        public override SimpleXmlSerializer Clone(ISimpleXmlSerializable simpleXmlSerializable) {
+        protected override SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable) {
             return new SimpleXmlSerializer(simpleXmlSerializable);
-        }
-
-        public override void ReadXml(XmlReader reader) {
-            try {
-                XmlSerializationWriter = null;
-                XmlSerializationReader = reader;
-                SimpleXmlSerializable.Serialize();
-            } finally {
-                XmlSerializationReader = null;
-            }
-        }
-
-        public override void WriteXml(XmlWriter writer) {
-            try {
-                XmlSerializationReader = null;
-                XmlSerializationWriter = writer;
-                SimpleXmlSerializable.Serialize();
-            } finally {
-                XmlSerializationWriter = null;
-            }
         }
 
         public override bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc) {
@@ -185,9 +165,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     long flagValue = enumValues[i].ToInt64(null);
 
                     long currentFlag = currentEnumValue & flagValue;
-                    if (currentFlag != (defaultValueLong & currentEnumValue)) {
-                        ProcessAttributeString(flagName, null, () => Convert.ToString(currentFlag != 0));
-                    }
+                    ProcessAttributeString(flagName, null, () => Convert.ToString(currentFlag != 0));
                 }
             }
         }
@@ -201,57 +179,6 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             } else {
                 action();
             }
-        }
-
-        public override T CreateByXmlRootName<T>(string name, params Type[] types) {
-            foreach (Type type in types) {
-                if (GetXmlRootName(type) == name) {
-                    T value = (T) Activator.CreateInstance(type, true);
-                    CloneAndAssignSerializer(value);
-                    return value;
-                }
-            }
-
-            throw new NotSupportedException($"Unknown element name {name}");
-        }
-
-        public override T CreateByKnownInheritors<T>(string name) {
-            IEnumerable<Type> knownInheritors =
-                Attribute
-                .GetCustomAttributes(typeof(T), typeof(KnownInheritorsAttribute))
-                .Cast<KnownInheritorsAttribute>()
-                .SelectMany(attribute => attribute.InheritorTypes)
-                .Distinct();
-
-            bool isEmpty = true;
-            foreach (Type type in knownInheritors) {
-                isEmpty = false;
-                if (GetXmlRootName(type) == name) {
-                    T value = (T) Activator.CreateInstance(type, true);
-                    CloneAndAssignSerializer(value);
-                    return value;
-                }
-            }
-
-            if (isEmpty)
-                throw new InvalidOperationException($"Type {typeof(T)} has no {nameof(KnownInheritorsAttribute)} attached");
-
-            throw new NotSupportedException($"Unknown element name {name}");
-        }
-
-        public static string GetXmlRootName(Type type) {
-            if (!typeof(ISimpleXmlSerializable).IsAssignableFrom(type))
-                throw new Exception($"{nameof(type.Name)} must implement {nameof(ISimpleXmlSerializable)}");
-
-            XmlRootAttribute xmlRootAttribute = (XmlRootAttribute) Attribute.GetCustomAttribute(type, typeof(XmlRootAttribute));
-            if (xmlRootAttribute == null)
-                throw new Exception($"No {nameof(XmlRootAttribute)} defined on {type.Name}");
-
-            return xmlRootAttribute.ElementName;
-        }
-
-        public static string GetXmlRootName<T>() where T : ISimpleXmlSerializable {
-            return GetXmlRootName(typeof(T));
         }
     }
 }

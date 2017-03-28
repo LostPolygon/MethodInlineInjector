@@ -34,7 +34,7 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             Serializer.ProcessAdvanceOnRead();
             {
                 Serializer.ProcessWhileNotElementEnd(() => {

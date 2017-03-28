@@ -39,10 +39,12 @@ namespace LostPolygon.MethodInlineInjector {
         protected override void Serialize() {
             base.Serialize();
 
-            Serializer.ProcessStartElement(SimpleXmlSerializer.GetXmlRootName(GetType()));
+            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             {
                 Serializer.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                Serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
+                Serializer.ProcessOptional(() => {
+                    Serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
+                });
             }
             Serializer.ProcessAdvanceOnRead();
             Serializer.ProcessEndElement();
