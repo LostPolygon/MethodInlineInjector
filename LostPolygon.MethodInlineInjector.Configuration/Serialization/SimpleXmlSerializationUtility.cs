@@ -6,21 +6,29 @@ using System.Xml;
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public static class SimpleXmlSerializationUtility {
         public static string GenerateXmlSchemaString<T>(T objectInstance) where T : ISimpleXmlSerializable {
+            if (objectInstance == null)
+                return "";
+
+            XmlDocument xmlDocument = new XmlDocument();
             StringBuilder sb = new StringBuilder();
             using (TextWriter textWriter = new StringWriter(sb)) {
                 using (XmlTextWriter xmlTextWriter = new XmlTextWriter(textWriter)) {
                     xmlTextWriter.Formatting = Formatting.Indented;
                     xmlTextWriter.IndentChar = ' ';
                     xmlTextWriter.Indentation = 4;
-                    objectInstance.SetSerializer(new SchemaGeneratorSimpleXmlSerializer(objectInstance));
 
-                    xmlTextWriter.WriteStartElement("xs", "schema", "http://www.w3.org/2001/XMLSchema");
-                    xmlTextWriter.WriteAttributeString("elementFormDefault", "qualified");
-                    xmlTextWriter.WriteAttributeString("attributeFormDefault", "unqualified");
+                    XmlElement schemaElement = xmlDocument.CreateElement("xs", "schema", "http://www.w3.org/2001/XMLSchema");
+                    schemaElement.SetAttribute("elementFormDefault", "qualified");
+                    schemaElement.SetAttribute("attributeFormDefault", "unqualified");
+                    xmlDocument.InsertBefore(schemaElement, null);
 
-                    objectInstance.WriteXml(xmlTextWriter);
+                    SchemaGeneratorSimpleXmlSerializer serializer = new SchemaGeneratorSimpleXmlSerializer(objectInstance, xmlDocument, schemaElement);
+                    objectInstance.Serializer = serializer;
+                    objectInstance.Serialize();
 
-                    xmlTextWriter.WriteEndElement();
+                    serializer.InsertCapturedTypes();
+
+                    xmlDocument.WriteContentTo(xmlTextWriter);
                 }
             }
 
@@ -28,6 +36,10 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         }
 
         public static string XmlSerializeToString<T>(T objectInstance) where T : ISimpleXmlSerializable {
+            if (objectInstance == null)
+                return "";
+
+            XmlDocument xmlDocument = new XmlDocument();
             StringBuilder sb = new StringBuilder();
             using (TextWriter textWriter = new StringWriter(sb)) {
                 using (XmlTextWriter xmlTextWriter = new XmlTextWriter(textWriter)) {
@@ -35,15 +47,20 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     xmlTextWriter.IndentChar = ' ';
                     xmlTextWriter.Indentation = 4;
                     xmlTextWriter.Namespaces = false;
-                    objectInstance.SetSerializer(new SimpleXmlSerializer(objectInstance));
-                    objectInstance.WriteXml(xmlTextWriter);
+                    objectInstance.Serializer =
+                        new SimpleXmlSerializer(false, objectInstance, xmlDocument, xmlDocument.DocumentElement);
+                    objectInstance.Serialize();
+
+                    xmlDocument.WriteContentTo(xmlTextWriter);
                 }
             }
 
             return sb.ToString();
         }
 
-        public static T XmlDeserializeFromString<T>(string objectData) where T : ISimpleXmlSerializable {
+        public static T XmlDeserializeFromString<T>(string objectData) where T : class, ISimpleXmlSerializable {
+            XmlDocument xmlDocument = new XmlDocument();
+
             T result;
             using (TextReader textReader = new StringReader(objectData)) {
                 XmlReaderSettings xmlReaderSettings = new XmlReaderSettings {
@@ -54,10 +71,12 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 while (xmlReader.NodeType != XmlNodeType.Element) {
                     xmlReader.Read();
                 }
+                xmlDocument.Load(xmlReader);
 
                 result = (T) Activator.CreateInstance(typeof(T), true);
-                result.SetSerializer(new SimpleXmlSerializer(result));
-                result.ReadXml(xmlReader);
+                result.Serializer =
+                    new SimpleXmlSerializer(true, result, xmlDocument, xmlDocument.DocumentElement);
+                result.Serialize();
             }
 
             return result;

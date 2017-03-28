@@ -1,0 +1,18 @@
+<Configuration>
+    <InjecteeAssemblies>
+        <InjecteeAssembly AssemblyPath="Mono.Cecil_Injectee.dll">
+            <MemberReferenceBlacklist>
+                <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
+                <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
+            </MemberReferenceBlacklist>
+            <AssemblyReferenceWhitelist>
+                <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
+                <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
+                <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
+            </AssemblyReferenceWhitelist>
+        </InjecteeAssembly>
+    </InjecteeAssemblies>
+    <InjectedMethods>
+        <InjectedMethod AssemblyPath="TestInjectedLibrary.dll" MethodFullName="TestInjectedLibrary.TestInjectedMethods.Complex" InjectionPosition="InjecteeMethodStart" />
+    </InjectedMethods>
+</Configuration>

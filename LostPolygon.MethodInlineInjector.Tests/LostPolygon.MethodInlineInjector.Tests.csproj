@@ -117,7 +117,7 @@
     <None Include="TestData\Configuration.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="TestData\ConfigurationOld.xsd">
+    <None Include="TestData\ConfigurationRef.xsd">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

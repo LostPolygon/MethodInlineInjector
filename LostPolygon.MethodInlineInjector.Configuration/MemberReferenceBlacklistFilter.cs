@@ -42,7 +42,9 @@ namespace LostPolygon.MethodInlineInjector {
             Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             {
                 Serializer.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                Serializer.ProcessOptional(() => {
+                Serializer.ProcessWithFlags(
+                    SimpleXmlSerializerFlags.IsOptional,
+                    () => {
                     Serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
                 });
             }

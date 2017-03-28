@@ -1,8 +1,7 @@
-using System.Xml.Serialization;
-
 namespace LostPolygon.MethodInlineInjector.Serialization {
-    public interface ISimpleXmlSerializable : IXmlSerializable  {
+    public interface ISimpleXmlSerializable {
         void Serialize();
-        void SetSerializer(SimpleXmlSerializerBase serializer);
+
+        SimpleXmlSerializerBase Serializer { get; set; }
     }
 }

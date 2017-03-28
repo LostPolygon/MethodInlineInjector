@@ -35,7 +35,9 @@ namespace LostPolygon.MethodInlineInjector {
             Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             {
                 Serializer.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
-                Serializer.ProcessOptional(() => {
+                Serializer.ProcessWithFlags(
+                    SimpleXmlSerializerFlags.IsOptional, 
+                    () => {
                     Serializer.ProcessAttributeString(
                         nameof(StrictNameCheck),
                         s => StrictNameCheck = Convert.ToBoolean(s),
@@ -44,7 +46,6 @@ namespace LostPolygon.MethodInlineInjector {
                 });
 
             }
-            Serializer.ProcessAdvanceOnRead();
             Serializer.ProcessEndElement();
         }
 

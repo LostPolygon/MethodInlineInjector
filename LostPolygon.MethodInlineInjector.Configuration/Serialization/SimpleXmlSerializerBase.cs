@@ -1,47 +1,39 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public abstract class SimpleXmlSerializerBase {
-        public ISimpleXmlSerializable SimpleXmlSerializable { get; }
-        public XmlReader XmlSerializationReader { get; protected set; }
-        public XmlWriter XmlSerializationWriter { get; protected set; }
-        public bool IsXmlSerializationReading => XmlSerializationReader != null;
+        protected XmlDocument Document { get; }
+        public XmlElement CurrentXmlElement { get; set; }
 
-        protected SimpleXmlSerializerBase(ISimpleXmlSerializable simpleXmlSerializable) {
-            SimpleXmlSerializable = simpleXmlSerializable;
+        public ISimpleXmlSerializable SimpleXmlSerializable { get; }
+        public bool IsXmlSerializationReading { get; }
+
+        protected SimpleXmlSerializerBase(
+            bool isReading,
+            ISimpleXmlSerializable simpleXmlSerializable,
+            XmlDocument xmlDocument,
+            XmlElement currentXmlElement) {
+            IsXmlSerializationReading  = isReading;
+            SimpleXmlSerializable = simpleXmlSerializable ?? throw new ArgumentNullException(nameof(simpleXmlSerializable));
+            Document = xmlDocument ?? throw new ArgumentNullException(nameof(xmlDocument));
+            CurrentXmlElement = currentXmlElement;
         }
 
         protected abstract SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable);
 
-        public virtual void ReadXml(XmlReader reader) {
-            try {
-                XmlSerializationWriter = null;
-                XmlSerializationReader = reader;
-                SimpleXmlSerializable.Serialize();
-            } finally {
-                XmlSerializationReader = null;
-            }
+        public virtual void Serialize() {
+            SimpleXmlSerializable.Serialize();
         }
 
-        public virtual void WriteXml(XmlWriter writer) {
-            try {
-                XmlSerializationReader = null;
-                XmlSerializationWriter = writer;
-                SimpleXmlSerializable.Serialize();
-            } finally {
-                XmlSerializationWriter = null;
-            }
-        }
-
-        public abstract bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc);
         public abstract bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc);
-        public abstract bool ProcessStartElement(string name);
-        public abstract void ProcessEndElement(bool readEndElement = true);
+        public abstract bool ProcessStartElement(string name, string prefix = null, string namespaceUri = null);
+        public abstract void ProcessEndElement();
         public abstract void ProcessAdvanceOnRead();
 
         public abstract void ProcessCollection<T>(
@@ -63,12 +55,12 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         public abstract void ProcessWhileNotElementEnd(Action action);
 
-        public virtual void ProcessOptional(Action action) {
+        public virtual void ProcessWithFlags(SimpleXmlSerializerFlags flags, Action action) {
             action();
         }
 
         protected void CloneAndAssignSerializer(ISimpleXmlSerializable simpleXmlSerializable) {
-            simpleXmlSerializable.SetSerializer(Clone(simpleXmlSerializable));
+            simpleXmlSerializable.Serializer = Clone(simpleXmlSerializable);
         }
 
         public virtual T CreateByXmlRootName<T>(string name, params Type[] types)
@@ -109,6 +101,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             throw new NotSupportedException($"Unknown element name {name}");
         }
 
+        [DebuggerStepThrough]
         public virtual string GetXmlRootName(Type type) {
             if (!typeof(ISimpleXmlSerializable).IsAssignableFrom(type))
                 throw new Exception($"{nameof(type.Name)} must implement {nameof(ISimpleXmlSerializable)}");

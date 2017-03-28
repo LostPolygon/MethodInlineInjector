@@ -13,6 +13,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjectionConfiguration configuration = GetInjectionConfiguration();
 
             string configurationSerialized = SimpleXmlSerializationUtility.XmlSerializeToString(configuration);
+            Console.WriteLine(configurationSerialized);
             InjectionConfiguration configurationDeserialized =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
@@ -46,7 +47,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                         MemberReferenceBlacklistFilterFlags.SkipTypes |
                         MemberReferenceBlacklistFilterFlags.MatchAncestors
                     ),
-                    new MemberReferenceBlacklistFilterInclude("SomeInclude.xml")
+                    //new MemberReferenceBlacklistFilterInclude("SomeMemberReferenceBlacklistFilterInclude.xml")
                 };
             }
 
@@ -54,7 +55,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 assemblyReferenceWhitelist = new List<IAssemblyReferenceWhitelistItem> {
                     new AssemblyReferenceWhitelistFilter("mscorlib", true),
                     new AssemblyReferenceWhitelistFilter("System", false),
-                    new AssemblyReferenceWhitelistFilterInclude("SomeInclude.xml")
+                    //new AssemblyReferenceWhitelistFilterInclude("SomeInclude.xml")
                 };
             }
 

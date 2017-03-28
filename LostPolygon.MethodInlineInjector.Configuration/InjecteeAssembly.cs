@@ -41,7 +41,9 @@ namespace LostPolygon.MethodInlineInjector {
                 Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
                 Serializer.ProcessAdvanceOnRead();
 
-                Serializer.ProcessOptional(() => {
+                Serializer.ProcessWithFlags(
+                    SimpleXmlSerializerFlags.IsOptional, 
+                    () => {
                     Serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
                     Serializer.ProcessAdvanceOnRead();
                     {
@@ -50,7 +52,7 @@ namespace LostPolygon.MethodInlineInjector {
                             () => MemberReferenceBlacklist,
                             () =>
                                 Serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
-                                    Serializer.XmlSerializationReader.Name
+                                    Serializer.CurrentXmlElement.Name
                                 )
                         );
                     }
@@ -64,7 +66,7 @@ namespace LostPolygon.MethodInlineInjector {
                             () => AssemblyReferenceWhitelist,
                             () =>
                                 Serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
-                                    Serializer.XmlSerializationReader.Name
+                                    Serializer.CurrentXmlElement.Name
                                 )
                         );
                     }

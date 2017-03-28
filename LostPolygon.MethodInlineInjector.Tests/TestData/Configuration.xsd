@@ -1,0 +1,72 @@
+<xs:schema elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Configuration">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element minOccurs="1" name="InjecteeAssemblies">
+          <xs:complexType>
+            <xs:choice>
+              <xs:element name="InjecteeAssembly" type="InjecteeAssembly" />
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+        <xs:element minOccurs="1" maxOccurs="unbounded" name="InjectedMethods">
+          <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+              <xs:element name="InjectedMethod" type="InjectedMethod" />
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="MemberReferenceBlacklistFilter">
+    <xs:attribute name="Filter" type="xs:string" use="required" />
+    <xs:attribute name="SkipTypes" type="xs:string" />
+    <xs:attribute name="SkipMethods" type="xs:string" />
+    <xs:attribute name="SkipProperties" type="xs:string" />
+    <xs:attribute name="IsRegex" type="xs:string" />
+    <xs:attribute name="MatchAncestors" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="MemberReferenceBlacklistFilterInclude">
+    <xs:attribute name="Path" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="AssemblyReferenceWhitelistFilter">
+    <xs:attribute name="Name" type="xs:string" use="required" />
+    <xs:attribute name="StrictNameCheck" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="AssemblyReferenceWhitelistFilterInclude">
+    <xs:attribute name="Path" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="InjecteeAssembly">
+    <xs:all>
+      <xs:element name="MemberReferenceBlacklist" minOccurs="0">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element minOccurs="0" name="Filter" type="MemberReferenceBlacklistFilter" />
+            <xs:element minOccurs="0" name="Include" type="MemberReferenceBlacklistFilterInclude" />
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="AssemblyReferenceWhitelist" minOccurs="0">
+        <xs:complexType>
+          <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element minOccurs="0" name="Assembly" type="AssemblyReferenceWhitelistFilter" />
+            <xs:element minOccurs="0" name="Include" type="AssemblyReferenceWhitelistFilterInclude" />
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+    <xs:attribute name="AssemblyPath" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="MethodInjectionPosition">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="InjecteeMethodStart" />
+      <xs:enumeration value="InjecteeMethodReturn" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="InjectedMethod">
+    <xs:attribute name="AssemblyPath" type="xs:string" use="required" />
+    <xs:attribute name="MethodFullName" type="xs:string" use="required" />
+    <xs:attribute name="InjectionPosition" type="MethodInjectionPosition" />
+  </xs:complexType>
+</xs:schema>

@@ -1,82 +1,75 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
-using System.Xml.Serialization;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public class SimpleXmlSerializer : SimpleXmlSerializerBase {
-        private readonly Stack<String> _readStartedElementNamesStack = new Stack<string>();
-
-        public SimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) : base(simpleXmlSerializable) {
+        public SimpleXmlSerializer(bool isReading, ISimpleXmlSerializable simpleXmlSerializable, XmlDocument xmlDocument, XmlElement currentXmlElement)
+            : base(isReading, simpleXmlSerializable, xmlDocument, currentXmlElement) {
         }
 
         protected override SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable) {
-            return new SimpleXmlSerializer(simpleXmlSerializable);
-        }
-
-        public override bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc) {
-            if (IsXmlSerializationReading) {
-                string xmlValue = XmlSerializationReader.ReadElementString(name);
-                if (xmlValue == null)
-                    return false;
-
-                readAction(xmlValue);
-            } else {
-                string xmlValue = writeFunc();
-                XmlSerializationWriter.WriteElementString(name, xmlValue);
-            }
-
-            return true;
+            return new SimpleXmlSerializer(IsXmlSerializationReading, simpleXmlSerializable, Document, CurrentXmlElement);
         }
 
         public override bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {
             if (IsXmlSerializationReading) {
-                string xmlValue = XmlSerializationReader.GetAttribute(name);
-                if (xmlValue == null)
+                if (!CurrentXmlElement.HasAttribute(name))
                     return false;
 
+                string xmlValue = CurrentXmlElement.GetAttribute(name);
                 readAction(xmlValue);
             } else {
                 string xmlValue = writeFunc();
-                XmlSerializationWriter.WriteAttributeString(name, xmlValue);
+                CurrentXmlElement.SetAttribute(name, xmlValue);
             }
 
             return true;
         }
 
-        public override bool ProcessStartElement(string name) {
+        public override bool ProcessStartElement(string name, string prefix = null, string namespaceUri = null) {
             if (IsXmlSerializationReading) {
-                if (XmlSerializationReader.MoveToContent() != XmlNodeType.Element)
-                    return false;
-
-                if (XmlSerializationReader.Name != name)
-                    return false;
-
-                _readStartedElementNamesStack.Push(name);
+                return CurrentXmlElement.Name == name;
             } else {
-                XmlSerializationWriter.WriteStartElement(name);
-            }
-
-            return true;
-        }
-
-        public override void ProcessEndElement(bool readEndElement = true) {
-            if (IsXmlSerializationReading) {
-                string lastStartedElementName = _readStartedElementNamesStack.Pop();
-                if (readEndElement && XmlSerializationReader.MoveToContent() == XmlNodeType.EndElement && lastStartedElementName == XmlSerializationReader.Name) {
-                    XmlSerializationReader.ReadEndElement();
+                XmlElement newElement;
+                if (prefix == null || namespaceUri == null) {
+                    newElement = Document.CreateElement(name);
+                } else {
+                    newElement = Document.CreateElement(prefix, name, namespaceUri);
                 }
+
+                if (CurrentXmlElement == null) {
+                    Document.InsertBefore(newElement, null);
+                } else {
+                    CurrentXmlElement.AppendChild(newElement);
+                }
+                CurrentXmlElement = newElement;
+
+                return true;
+            }
+        }
+
+        public override void ProcessEndElement() {
+            if (CurrentXmlElement.ParentNode == null || CurrentXmlElement.ParentNode is XmlDocument) {
+                CurrentXmlElement = null;
             } else {
-                XmlSerializationWriter.WriteEndElement();
+                if (IsXmlSerializationReading) {
+                    if (CurrentXmlElement.NextSibling != null) {
+                        CurrentXmlElement = (XmlElement) CurrentXmlElement.NextSibling;
+                    } else {
+                        CurrentXmlElement = (XmlElement) CurrentXmlElement.ParentNode;
+                    }
+                } else {
+                    CurrentXmlElement = (XmlElement) CurrentXmlElement.ParentNode;
+                }
             }
         }
 
         public override void ProcessAdvanceOnRead() {
-            if (IsXmlSerializationReading) {
-                XmlSerializationReader.Read();
+            if (IsXmlSerializationReading && CurrentXmlElement.HasChildNodes) {
+                CurrentXmlElement = (XmlElement) CurrentXmlElement.FirstChild;
             }
         }
 
@@ -84,16 +77,24 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             ICollection<T> collection,
             Func<T> createItemFunc = null) {
             if (IsXmlSerializationReading) {
-                while (XmlSerializationReader.NodeType != XmlNodeType.EndElement) {
+                XmlElement startElement = (XmlElement) CurrentXmlElement.ParentNode;
+                XmlElement prevElement;
+                do {
+                    prevElement = CurrentXmlElement;
                     T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
                     CloneAndAssignSerializer(value);
-                    value.ReadXml(XmlSerializationReader);
+                    value.Serialize();
+
+
+                    CurrentXmlElement = value.Serializer.CurrentXmlElement;
                     collection.Add(value);
-                }
+                    if (value.Serializer.CurrentXmlElement == startElement)
+                        break;
+                } while (prevElement != CurrentXmlElement || CurrentXmlElement.NextSibling != null);
             } else {
                 foreach (T value in collection) {
                     CloneAndAssignSerializer(value);
-                    value.WriteXml(XmlSerializationWriter);
+                    value.Serialize();
                 }
             }
         }
@@ -172,10 +173,9 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         public override void ProcessWhileNotElementEnd(Action action) {
             if (IsXmlSerializationReading) {
-                while (XmlSerializationReader.NodeType != XmlNodeType.EndElement &&
-                       XmlSerializationReader.NodeType != XmlNodeType.EndEntity) {
+                do {
                     action();
-                }
+                } while (CurrentXmlElement.NextSibling != null);
             } else {
                 action();
             }

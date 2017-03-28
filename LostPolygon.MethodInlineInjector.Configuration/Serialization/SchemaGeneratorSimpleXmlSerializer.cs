@@ -6,57 +6,56 @@ using System.Runtime.Serialization;
 using System.Xml;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
-    public class SchemaGeneratorSimpleXmlSerializer : SimpleXmlSerializerBase {
+    public class SchemaGeneratorSimpleXmlSerializer : SimpleXmlSerializer {
         private const string kXmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
-        private bool _isOptional = false;
-        private bool _isTypeWritten = false;
+        private readonly Dictionary<string, XmlElement> _typeElements;
+        private SimpleXmlSerializerFlags _flags;
 
-        public SchemaGeneratorSimpleXmlSerializer(ISimpleXmlSerializable simpleXmlSerializable) : base(simpleXmlSerializable) {
+        protected bool IsOptional => (_flags & SimpleXmlSerializerFlags.IsOptional) != 0;
+
+        public SchemaGeneratorSimpleXmlSerializer(
+            ISimpleXmlSerializable simpleXmlSerializable, 
+            XmlDocument xmlDocument, 
+            XmlElement currentXmlElement) 
+            : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
+            _typeElements = new Dictionary<string, XmlElement>();
+        }
+
+        protected SchemaGeneratorSimpleXmlSerializer(
+            Dictionary<string, XmlElement> typeElements,
+            ISimpleXmlSerializable simpleXmlSerializable, 
+            XmlDocument xmlDocument, 
+            XmlElement currentXmlElement) 
+            : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
+            _typeElements = typeElements;
         }
 
         protected override SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable) {
-            return new SchemaGeneratorSimpleXmlSerializer(simpleXmlSerializable);
-        }
-
-        public override bool ProcessElementString(string name, Action<string> readAction, Func<string> writeFunc) {
-            string xmlValue = writeFunc();
-            XmlSerializationWriter.WriteElementString(name, xmlValue);
-
-            return true;
+            SchemaGeneratorSimpleXmlSerializer serializer =
+                new SchemaGeneratorSimpleXmlSerializer(_typeElements, simpleXmlSerializable, Document, CurrentXmlElement);
+            return serializer;
         }
 
         public override bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {
-            XmlSerializationWriter.WriteStartElement("xs", "attribute", kXmlSchemaNamespace);
-            {
-                XmlSerializationWriter.WriteAttributeString("name", name);
-                XmlSerializationWriter.WriteAttributeString("type", "xs:string");
-                if (!_isOptional) {
-                    XmlSerializationWriter.WriteAttributeString("use", "required");
-                }
-            }
-            XmlSerializationWriter.WriteEndElement();
+            ProcessAttributeString(name, "xs:string", writeFunc);
 
             return true;
         }
 
-        public override bool ProcessStartElement(string name) {
-            XmlSerializationWriter.WriteStartElement("xs", "element", kXmlSchemaNamespace);
-            XmlSerializationWriter.WriteAttributeString("name", name);
-            if (_isOptional) {
-                XmlSerializationWriter.WriteAttributeString("minOccurs", "0");
-            }
-            XmlSerializationWriter.WriteStartElement("xs", "complexType", kXmlSchemaNamespace);
-            if (!_isTypeWritten) {
-                XmlSerializationWriter.WriteAttributeString("type", SimpleXmlSerializable.GetType().Name);
-                _isTypeWritten = true;
-            }
+        public override bool ProcessStartElement(string name, string prefix = null, string namespaceUri = null) {
+           base.ProcessStartElement("element", "xs", kXmlSchemaNamespace);
+           base.ProcessAttributeString("name", null, () => name);
+           if (IsOptional) {
+               base.ProcessAttributeString("minOccurs", null, () => "0");
+           }
+           base.ProcessStartElement("complexType", "xs", kXmlSchemaNamespace);
 
             return true;
         }
 
-        public override void ProcessEndElement(bool readEndElement = true) {
-            XmlSerializationWriter.WriteEndElement();
-            XmlSerializationWriter.WriteEndElement();
+        public override void ProcessEndElement() {
+            base.ProcessEndElement();
+            base.ProcessEndElement();
         }
 
         public override void ProcessAdvanceOnRead() {
@@ -65,13 +64,34 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public override void ProcessCollection<T>(
             ICollection<T> collection,
             Func<T> createItemFunc = null) {
-            XmlSerializationWriter.WriteStartElement("xs", "sequence", kXmlSchemaNamespace);
-            {
-                T value = collection.FirstOrDefault() ?? throw new InvalidOperationException();
-                CloneAndAssignSerializer(value);
-                value.WriteXml(XmlSerializationWriter);
+
+            base.ProcessStartElement("choice", "xs", kXmlSchemaNamespace);
+            if (IsOptional) {
+                base.ProcessAttributeString("minOccurs", null, () => "0");
             }
-            XmlSerializationWriter.WriteEndElement();
+            {
+                var grouping = collection
+                    .GroupBy(arg => arg.GetType())
+                    .Select(grp => grp.FirstOrDefault());
+
+                foreach (T value in grouping) {
+                    XmlElement capturedType =
+                        CaptureType(value.GetType().Name, () => {
+                            CloneAndAssignSerializer(value);
+                            value.Serialize();
+                        });
+                    base.ProcessStartElement("element", "xs", kXmlSchemaNamespace);
+                    {
+                        base.ProcessAttributeString("name", null, () => capturedType.GetAttribute("name"));
+                        base.ProcessAttributeString("type", null, () => value.GetType().Name);
+                        if (capturedType.HasAttribute("minOccurs")) {
+                            base.ProcessAttributeString("minOccurs", null, () => capturedType.GetAttribute("minOccurs"));
+                        }
+                    }
+                    base.ProcessEndElement();
+                }
+            }
+            base.ProcessEndElement();
         }
 
         public override void ProcessCollectionAsReadOnly<T>(
@@ -86,33 +106,36 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             if (!enumType.IsEnum)
                 throw new SerializationException("value must be an Enum");
 
-            XmlSerializationWriter.WriteStartElement("xs", "attribute", kXmlSchemaNamespace);
-            XmlSerializationWriter.WriteAttributeString("name", name);
-            if (!_isOptional) {
-                XmlSerializationWriter.WriteAttributeString("use", "required");
-            }
-            {
-                XmlSerializationWriter.WriteStartElement("xs", "simpleType", kXmlSchemaNamespace);
-                {
-                    XmlSerializationWriter.WriteStartElement("xs", "restriction", kXmlSchemaNamespace);
-                    XmlSerializationWriter.WriteAttributeString("base", "xs:string");
-                    {
-                        string[] enumNames = Enum.GetNames(enumType);
-                        for (int i = 0; i < enumNames.Length; i++) {
-                            string enumName = enumNames[i];
-                            XmlSerializationWriter.WriteStartElement("xs", "enumeration", kXmlSchemaNamespace);
-                            {
-                                XmlSerializationWriter.WriteAttributeString("value", enumName);
-                            }
-                            XmlSerializationWriter.WriteEndElement();
-                        }
-                    }
-                    XmlSerializationWriter.WriteEndElement();
+            CaptureType(enumType.Name, () => {
+                base.ProcessStartElement("attribute", "xs", kXmlSchemaNamespace);
+                base.ProcessAttributeString("name", null, () => name);
+                if (!IsOptional) {
+                    base.ProcessAttributeString("use", null, () => "required");
                 }
-                XmlSerializationWriter.WriteEndElement();
-            }
-            XmlSerializationWriter.WriteEndElement();
+                {
+                    base.ProcessStartElement("simpleType", "xs", kXmlSchemaNamespace);
+                    {
+                        base.ProcessStartElement("restriction", "xs", kXmlSchemaNamespace);
+                        base.ProcessAttributeString("base", null, () => "xs:string");
+                        {
+                            string[] enumNames = Enum.GetNames(enumType);
+                            for (int i = 0; i < enumNames.Length; i++) {
+                                string enumName = enumNames[i];
+                                base.ProcessStartElement("enumeration", "xs", kXmlSchemaNamespace);
+                                {
+                                    base.ProcessAttributeString("value", null, () => enumName);
+                                }
+                                base.ProcessEndElement();
+                            }
+                        }
+                        base.ProcessEndElement();
+                    }
+                    base.ProcessEndElement();
+                }
+                base.ProcessEndElement();
+            });
 
+            ProcessAttributeString(name, enumType.Name, () => Enum.GetName(enumType, writeFunc()));
 
             return true;
         }
@@ -131,18 +154,61 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 long flagValue = enumValues[i].ToInt64(null);
 
                 long currentFlag = currentEnumValue & flagValue;
-                ProcessAttributeString(flagName, null, () => Convert.ToString(currentFlag != 0));
+                ProcessAttributeString(flagName, "xs:string", () => Convert.ToString(currentFlag != 0));
             }
         }
 
         public override void ProcessWhileNotElementEnd(Action action) {
-            ProcessOptional(action);
+            action();
         }
 
-        public override void ProcessOptional(Action action) {
-            _isOptional = true;
+        public override void ProcessWithFlags(SimpleXmlSerializerFlags flags, Action action) {
+            SimpleXmlSerializerFlags prevFlags = _flags;
+            _flags |= flags;
             action();
-            _isOptional = false;
+            _flags = prevFlags;
+        }
+
+        public void InsertCapturedTypes() {
+            foreach (KeyValuePair<string, XmlElement> pair in _typeElements) {
+                XmlElement typeDeclarationElement = pair.Value;
+                foreach (XmlAttribute attribute in typeDeclarationElement.Attributes) {
+                    typeDeclarationElement.FirstChild.Attributes.Append(attribute);
+                }
+                typeDeclarationElement = (XmlElement) typeDeclarationElement.FirstChild;
+                typeDeclarationElement.SetAttribute("name", pair.Key);
+                Document.DocumentElement.InsertBefore(typeDeclarationElement, null);
+            }
+        }
+
+        public XmlElement CaptureType(string typeName, Action action) {
+            if (_typeElements.ContainsKey(typeName))
+                return null;
+
+            XmlElement currentXmlElement = CurrentXmlElement;
+
+            XmlElement typeDeclarationElement = Document.CreateElement("typeDecl");
+            CurrentXmlElement = typeDeclarationElement;
+
+            action();
+            typeDeclarationElement = (XmlElement) typeDeclarationElement.FirstChild;
+            _typeElements.Add(typeName, typeDeclarationElement);
+
+            CurrentXmlElement = currentXmlElement;
+            return typeDeclarationElement;
+        }
+
+        private void ProcessAttributeString(string name, string typeName, Func<string> writeFunc) {
+            base.ProcessStartElement("attribute", "xs", kXmlSchemaNamespace);
+            {
+                base.ProcessAttributeString("name", null, () => name);
+                base.ProcessAttributeString("type", null, () => typeName);
+                if (!IsOptional)
+                {
+                    base.ProcessAttributeString("use", null, () =>  "required");
+                }
+            }
+            base.ProcessEndElement();
         }
     }
 }

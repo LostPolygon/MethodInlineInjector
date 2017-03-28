@@ -37,23 +37,21 @@ namespace LostPolygon.MethodInlineInjector {
             Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
             Serializer.ProcessAdvanceOnRead();
             {
-                Serializer.ProcessWhileNotElementEnd(() => {
-                    if (Serializer.ProcessStartElement(nameof(InjecteeAssemblies))) {
-                        Serializer.ProcessAdvanceOnRead();
-                        {
-                            Serializer.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
-                        }
-                        Serializer.ProcessEndElement();
+                if (Serializer.ProcessStartElement(nameof(InjecteeAssemblies))) {
+                    Serializer.ProcessAdvanceOnRead();
+                    {
+                        Serializer.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
                     }
+                    Serializer.ProcessEndElement();
+                }
 
-                    if (Serializer.ProcessStartElement(nameof(InjectedMethods))) {
-                        Serializer.ProcessAdvanceOnRead();
-                        {
-                            Serializer.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
-                        }
-                        Serializer.ProcessEndElement();
+                if (Serializer.ProcessStartElement(nameof(InjectedMethods))) {
+                    Serializer.ProcessAdvanceOnRead();
+                    {
+                        Serializer.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
                     }
-                });
+                    Serializer.ProcessEndElement();
+                }
             }
             Serializer.ProcessEndElement();
         }
