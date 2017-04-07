@@ -362,8 +362,7 @@ namespace LostPolygon.MethodInlineInjector {
         protected virtual bool ValidateInjecteeMethod(MethodDefinition injecteeMethod) {
             bool isNonInjectable =
                 !injecteeMethod.HasBody ||
-                injecteeMethod.HasGenericParameters
-                ;
+                injecteeMethod.HasGenericParameters;
 
             return !isNonInjectable;
         }

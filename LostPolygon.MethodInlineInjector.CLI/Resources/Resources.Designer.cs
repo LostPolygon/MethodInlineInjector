@@ -39,7 +39,7 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("LostPolygon.MethodInlineInjector.ConsoleApp.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("LostPolygon.MethodInlineInjector.Cli.Resources.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,24 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+        ///&lt;log4net&gt;
+        ///  &lt;appender name=&quot;ColoredConsoleAppender&quot; type=&quot;log4net.Appender.ManagedColoredConsoleAppender&quot;&gt;
+        ///    &lt;mapping&gt;
+        ///      &lt;level value=&quot;DEBUG&quot; /&gt;
+        ///      &lt;forecolor value=&quot;Magenta&quot; /&gt;
+        ///    &lt;/mapping&gt;
+        ///    &lt;mapping&gt;
+        ///      &lt;level value=&quot;INFO&quot; /&gt;
+        ///      &lt;forecolor value=&quot;Cyan&quot; /&gt;
+        ///    &lt;/mapping&gt;
+        ///    &lt;mapping&gt;
+        ///      &lt;level value=&quot;WARN&quot; /&gt;
+        ///      &lt;forecolor value=&quot;Yellow&quot; /&gt;
+        ///    &lt;/mapping&gt;
+        ///    &lt;mapping&gt;
+        ///      &lt;level value=&quot;ERROR&quot; /&gt;
+        ///      &lt;forecolor value=&quot;D [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string log4netConfiguration {
             get {

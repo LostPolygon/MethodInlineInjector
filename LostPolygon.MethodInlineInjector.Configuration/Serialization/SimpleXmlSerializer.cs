@@ -85,7 +85,6 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     CloneAndAssignSerializer(value);
                     value.Serialize();
 
-
                     CurrentXmlElement = value.Serializer.CurrentXmlElement;
                     collection.Add(value);
                     if (value.Serializer.CurrentXmlElement == startElement)
@@ -171,7 +170,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public override void ProcessWhileNotElementEnd(Action action) {
+        public override void ProcessWhileNotElementEnd(Action action) {           
             if (IsXmlSerializationReading) {
                 do {
                     action();

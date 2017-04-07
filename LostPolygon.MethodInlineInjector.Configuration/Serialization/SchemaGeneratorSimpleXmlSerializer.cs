@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Xml;
 
@@ -14,18 +15,18 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         protected bool IsOptional => (_flags & SimpleXmlSerializerFlags.IsOptional) != 0;
 
         public SchemaGeneratorSimpleXmlSerializer(
-            ISimpleXmlSerializable simpleXmlSerializable, 
-            XmlDocument xmlDocument, 
-            XmlElement currentXmlElement) 
+            ISimpleXmlSerializable simpleXmlSerializable,
+            XmlDocument xmlDocument,
+            XmlElement currentXmlElement)
             : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
             _typeElements = new Dictionary<string, XmlElement>();
         }
 
         protected SchemaGeneratorSimpleXmlSerializer(
             Dictionary<string, XmlElement> typeElements,
-            ISimpleXmlSerializable simpleXmlSerializable, 
-            XmlDocument xmlDocument, 
-            XmlElement currentXmlElement) 
+            ISimpleXmlSerializable simpleXmlSerializable,
+            XmlDocument xmlDocument,
+            XmlElement currentXmlElement)
             : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
             _typeElements = typeElements;
         }
@@ -70,22 +71,23 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 base.ProcessAttributeString("minOccurs", null, () => "0");
             }
             {
+                // Select one instance of each element
                 var grouping = collection
                     .GroupBy(arg => arg.GetType())
-                    .Select(grp => grp.FirstOrDefault());
+                    .Select(grp => grp.First());
 
                 foreach (T value in grouping) {
-                    XmlElement capturedType =
+                    XmlElement capturedTypeElement =
                         CaptureType(value.GetType().Name, () => {
                             CloneAndAssignSerializer(value);
                             value.Serialize();
                         });
                     base.ProcessStartElement("element", "xs", kXmlSchemaNamespace);
                     {
-                        base.ProcessAttributeString("name", null, () => capturedType.GetAttribute("name"));
+                        base.ProcessAttributeString("name", null, () => capturedTypeElement.GetAttribute("name"));
                         base.ProcessAttributeString("type", null, () => value.GetType().Name);
-                        if (capturedType.HasAttribute("minOccurs")) {
-                            base.ProcessAttributeString("minOccurs", null, () => capturedType.GetAttribute("minOccurs"));
+                        if (capturedTypeElement.HasAttribute("minOccurs")) {
+                            base.ProcessAttributeString("minOccurs", null, () => capturedTypeElement.GetAttribute("minOccurs"));
                         }
                     }
                     base.ProcessEndElement();
@@ -178,10 +180,11 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 typeDeclarationElement = (XmlElement) typeDeclarationElement.FirstChild;
                 typeDeclarationElement.SetAttribute("name", pair.Key);
                 Document.DocumentElement.InsertBefore(typeDeclarationElement, null);
+                Document.DocumentElement.InsertBefore(Document.CreateWhitespace(Environment.NewLine+Environment.NewLine), typeDeclarationElement);
             }
         }
 
-        public XmlElement CaptureType(string typeName, Action action) {
+        private XmlElement CaptureType(string typeName, Action action) {
             if (_typeElements.ContainsKey(typeName))
                 return null;
 

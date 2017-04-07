@@ -12,7 +12,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         }
 
-        protected SimpleXmlSerializerBase Serializer { get; set; }
+        protected SimpleXmlSerializerBase Serializer { get; private set; }
 
         SimpleXmlSerializerBase ISimpleXmlSerializable.Serializer {
             get => Serializer;

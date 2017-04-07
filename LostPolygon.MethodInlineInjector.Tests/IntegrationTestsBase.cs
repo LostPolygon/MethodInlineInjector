@@ -3,15 +3,13 @@ using System.IO;
 using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
-    public abstract class IntegrationTestsBase {
+    public abstract class IntegrationTestsBase : TestEnvironmentTestsBase {
         public abstract string InjectedLibraryName { get; }
         public abstract string InjecteeLibraryName { get; }
         public abstract string InjectedClassName { get; }
         public abstract string InjecteeClassName { get; }
         public abstract string InjectedLibraryPath { get; }
         public abstract string InjecteeLibraryPath { get; }
-
-        protected TestEnvironmentConfig TestEnvironmentConfig { get; set; }
 
         protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
             InjectedMethod injectedMethod,
@@ -75,18 +73,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
             CopyIfDateMismatch(InjectedLibraryPath, InjectedLibraryName);
             CopyIfDateMismatch(InjecteeLibraryPath, InjecteeLibraryName);
-        }
-
-        [OneTimeSetUp]
-        public void FixtureSetUp() {
-            Directory.SetCurrentDirectory(TestContext.CurrentContext.TestDirectory);
-            TestEnvironmentConfig.SetTestEnvironmentConfigPath("TestEnvironmentConfig.ini");
-            TestEnvironmentConfig = TestEnvironmentConfig.Instance;
-        }
-
-        [OneTimeTearDown]
-        public void FixtureTearDown() {
-            Directory.SetCurrentDirectory(TestContext.CurrentContext.WorkDirectory);
         }
 
         #endregion
