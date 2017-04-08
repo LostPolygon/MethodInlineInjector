@@ -1,0 +1,3 @@
+[submodule "LostPolygon.Common.SimpleXmlSerialization"]
+	path = LostPolygon.Common.SimpleXmlSerialization
+	url = git@github.com:LostPolygon/LostPolygon.Common.SimpleXmlSerialization.git

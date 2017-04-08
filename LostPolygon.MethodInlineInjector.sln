@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.MethodInlineInj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.MethodInlineInjector.CLI", "LostPolygon.MethodInlineInjector.CLI\LostPolygon.MethodInlineInjector.CLI.csproj", "{7870A46D-285E-49CF-8A96-7DA7FB05CBD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.Common.SimpleXmlSerialization", "LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization.csproj", "{3C709248-44B8-4897-981B-766696CF52D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LostPolygon.Common.SimpleXmlSerialization", "LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization.csproj", "{3C709248-44B8-4897-981B-766696CF52D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

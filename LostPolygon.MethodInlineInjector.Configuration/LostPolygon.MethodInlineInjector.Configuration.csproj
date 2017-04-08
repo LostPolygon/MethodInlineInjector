@@ -66,7 +66,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization.csproj">
+    <ProjectReference Include="..\LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization.csproj">
       <Project>{3c709248-44b8-4897-981b-766696cf52d2}</Project>
       <Name>LostPolygon.Common.SimpleXmlSerialization</Name>
     </ProjectReference>
