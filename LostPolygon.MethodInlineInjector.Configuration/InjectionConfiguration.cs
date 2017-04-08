@@ -4,7 +4,7 @@ using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Configuration")]
-    public class InjectionConfiguration : SimpleXmlSerializable {
+    public class InjectionConfiguration {
         public ReadOnlyCollection<InjecteeAssembly> InjecteeAssemblies { get; private set; } =
             ReadOnlyCollectionUtility<InjecteeAssembly>.Empty;
 
@@ -31,29 +31,32 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region Serialization
 
-        protected override void Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static InjectionConfiguration Serialize(InjectionConfiguration instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new InjectionConfiguration();
 
-            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
-            Serializer.ProcessAdvanceOnRead();
+            serializer.ProcessStartElement(serializer.GetXmlRootName(instance.GetType()));
+            serializer.ProcessAdvanceOnRead();
             {
-                if (Serializer.ProcessStartElement(nameof(InjecteeAssemblies))) {
-                    Serializer.ProcessAdvanceOnRead();
+                if (serializer.ProcessStartElement(nameof(InjecteeAssemblies))) {
+                    serializer.ProcessAdvanceOnRead();
                     {
-                        Serializer.ProcessCollectionAsReadOnly(v => InjecteeAssemblies = v, () => InjecteeAssemblies);
+                        serializer.ProcessCollectionAsReadOnly(v => instance.InjecteeAssemblies = v, () => instance.InjecteeAssemblies);
                     }
-                    Serializer.ProcessEndElement();
+                    serializer.ProcessEndElement();
                 }
 
-                if (Serializer.ProcessStartElement(nameof(InjectedMethods))) {
-                    Serializer.ProcessAdvanceOnRead();
+                if (serializer.ProcessStartElement(nameof(InjectedMethods))) {
+                    serializer.ProcessAdvanceOnRead();
                     {
-                        Serializer.ProcessCollectionAsReadOnly(v => InjectedMethods = v, () => InjectedMethods);
+                        serializer.ProcessCollectionAsReadOnly(v => instance.InjectedMethods = v, () => instance.InjectedMethods);
                     }
-                    Serializer.ProcessEndElement();
+                    serializer.ProcessEndElement();
                 }
             }
-            Serializer.ProcessEndElement();
+            serializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

@@ -2,7 +2,7 @@ using System;
 using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
-    public class InjectedMethod : SimpleXmlSerializable {
+    public class InjectedMethod {
         public string AssemblyPath { get; private set; }
         public string MethodFullName { get; private set; }
         public MethodInjectionPosition InjectionPosition { get; private set; } = MethodInjectionPosition.InjecteeMethodStart;
@@ -36,21 +36,24 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region Serialization
 
-        protected override void Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static InjectedMethod Serialize(InjectedMethod instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new InjectedMethod();
 
-            Serializer.ProcessStartElement(nameof(InjectedMethod));
+            serializer.ProcessStartElement(nameof(InjectedMethod));
             {
-                Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
-                Serializer.ProcessAttributeString(nameof(MethodFullName), s => MethodFullName = s, () => MethodFullName);
-                Serializer.ProcessWithFlags(
-                    SimpleXmlSerializerFlags.IsOptional, 
+                serializer.ProcessAttributeString(nameof(AssemblyPath), s => instance.AssemblyPath = s, () => instance.AssemblyPath);
+                serializer.ProcessAttributeString(nameof(MethodFullName), s => instance.MethodFullName = s, () => instance.MethodFullName);
+                serializer.ProcessWithFlags(
+                    SimpleXmlSerializerFlags.IsOptional,
                     () => {
-                    Serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => InjectionPosition = s, () => InjectionPosition);
+                    serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => instance.InjectionPosition = s, () => instance.InjectionPosition);
                 });
             }
-            Serializer.ProcessAdvanceOnRead();
-            Serializer.ProcessEndElement();
+            serializer.ProcessAdvanceOnRead();
+            serializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

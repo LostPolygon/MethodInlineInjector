@@ -6,16 +6,16 @@ using System.Xml;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public class SimpleXmlSerializer : SimpleXmlSerializerBase {
-        public SimpleXmlSerializer(bool isReading, ISimpleXmlSerializable simpleXmlSerializable, XmlDocument xmlDocument, XmlElement currentXmlElement)
-            : base(isReading, simpleXmlSerializable, xmlDocument, currentXmlElement) {
+        public SimpleXmlSerializer(bool isDeserealizing, XmlDocument xmlDocument, XmlElement currentXmlElement)
+            : base(isDeserealizing, xmlDocument, currentXmlElement) {
         }
 
-        protected override SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable) {
-            return new SimpleXmlSerializer(IsXmlSerializationReading, simpleXmlSerializable, Document, CurrentXmlElement);
+        protected override SimpleXmlSerializerBase CloneSerializer(object serializedObject) {
+            return new SimpleXmlSerializer(IsDeserializing, Document, CurrentXmlElement);
         }
 
         public override bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {
-            if (IsXmlSerializationReading) {
+            if (IsDeserializing) {
                 if (!CurrentXmlElement.HasAttribute(name))
                     return false;
 
@@ -30,7 +30,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         }
 
         public override bool ProcessStartElement(string name, string prefix = null, string namespaceUri = null) {
-            if (IsXmlSerializationReading) {
+            if (IsDeserializing) {
                 return CurrentXmlElement.Name == name;
             } else {
                 XmlElement newElement;
@@ -55,7 +55,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             if (CurrentXmlElement.ParentNode == null || CurrentXmlElement.ParentNode is XmlDocument) {
                 CurrentXmlElement = null;
             } else {
-                if (IsXmlSerializationReading) {
+                if (IsDeserializing) {
                     if (CurrentXmlElement.NextSibling != null) {
                         CurrentXmlElement = (XmlElement) CurrentXmlElement.NextSibling;
                     } else {
@@ -68,32 +68,31 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         }
 
         public override void ProcessAdvanceOnRead() {
-            if (IsXmlSerializationReading && CurrentXmlElement.HasChildNodes) {
+            if (IsDeserializing && CurrentXmlElement.HasChildNodes) {
                 CurrentXmlElement = (XmlElement) CurrentXmlElement.FirstChild;
             }
         }
 
         public override void ProcessCollection<T>(
             ICollection<T> collection,
-            Func<T> createItemFunc = null) {
-            if (IsXmlSerializationReading) {
+            Func<SimpleXmlSerializerBase, T> createItemFunc = null) {
+            if (IsDeserializing) {
                 XmlElement startElement = (XmlElement) CurrentXmlElement.ParentNode;
                 XmlElement prevElement;
                 do {
                     prevElement = CurrentXmlElement;
-                    T value = createItemFunc?.Invoke() ?? (T) Activator.CreateInstance(typeof(T), true);
-                    CloneAndAssignSerializer(value);
-                    value.Serialize();
 
-                    CurrentXmlElement = value.Serializer.CurrentXmlElement;
+                    SimpleXmlSerializerBase clonedSerializer = CloneSerializer(this);
+                    T value = createItemFunc?.Invoke(clonedSerializer) ?? InvokeSerializationMethod<T>(null, clonedSerializer);
+
+                    CurrentXmlElement = clonedSerializer.CurrentXmlElement;
                     collection.Add(value);
-                    if (value.Serializer.CurrentXmlElement == startElement)
+                    if (clonedSerializer.CurrentXmlElement == startElement)
                         break;
                 } while (prevElement != CurrentXmlElement || CurrentXmlElement.NextSibling != null);
             } else {
                 foreach (T value in collection) {
-                    CloneAndAssignSerializer(value);
-                    value.Serialize();
+                    CloneSerializerAndInvokeSerializationMethod(value);
                 }
             }
         }
@@ -101,8 +100,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public override void ProcessCollectionAsReadOnly<T>(
             Action<ReadOnlyCollection<T>> collectionSetAction,
             Func<ReadOnlyCollection<T>> collectionGetFunc,
-            Func<T> createItemFunc = null) {
-            if (IsXmlSerializationReading) {
+            Func<SimpleXmlSerializerBase, T> createItemFunc = null) {
+            if (IsDeserializing) {
                 List<T> list = new List<T>();
                 ProcessCollection(list, createItemFunc);
                 collectionSetAction(list.AsReadOnly());
@@ -116,7 +115,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             if (!enumType.IsEnum)
                 throw new SerializationException("value must be an Enum");
 
-            if (IsXmlSerializationReading) {
+            if (IsDeserializing) {
                 string stringEnumValue = null;
                 if (!ProcessAttributeString(name, s => stringEnumValue = s, null))
                     return false;
@@ -140,7 +139,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             T[] enumValues = (T[]) Enum.GetValues(enumType);
             string[] enumNames = Enum.GetNames(enumType);
 
-            if (IsXmlSerializationReading) {
+            if (IsDeserializing) {
                 long resultEnumValue = defaultValueLong;
                 for (int i = 0; i < enumNames.Length; i++) {
                     string flagName = enumNames[i];
@@ -170,8 +169,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             }
         }
 
-        public override void ProcessWhileNotElementEnd(Action action) {           
-            if (IsXmlSerializationReading) {
+        public override void ProcessWhileNotElementEnd(Action action) {
+            if (IsDeserializing) {
                 do {
                     action();
                 } while (CurrentXmlElement.NextSibling != null);

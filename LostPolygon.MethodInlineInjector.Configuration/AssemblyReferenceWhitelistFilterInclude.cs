@@ -1,4 +1,5 @@
 ﻿using System.Xml.Serialization;
+using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Include")]
@@ -7,6 +8,13 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public AssemblyReferenceWhitelistFilterInclude(string path) : base(path) {
+        }
+
+        [SerializationMethod]
+        public static AssemblyReferenceWhitelistFilterInclude Serialize(AssemblyReferenceWhitelistFilterInclude instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new AssemblyReferenceWhitelistFilterInclude();
+            InjectionConfigurationFileInclude.Serialize(instance, serializer);
+            return instance;
         }
     }
 }

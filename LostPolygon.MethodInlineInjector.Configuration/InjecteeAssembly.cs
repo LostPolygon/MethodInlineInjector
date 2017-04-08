@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
-    public class InjecteeAssembly : SimpleXmlSerializable {
+    public class InjecteeAssembly {
         public string AssemblyPath { get; private set; }
         public ReadOnlyCollection<IMemberReferenceBlacklistItem> MemberReferenceBlacklist { get; private set; } =
             ReadOnlyCollectionUtility<IMemberReferenceBlacklistItem>.Empty;
@@ -33,47 +33,52 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region Serialization
 
-        protected override void Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static InjecteeAssembly Serialize(InjecteeAssembly instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new InjecteeAssembly();
 
-            Serializer.ProcessStartElement(nameof(InjecteeAssembly));
+            serializer.ProcessStartElement(nameof(InjecteeAssembly));
             {
-                Serializer.ProcessAttributeString(nameof(AssemblyPath), s => AssemblyPath = s, () => AssemblyPath);
-                Serializer.ProcessAdvanceOnRead();
+                serializer.ProcessAttributeString(nameof(AssemblyPath), s => instance.AssemblyPath = s, () => instance.AssemblyPath);
+                serializer.ProcessAdvanceOnRead();
 
-                Serializer.ProcessWithFlags(
+                serializer.ProcessWithFlags(
                     SimpleXmlSerializerFlags.IsOptional, 
                     () => {
-                    Serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
-                    Serializer.ProcessAdvanceOnRead();
+                    serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
+                    serializer.ProcessAdvanceOnRead();
                     {
-                        Serializer.ProcessCollectionAsReadOnly(
-                            v => MemberReferenceBlacklist = v,
-                            () => MemberReferenceBlacklist,
-                            () =>
-                                Serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
-                                    Serializer.CurrentXmlElement.Name
+                        serializer.ProcessCollectionAsReadOnly(
+                            v => instance.MemberReferenceBlacklist = v,
+                            () => instance.MemberReferenceBlacklist,
+                            itemSerializer =>
+                                serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                                    serializer.CurrentXmlElement.Name,
+                                    itemSerializer
                                 )
                         );
                     }
-                    Serializer.ProcessEndElement();
+                    serializer.ProcessEndElement();
 
-                    Serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
-                    Serializer.ProcessAdvanceOnRead();
+                    serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
+                    serializer.ProcessAdvanceOnRead();
                     {
-                        Serializer.ProcessCollectionAsReadOnly(
-                            v => AssemblyReferenceWhitelist = v,
-                            () => AssemblyReferenceWhitelist,
-                            () =>
-                                Serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
-                                    Serializer.CurrentXmlElement.Name
+                        serializer.ProcessCollectionAsReadOnly(
+                            v => instance.AssemblyReferenceWhitelist = v,
+                            () => instance.AssemblyReferenceWhitelist,
+                            itemSerializer =>
+                                serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                                    serializer.CurrentXmlElement.Name,
+                                    itemSerializer
                                 )
                         );
                     }
-                    Serializer.ProcessEndElement();
+                    serializer.ProcessEndElement();
                 });
             }
-            Serializer.ProcessEndElement();
+            serializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

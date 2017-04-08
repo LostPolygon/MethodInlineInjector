@@ -2,7 +2,7 @@
 using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
-    public abstract class InjectionConfigurationFileInclude : SimpleXmlSerializable {
+    public abstract class InjectionConfigurationFileInclude {
         public string Path { get; private set; }
 
         protected InjectionConfigurationFileInclude() {
@@ -18,15 +18,18 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region Serialization
 
-        protected override void Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static InjectionConfigurationFileInclude Serialize(InjectionConfigurationFileInclude instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? throw new ArgumentNullException(nameof(instance));
 
-            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
+            serializer.ProcessStartElement(serializer.GetXmlRootName(instance.GetType()));
             {
-                Serializer.ProcessAttributeString(nameof(Path), s => Path = s, () => Path);
+                serializer.ProcessAttributeString(nameof(Path), s => instance.Path = s, () => instance.Path);
             }
-            Serializer.ProcessAdvanceOnRead();
-            Serializer.ProcessEndElement();
+            serializer.ProcessAdvanceOnRead();
+            serializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

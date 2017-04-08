@@ -384,20 +384,25 @@ namespace LostPolygon.MethodInlineInjector {
             }
         }
 
-        private class FileIncludeLoader<TItem> : SimpleXmlSerializable where TItem : class, ISimpleXmlSerializable {
+        private class FileIncludeLoader<TItem> where TItem : class {
             public IList<TItem> Items { get; } = new List<TItem>();
-
-            protected override void Serialize() {
-                base.Serialize();
-
+            
+            [SerializationMethod]
+            public static FileIncludeLoader<TItem> Serialize(FileIncludeLoader<TItem> instance, SimpleXmlSerializerBase serializer) {
+                if (instance == null) {
+                    instance = new FileIncludeLoader<TItem>();
+                }
                 // Skip root element when reading
-                Serializer.ProcessAdvanceOnRead();
+                serializer.ProcessAdvanceOnRead();
 
-                Serializer.ProcessCollection(
-                    Items,
-                    () => Serializer.CreateByKnownInheritors<TItem>(
-                        Serializer.CurrentXmlElement.Name
+                serializer.ProcessCollection(
+                    instance.Items,
+                    itemSerializer => serializer.CreateByKnownInheritors<TItem>(
+                        serializer.CurrentXmlElement.Name,
+                        itemSerializer
                     ));
+
+                return instance;
             }
         }
 

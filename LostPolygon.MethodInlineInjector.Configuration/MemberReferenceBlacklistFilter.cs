@@ -4,7 +4,7 @@ using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Filter")]
-    public class MemberReferenceBlacklistFilter : SimpleXmlSerializable, IMemberReferenceBlacklistItem {
+    public class MemberReferenceBlacklistFilter : IMemberReferenceBlacklistItem {
         private const MemberReferenceBlacklistFilterFlags kDefaultFilterOptions =
             MemberReferenceBlacklistFilterFlags.SkipTypes |
             MemberReferenceBlacklistFilterFlags.SkipMethods |
@@ -36,20 +36,23 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region Serialization
 
-        protected override void Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static MemberReferenceBlacklistFilter Serialize(MemberReferenceBlacklistFilter instance, SimpleXmlSerializerBase sSerializer) {
+            instance = instance ?? new MemberReferenceBlacklistFilter();
 
-            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
+            sSerializer.ProcessStartElement(sSerializer.GetXmlRootName(instance.GetType()));
             {
-                Serializer.ProcessAttributeString(nameof(Filter), s => Filter = s, () => Filter);
-                Serializer.ProcessWithFlags(
+                sSerializer.ProcessAttributeString(nameof(Filter), s => instance.Filter = s, () => instance.Filter);
+                sSerializer.ProcessWithFlags(
                     SimpleXmlSerializerFlags.IsOptional,
                     () => {
-                    Serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => FilterFlags = s, () => FilterFlags);
+                    sSerializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => instance.FilterFlags = s, () => instance.FilterFlags);
                 });
             }
-            Serializer.ProcessAdvanceOnRead();
-            Serializer.ProcessEndElement();
+            sSerializer.ProcessAdvanceOnRead();
+            sSerializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

@@ -5,8 +5,8 @@ using System.Xml;
 
 namespace LostPolygon.MethodInlineInjector.Serialization {
     public static class SimpleXmlSerializationUtility {
-        public static string GenerateXmlSchemaString<T>(T objectInstance) where T : ISimpleXmlSerializable {
-            if (objectInstance == null)
+        public static string GenerateXmlSchemaString<T>(T serializedObject) where T : class {
+            if (serializedObject == null)
                 return "";
 
             XmlDocument xmlDocument = new XmlDocument();
@@ -22,9 +22,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     schemaElement.SetAttribute("attributeFormDefault", "unqualified");
                     xmlDocument.InsertBefore(schemaElement, null);
 
-                    SchemaGeneratorSimpleXmlSerializer serializer = new SchemaGeneratorSimpleXmlSerializer(objectInstance, xmlDocument, schemaElement);
-                    objectInstance.Serializer = serializer;
-                    objectInstance.Serialize();
+                    SchemaGeneratorSimpleXmlSerializer serializer = new SchemaGeneratorSimpleXmlSerializer(serializedObject, xmlDocument, schemaElement);
+                    SimpleXmlSerializerBase.InvokeSerializationMethod(serializedObject, serializer);
 
                     serializer.InsertCapturedTypes();
 
@@ -35,8 +34,8 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return sb.ToString();
         }
 
-        public static string XmlSerializeToString<T>(T objectInstance) where T : ISimpleXmlSerializable {
-            if (objectInstance == null)
+        public static string XmlSerializeToString<T>(T serializedObject) where T : class {
+            if (serializedObject == null)
                 return "";
 
             XmlDocument xmlDocument = new XmlDocument();
@@ -47,9 +46,9 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     xmlTextWriter.IndentChar = ' ';
                     xmlTextWriter.Indentation = 4;
                     xmlTextWriter.Namespaces = false;
-                    objectInstance.Serializer =
-                        new SimpleXmlSerializer(false, objectInstance, xmlDocument, xmlDocument.DocumentElement);
-                    objectInstance.Serialize();
+
+                    SimpleXmlSerializer serializer = new SimpleXmlSerializer(false, xmlDocument, xmlDocument.DocumentElement);
+                    SimpleXmlSerializerBase.InvokeSerializationMethod(serializedObject, serializer);
 
                     xmlDocument.WriteContentTo(xmlTextWriter);
                 }
@@ -58,7 +57,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return sb.ToString();
         }
 
-        public static T XmlDeserializeFromString<T>(string objectData) where T : class, ISimpleXmlSerializable {
+        public static T XmlDeserializeFromString<T>(string objectData) where T : class {
             XmlDocument xmlDocument = new XmlDocument();
 
             T result;
@@ -73,10 +72,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 }
                 xmlDocument.Load(xmlReader);
 
-                result = (T) Activator.CreateInstance(typeof(T), true);
-                result.Serializer =
-                    new SimpleXmlSerializer(true, result, xmlDocument, xmlDocument.DocumentElement);
-                result.Serialize();
+                result = SimpleXmlSerializerBase.InvokeSerializationMethod<T>(null, new SimpleXmlSerializer(true, xmlDocument, xmlDocument.DocumentElement));
             }
 
             return result;

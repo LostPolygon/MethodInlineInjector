@@ -4,7 +4,7 @@ using LostPolygon.MethodInlineInjector.Serialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Assembly")]
-    public class AssemblyReferenceWhitelistFilter : SimpleXmlSerializable, IAssemblyReferenceWhitelistItem {
+    public class AssemblyReferenceWhitelistFilter : IAssemblyReferenceWhitelistItem {
         public string Name { get; private set; }
         public bool StrictNameCheck { get; private set; }
 
@@ -29,24 +29,27 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region ISimpleXmlSerializable
 
-        void ISimpleXmlSerializable.Serialize() {
-            base.Serialize();
+        [SerializationMethod]
+        public static AssemblyReferenceWhitelistFilter Serialize(AssemblyReferenceWhitelistFilter instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new AssemblyReferenceWhitelistFilter();
 
-            Serializer.ProcessStartElement(Serializer.GetXmlRootName(GetType()));
+            serializer.ProcessStartElement(serializer.GetXmlRootName(typeof(AssemblyReferenceWhitelistFilter)));
             {
-                Serializer.ProcessAttributeString(nameof(Name), s => Name = s, () => Name);
-                Serializer.ProcessWithFlags(
+                serializer.ProcessAttributeString(nameof(Name), s => instance.Name = s, () => instance.Name);
+                serializer.ProcessWithFlags(
                     SimpleXmlSerializerFlags.IsOptional, 
                     () => {
-                    Serializer.ProcessAttributeString(
+                    serializer.ProcessAttributeString(
                         nameof(StrictNameCheck),
-                        s => StrictNameCheck = Convert.ToBoolean(s),
-                        () => Convert.ToString(StrictNameCheck)
+                        s => instance.StrictNameCheck = Convert.ToBoolean(s),
+                        () => Convert.ToString(instance.StrictNameCheck)
                     );
                 });
 
             }
-            Serializer.ProcessEndElement();
+            serializer.ProcessEndElement();
+
+            return instance;
         }
 
         #endregion

@@ -15,25 +15,25 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         protected bool IsOptional => (_flags & SimpleXmlSerializerFlags.IsOptional) != 0;
 
         public SchemaGeneratorSimpleXmlSerializer(
-            ISimpleXmlSerializable simpleXmlSerializable,
+            object serializedObject,
             XmlDocument xmlDocument,
             XmlElement currentXmlElement)
-            : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
+            : base(false, xmlDocument, currentXmlElement) {
             _typeElements = new Dictionary<string, XmlElement>();
         }
 
         protected SchemaGeneratorSimpleXmlSerializer(
             Dictionary<string, XmlElement> typeElements,
-            ISimpleXmlSerializable simpleXmlSerializable,
+            object serializedObject,
             XmlDocument xmlDocument,
             XmlElement currentXmlElement)
-            : base(false, simpleXmlSerializable, xmlDocument, currentXmlElement) {
+            : base(false, xmlDocument, currentXmlElement) {
             _typeElements = typeElements;
         }
 
-        protected override SimpleXmlSerializerBase Clone(ISimpleXmlSerializable simpleXmlSerializable) {
+        protected override SimpleXmlSerializerBase CloneSerializer(object serializedObject) {
             SchemaGeneratorSimpleXmlSerializer serializer =
-                new SchemaGeneratorSimpleXmlSerializer(_typeElements, simpleXmlSerializable, Document, CurrentXmlElement);
+                new SchemaGeneratorSimpleXmlSerializer(_typeElements, serializedObject, Document, CurrentXmlElement);
             return serializer;
         }
 
@@ -64,7 +64,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         public override void ProcessCollection<T>(
             ICollection<T> collection,
-            Func<T> createItemFunc = null) {
+            Func<SimpleXmlSerializerBase, T> createItemFunc = null) {
 
             base.ProcessStartElement("choice", "xs", kXmlSchemaNamespace);
             if (IsOptional) {
@@ -79,16 +79,12 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 foreach (T value in grouping) {
                     XmlElement capturedTypeElement =
                         CaptureType(value.GetType().Name, () => {
-                            CloneAndAssignSerializer(value);
-                            value.Serialize();
+                            CloneSerializerAndInvokeSerializationMethod<T>(value);
                         });
                     base.ProcessStartElement("element", "xs", kXmlSchemaNamespace);
                     {
                         base.ProcessAttributeString("name", null, () => capturedTypeElement.GetAttribute("name"));
                         base.ProcessAttributeString("type", null, () => value.GetType().Name);
-                        if (capturedTypeElement.HasAttribute("minOccurs")) {
-                            base.ProcessAttributeString("minOccurs", null, () => capturedTypeElement.GetAttribute("minOccurs"));
-                        }
                     }
                     base.ProcessEndElement();
                 }
@@ -99,7 +95,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         public override void ProcessCollectionAsReadOnly<T>(
             Action<ReadOnlyCollection<T>> collectionSetAction,
             Func<ReadOnlyCollection<T>> collectionGetFunc,
-            Func<T> createItemFunc = null) {
+            Func<SimpleXmlSerializerBase, T> createItemFunc = null) {
             ProcessCollection(collectionGetFunc(), createItemFunc);
         }
 
