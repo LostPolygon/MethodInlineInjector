@@ -384,14 +384,13 @@ namespace LostPolygon.MethodInlineInjector {
             }
         }
 
-        private class FileIncludeLoader<TItem> where TItem : class {
+        private abstract class FileIncludeLoader<TItem> where TItem : class {
             public IList<TItem> Items { get; } = new List<TItem>();
-            
+
             [SerializationMethod]
             public static FileIncludeLoader<TItem> Serialize(FileIncludeLoader<TItem> instance, SimpleXmlSerializerBase serializer) {
-                if (instance == null) {
-                    instance = new FileIncludeLoader<TItem>();
-                }
+                instance = instance ?? throw new ArgumentNullException(nameof(instance));
+
                 // Skip root element when reading
                 serializer.ProcessAdvanceOnRead();
 
@@ -408,12 +407,26 @@ namespace LostPolygon.MethodInlineInjector {
 
         [XmlRoot("MemberReferenceBlacklist")]
         private class MemberReferenceBlacklistFilterIncludeLoader : FileIncludeLoader<IMemberReferenceBlacklistItem> {
-
+            [SerializationMethod]
+            public static MemberReferenceBlacklistFilterIncludeLoader Serialize(
+                MemberReferenceBlacklistFilterIncludeLoader instance, SimpleXmlSerializerBase serializer
+                ) {
+                instance = instance ?? new MemberReferenceBlacklistFilterIncludeLoader();
+                FileIncludeLoader<IMemberReferenceBlacklistItem>.Serialize(instance, serializer);
+                return instance;
+            }
         }
 
         [XmlRoot("AssemblyReferenceWhitelist")]
         private class AssemblyReferenceWhitelistFilterIncludeLoader : FileIncludeLoader<IAssemblyReferenceWhitelistItem> {
-
+            [SerializationMethod]
+            public static AssemblyReferenceWhitelistFilterIncludeLoader Serialize(
+                AssemblyReferenceWhitelistFilterIncludeLoader instance, SimpleXmlSerializerBase serializer
+                ) {
+                instance = instance ?? new AssemblyReferenceWhitelistFilterIncludeLoader();
+                FileIncludeLoader<IAssemblyReferenceWhitelistItem>.Serialize(instance, serializer);
+                return instance;
+            }
         }
     }
 }

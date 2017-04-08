@@ -14,6 +14,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
             string configurationSerialized = SimpleXmlSerializationUtility.XmlSerializeToString(configuration);
             Console.WriteLine(configurationSerialized);
+            Console.WriteLine();
             InjectionConfiguration configurationDeserialized =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);

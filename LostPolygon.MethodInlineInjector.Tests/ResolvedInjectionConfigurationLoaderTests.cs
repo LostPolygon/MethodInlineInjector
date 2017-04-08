@@ -155,6 +155,21 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             params IMemberReferenceBlacklistItem[] memberReferenceBlacklist
         ) {
             InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist.ToList());
+
+            // Strip includes
+            configuration = 
+                configuration.WithInjecteeAssemblies(
+                    configuration.InjecteeAssemblies.Select(assembly =>
+                        assembly.WithAssemblyReferenceWhitelist(
+                            assembly.AssemblyReferenceWhitelist.Where(item => !(item is InjectionConfigurationFileInclude)).ToList().AsReadOnly()
+                        )
+                        .WithMemberReferenceBlacklist(
+                                assembly.MemberReferenceBlacklist.Where(item => !(item is InjectionConfigurationFileInclude)).ToList().AsReadOnly()
+                        )
+                    )
+                    .ToList().AsReadOnly()
+                );
+
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(configuration);
             ExecuteSimpleTest(resolvedConfiguration, false);
