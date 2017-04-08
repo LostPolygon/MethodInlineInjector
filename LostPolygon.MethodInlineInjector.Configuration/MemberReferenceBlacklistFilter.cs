@@ -1,6 +1,6 @@
 using System;
 using System.Xml.Serialization;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Filter")]

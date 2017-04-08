@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     [AttributeUsage(AttributeTargets.Method)]
     public class SerializationMethodAttribute : Attribute {
     }

@@ -4,13 +4,13 @@ using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using System.Xml;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     public class SimpleXmlSerializer : SimpleXmlSerializerBase {
         public SimpleXmlSerializer(bool isDeserealizing, XmlDocument xmlDocument, XmlElement currentXmlElement)
             : base(isDeserealizing, xmlDocument, currentXmlElement) {
         }
 
-        protected override SimpleXmlSerializerBase CloneSerializer(object serializedObject) {
+        protected override SimpleXmlSerializerBase Clone() {
             return new SimpleXmlSerializer(IsDeserializing, Document, CurrentXmlElement);
         }
 
@@ -82,7 +82,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                 do {
                     prevElement = CurrentXmlElement;
 
-                    SimpleXmlSerializerBase clonedSerializer = CloneSerializer(this);
+                    SimpleXmlSerializerBase clonedSerializer = Clone();
                     T value = createItemFunc?.Invoke(clonedSerializer) ?? InvokeSerializationMethod<T>(null, clonedSerializer);
 
                     CurrentXmlElement = clonedSerializer.CurrentXmlElement;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Mono.Cecil;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 using log4net;

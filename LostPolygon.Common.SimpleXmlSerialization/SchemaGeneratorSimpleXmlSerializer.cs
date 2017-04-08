@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Xml;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     public class SchemaGeneratorSimpleXmlSerializer : SimpleXmlSerializer {
         private const string kXmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
         private readonly Dictionary<string, XmlElement> _typeElements;
@@ -15,7 +14,6 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
         protected bool IsOptional => (_flags & SimpleXmlSerializerFlags.IsOptional) != 0;
 
         public SchemaGeneratorSimpleXmlSerializer(
-            object serializedObject,
             XmlDocument xmlDocument,
             XmlElement currentXmlElement)
             : base(false, xmlDocument, currentXmlElement) {
@@ -24,17 +22,14 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
 
         protected SchemaGeneratorSimpleXmlSerializer(
             Dictionary<string, XmlElement> typeElements,
-            object serializedObject,
             XmlDocument xmlDocument,
             XmlElement currentXmlElement)
             : base(false, xmlDocument, currentXmlElement) {
             _typeElements = typeElements;
         }
 
-        protected override SimpleXmlSerializerBase CloneSerializer(object serializedObject) {
-            SchemaGeneratorSimpleXmlSerializer serializer =
-                new SchemaGeneratorSimpleXmlSerializer(_typeElements, serializedObject, Document, CurrentXmlElement);
-            return serializer;
+        protected override SimpleXmlSerializerBase Clone() {
+            return new SchemaGeneratorSimpleXmlSerializer(_typeElements, Document, CurrentXmlElement);
         }
 
         public override bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc) {

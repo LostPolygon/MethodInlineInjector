@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     [Flags]
     public enum SimpleXmlSerializerFlags {
         IsOptional = 1 << 0,

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 
 namespace LostPolygon.MethodInlineInjector {
     public class InjecteeAssembly {

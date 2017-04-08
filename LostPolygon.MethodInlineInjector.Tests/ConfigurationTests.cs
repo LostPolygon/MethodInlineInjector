@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 using NUnit.Framework;
 using TestInjectedLibrary;
 

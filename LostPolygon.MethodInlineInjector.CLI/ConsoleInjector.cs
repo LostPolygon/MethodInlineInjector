@@ -6,7 +6,7 @@ using CommandLine;
 using CommandLine.Text;
 using log4net;
 using log4net.Core;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 
 namespace LostPolygon.MethodInlineInjector.Cli {
     internal class ConsoleInjector {

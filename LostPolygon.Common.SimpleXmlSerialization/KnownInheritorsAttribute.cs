@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true)]
     public class KnownInheritorsAttribute : Attribute  {
         public Type[] InheritorTypes { get; }

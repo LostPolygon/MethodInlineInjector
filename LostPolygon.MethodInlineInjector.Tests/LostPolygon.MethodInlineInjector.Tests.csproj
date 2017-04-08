@@ -123,6 +123,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\LostPolygon.Common.SimpleXmlSerialization\LostPolygon.Common.SimpleXmlSerialization.csproj">
+      <Project>{3c709248-44b8-4897-981b-766696cf52d2}</Project>
+      <Name>LostPolygon.Common.SimpleXmlSerialization</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Configuration\LostPolygon.MethodInlineInjector.Configuration.csproj">
       <Project>{d207f1af-1776-48bd-b4ab-adf1217373bb}</Project>
       <Name>LostPolygon.MethodInlineInjector.Configuration</Name>
@@ -151,6 +155,7 @@
     </Content>
     <Content Include="TestData\Common\UnityPerfomanceBlacklist.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="TestData\inject.xml" />
   </ItemGroup>

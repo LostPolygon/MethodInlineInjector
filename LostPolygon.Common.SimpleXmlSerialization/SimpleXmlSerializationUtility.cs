@@ -1,9 +1,8 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Xml;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     public static class SimpleXmlSerializationUtility {
         public static string GenerateXmlSchemaString<T>(T serializedObject) where T : class {
             if (serializedObject == null)
@@ -22,7 +21,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
                     schemaElement.SetAttribute("attributeFormDefault", "unqualified");
                     xmlDocument.InsertBefore(schemaElement, null);
 
-                    SchemaGeneratorSimpleXmlSerializer serializer = new SchemaGeneratorSimpleXmlSerializer(serializedObject, xmlDocument, schemaElement);
+                    SchemaGeneratorSimpleXmlSerializer serializer = new SchemaGeneratorSimpleXmlSerializer(xmlDocument, schemaElement);
                     SimpleXmlSerializerBase.InvokeSerializationMethod(serializedObject, serializer);
 
                     serializer.InsertCapturedTypes();

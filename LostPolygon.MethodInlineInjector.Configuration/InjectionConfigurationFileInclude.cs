@@ -1,5 +1,5 @@
 ﻿using System;
-using LostPolygon.MethodInlineInjector.Serialization;
+using LostPolygon.Common.SimpleXmlSerialization;
 
 namespace LostPolygon.MethodInlineInjector {
     public abstract class InjectionConfigurationFileInclude {

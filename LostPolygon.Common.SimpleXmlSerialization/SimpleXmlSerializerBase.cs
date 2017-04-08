@@ -6,9 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.Contracts;
 
-namespace LostPolygon.MethodInlineInjector.Serialization {
+namespace LostPolygon.Common.SimpleXmlSerialization {
     public abstract class SimpleXmlSerializerBase {
         public XmlDocument Document { get; }
         public XmlElement CurrentXmlElement { get; protected set; }
@@ -23,7 +22,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             CurrentXmlElement = currentXmlElement;
         }
 
-        protected abstract SimpleXmlSerializerBase CloneSerializer(object serializedObject);
+        protected abstract SimpleXmlSerializerBase Clone();
 
         public abstract bool ProcessAttributeString(string name, Action<string> readAction, Func<string> writeFunc);
         public abstract bool ProcessStartElement(string name, string prefix = null, string namespaceUri = null);
@@ -57,7 +56,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             where T : class {
             foreach (Type type in types) {
                 if (GetXmlRootName(type) == name) {
-                    T value = (T) CloneSerializerAndInvokeSerializationMethod(type, this);
+                    T value = (T) CloneSerializerAndInvokeSerializationMethod(type);
                     return value;
                 }
             }
@@ -78,7 +77,7 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             foreach (Type type in knownInheritors) {
                 isEmpty = false;
                 if (GetXmlRootName(type) == name) {
-                    serializer = serializer ?? CloneSerializer(this);
+                    serializer = serializer ?? Clone();
                     T value = (T) InvokeSerializationMethod(type, null, serializer);
                     return value;
                 }
@@ -103,27 +102,18 @@ namespace LostPolygon.MethodInlineInjector.Serialization {
             return GetXmlRootName(typeof(T));
         }
 
-        protected T CloneSerializerAndInvokeSerializationMethod<T>() where T : class {
-            return CloneSerializerAndInvokeSerializationMethod<T>(this);
+        protected object CloneSerializerAndInvokeSerializationMethod(Type serializedObjectType)
+        {
+            return CloneSerializerAndInvokeSerializationMethod(serializedObjectType, null);
         }
 
-        protected object CloneSerializerAndInvokeSerializationMethod(Type serializedObjectType, SimpleXmlSerializerBase serializer)  {
-            SimpleXmlSerializerBase clonedSerializer = CloneSerializer(serializer);
-            return InvokeSerializationMethod(serializedObjectType, null, clonedSerializer);
+        protected object CloneSerializerAndInvokeSerializationMethod(Type serializedObjectType, object serializedObject)
+        {
+            return InvokeSerializationMethod(serializedObjectType, serializedObject, Clone());
         }
 
-        protected T CloneSerializerAndInvokeSerializationMethod<T>(SimpleXmlSerializerBase serializer) where T : class {
-            SimpleXmlSerializerBase clonedSerializer = CloneSerializer(serializer);
-            return InvokeSerializationMethod<T>(null, clonedSerializer);
-        }
-
-        protected T CloneSerializerAndInvokeSerializationMethod<T>(T serializedObject) {
-            return CloneSerializerAndInvokeSerializationMethod(serializedObject, this);
-        }
-
-        protected T CloneSerializerAndInvokeSerializationMethod<T>(T serializedObject, SimpleXmlSerializerBase serializer) {
-            SimpleXmlSerializerBase clonedSerializer = CloneSerializer(serializer);
-            return InvokeSerializationMethod<T>(serializedObject, clonedSerializer);
+        protected T CloneSerializerAndInvokeSerializationMethod<T>(T serializedObject = null) where T : class {
+            return InvokeSerializationMethod(serializedObject, Clone());
         }
 
         public static T InvokeSerializationMethod<T>(T serializedObject, SimpleXmlSerializerBase serializer) {
