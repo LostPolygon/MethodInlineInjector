@@ -2,6 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
+using System.Xml.Schema;
 using CommandLine;
 using CommandLine.Text;
 using log4net;
@@ -98,6 +100,7 @@ namespace LostPolygon.MethodInlineInjector.Cli {
                     throw new MethodInlineInjectorException("Injector configuration is empty");
 
                 Log.Info("Parsing configuration file");
+                ValidateConfiguration(serializedInjectorConfiguration);
                 InjectionConfiguration injectionConfiguration =
                     SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(serializedInjectorConfiguration);
 
@@ -175,6 +178,36 @@ namespace LostPolygon.MethodInlineInjector.Cli {
                 $"MethodInlineInjector v{assemblyVersion} ({assemblyConfiguration}, built at {assemblyBuildDateTime:dd.MM.yyyy HH:MM})";
             helpText.Copyright = $"© Lost Polygon, {assemblyBuildDateTime.Year}";
             return helpText;
+        }
+
+        private static void ValidateConfiguration(string injectorConfigurationXml) {
+            XmlDocument document = new XmlDocument();
+
+            XmlSchema schema = XmlSchema.Read(new StringReader(Resources.injectorConfigurationSchema), null);
+
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.ValidationType = ValidationType.Schema;
+            settings.ValidationFlags |= XmlSchemaValidationFlags.ProcessInlineSchema;
+            settings.ValidationFlags |= XmlSchemaValidationFlags.ProcessSchemaLocation;
+            settings.ValidationFlags |= XmlSchemaValidationFlags.ReportValidationWarnings;
+            settings.ValidationEventHandler += (sender, args) => {
+                switch (args.Severity) {
+                    case XmlSeverityType.Error:
+                        throw new MethodInlineInjectorException("Error parsing configuration", args.Exception);
+                    case XmlSeverityType.Warning:
+                        Log.Warn(args.Message);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            };
+
+            settings.Schemas.Add(schema);
+
+            // Create the XmlReader object.
+            XmlReader reader = XmlReader.Create(new StringReader(injectorConfigurationXml), settings);
+
+            document.Load(reader);
         }
     }
 }

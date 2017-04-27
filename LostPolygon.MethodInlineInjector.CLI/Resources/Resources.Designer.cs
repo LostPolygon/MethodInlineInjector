@@ -61,6 +61,27 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;xs:schema elementFormDefault=&quot;qualified&quot; attributeFormDefault=&quot;unqualified&quot; xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+        ///  &lt;xs:element name=&quot;Configuration&quot;&gt;
+        ///    &lt;xs:complexType&gt;
+        ///      &lt;xs:all&gt;
+        ///        &lt;xs:element name=&quot;InjecteeAssemblies&quot;&gt;
+        ///          &lt;xs:complexType&gt;
+        ///            &lt;xs:choice maxOccurs=&quot;unbounded&quot;&gt;
+        ///              &lt;xs:element name=&quot;InjecteeAssembly&quot; type=&quot;InjecteeAssembly&quot; /&gt;
+        ///            &lt;/xs:choice&gt;
+        ///          &lt;/xs:complexType&gt;
+        ///        &lt;/xs:element&gt;
+        ///        &lt;xs:element name=&quot;InjectedMethods&quot;&gt;
+        ///   [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string injectorConfigurationSchema {
+            get {
+                return ResourceManager.GetString("injectorConfigurationSchema", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
         ///&lt;log4net&gt;
         ///  &lt;appender name=&quot;ColoredConsoleAppender&quot; type=&quot;log4net.Appender.ManagedColoredConsoleAppender&quot;&gt;

@@ -24,6 +24,30 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
+        public void InjectionConfigurationSerializationTest2() {
+            string configurationSerialized =
+@"<Configuration>
+    <InjecteeAssemblies>
+        <InjecteeAssembly AssemblyPath=""lib1.dll"">
+        </InjecteeAssembly>
+        <InjecteeAssembly AssemblyPath=""lib2.dll"">
+        </InjecteeAssembly>
+    </InjecteeAssemblies>
+    <InjectedMethods>
+        <InjectedMethod AssemblyPath=""TestInjectedLibrary.dll"" MethodFullName=""TestInjectedLibrary.TestInjectedMethods.Complex"" InjectionPosition=""InjecteeMethodStart"" />
+    </InjectedMethods>
+</Configuration>
+";
+            InjectionConfiguration configurationDeserialized =
+                SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
+            string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
+
+            Console.WriteLine(configurationSerializedAgain);
+            Assert.AreEqual(configurationSerialized.Trim(), configurationSerializedAgain.Trim());
+        }
+
+
+        [Test]
         public void GenerateSchema() {
             InjectionConfiguration configuration = GetInjectionConfiguration();
 

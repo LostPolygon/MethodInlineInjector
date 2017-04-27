@@ -40,40 +40,38 @@ namespace LostPolygon.MethodInlineInjector {
             serializer.ProcessStartElement(nameof(InjecteeAssembly));
             {
                 serializer.ProcessAttributeString(nameof(AssemblyPath), s => instance.AssemblyPath = s, () => instance.AssemblyPath);
-                serializer.ProcessAdvanceOnRead();
+                serializer.ProcessEnterChildOnRead();
 
-                serializer.ProcessWithFlags(
-                    SimpleXmlSerializerFlags.IsOptional, 
-                    () => {
-                    serializer.ProcessStartElement(nameof(MemberReferenceBlacklist));
-                    serializer.ProcessAdvanceOnRead();
-                    {
-                        serializer.ProcessCollectionAsReadOnly(
-                            v => instance.MemberReferenceBlacklist = v,
-                            () => instance.MemberReferenceBlacklist,
-                            itemSerializer =>
-                                serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
-                                    serializer.CurrentXmlElement.Name,
-                                    itemSerializer
-                                )
-                        );
-                    }
-                    serializer.ProcessEndElement();
+                serializer.ProcessWithFlags(SimpleXmlSerializerFlags.IsOptional | SimpleXmlSerializerFlags.CollectionUnorderedRequired, () => {
+                    serializer.ProcessUnorderedSequence(() => {
+                        if (serializer.ProcessStartElement(nameof(MemberReferenceBlacklist))) {
+                            serializer.ProcessEnterChildOnRead();
+                            serializer.ProcessCollectionAsReadOnly(
+                                v => instance.MemberReferenceBlacklist = v,
+                                () => instance.MemberReferenceBlacklist,
+                                itemSerializer =>
+                                    serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                                        serializer.CurrentXmlElement.Name,
+                                        itemSerializer
+                                    )
+                            );
+                        }
+                        serializer.ProcessEndElement();
 
-                    serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist));
-                    serializer.ProcessAdvanceOnRead();
-                    {
-                        serializer.ProcessCollectionAsReadOnly(
-                            v => instance.AssemblyReferenceWhitelist = v,
-                            () => instance.AssemblyReferenceWhitelist,
-                            itemSerializer =>
-                                serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
-                                    serializer.CurrentXmlElement.Name,
-                                    itemSerializer
-                                )
-                        );
-                    }
-                    serializer.ProcessEndElement();
+                        if (serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist))) {
+                            serializer.ProcessEnterChildOnRead();
+                            serializer.ProcessCollectionAsReadOnly(
+                                v => instance.AssemblyReferenceWhitelist = v,
+                                () => instance.AssemblyReferenceWhitelist,
+                                itemSerializer =>
+                                    serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                                        serializer.CurrentXmlElement.Name,
+                                        itemSerializer
+                                    )
+                            );
+                        }
+                        serializer.ProcessEndElement();
+                    });
                 });
             }
             serializer.ProcessEndElement();

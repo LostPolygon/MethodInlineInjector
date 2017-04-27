@@ -49,7 +49,7 @@ namespace LostPolygon.MethodInlineInjector {
                     sSerializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => instance.FilterFlags = s, () => instance.FilterFlags);
                 });
             }
-            sSerializer.ProcessAdvanceOnRead();
+            sSerializer.ProcessEnterChildOnRead();
             sSerializer.ProcessEndElement();
 
             return instance;

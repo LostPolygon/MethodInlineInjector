@@ -50,7 +50,7 @@ namespace LostPolygon.MethodInlineInjector {
                     serializer.ProcessEnumAttribute(nameof(InjectionPosition), s => instance.InjectionPosition = s, () => instance.InjectionPosition);
                 });
             }
-            serializer.ProcessAdvanceOnRead();
+            serializer.ProcessEnterChildOnRead();
             serializer.ProcessEndElement();
 
             return instance;

@@ -392,7 +392,7 @@ namespace LostPolygon.MethodInlineInjector {
                 instance = instance ?? throw new ArgumentNullException(nameof(instance));
 
                 // Skip root element when reading
-                serializer.ProcessAdvanceOnRead();
+                serializer.ProcessEnterChildOnRead();
 
                 serializer.ProcessCollection(
                     instance.Items,

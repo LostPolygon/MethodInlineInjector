@@ -26,7 +26,7 @@ namespace LostPolygon.MethodInlineInjector {
             {
                 serializer.ProcessAttributeString(nameof(Path), s => instance.Path = s, () => instance.Path);
             }
-            serializer.ProcessAdvanceOnRead();
+            serializer.ProcessEnterChildOnRead();
             serializer.ProcessEndElement();
 
             return instance;
