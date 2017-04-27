@@ -185,7 +185,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
                 filteredInjecteeMethods =
                     filteredInjecteeMethods
-                        .Where(method => _injecteeMethodNames.Contains(method.GetFullName()))
+                        .Where(method => _injecteeMethodNames.Contains(method.GetFullSimpleName()))
                         .ToList();
 
                 return filteredInjecteeMethods;

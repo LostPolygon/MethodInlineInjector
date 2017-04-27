@@ -146,7 +146,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         [OneTimeSetUp]
         public static void Setup() {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
-            Console.SetOut(TestContext.Progress);
             XmlConfigurator.Configure();
         }
 

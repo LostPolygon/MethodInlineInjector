@@ -8,7 +8,8 @@ namespace LostPolygon.MethodInlineInjector {
         private const MemberReferenceBlacklistFilterFlags kDefaultFilterOptions =
             MemberReferenceBlacklistFilterFlags.SkipTypes |
             MemberReferenceBlacklistFilterFlags.SkipMethods |
-            MemberReferenceBlacklistFilterFlags.SkipProperties;
+            MemberReferenceBlacklistFilterFlags.SkipProperties |
+            MemberReferenceBlacklistFilterFlags.MatchAncestors;
 
         public string Filter { get; private set; }
         public MemberReferenceBlacklistFilterFlags FilterFlags { get; private set; } = kDefaultFilterOptions;
@@ -19,7 +20,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         public MemberReferenceBlacklistFilter(string filter, MemberReferenceBlacklistFilterFlags filterFlags = kDefaultFilterOptions) {
-            Filter = String.IsNullOrEmpty(filter) ? throw new ArgumentNullException(nameof(filter)) : filter;
+            Filter = !String.IsNullOrEmpty(filter) ? filter : throw new ArgumentNullException(nameof(filter));
             FilterFlags = filterFlags;
         }
 
@@ -37,20 +38,20 @@ namespace LostPolygon.MethodInlineInjector {
         #region Serialization
 
         [SerializationMethod]
-        public static MemberReferenceBlacklistFilter Serialize(MemberReferenceBlacklistFilter instance, SimpleXmlSerializerBase sSerializer) {
+        public static MemberReferenceBlacklistFilter Serialize(MemberReferenceBlacklistFilter instance, SimpleXmlSerializerBase serializer) {
             instance = instance ?? new MemberReferenceBlacklistFilter();
 
-            sSerializer.ProcessStartElement(sSerializer.GetXmlRootName(instance.GetType()));
+            serializer.ProcessStartElement(serializer.GetXmlRootName(instance.GetType()));
             {
-                sSerializer.ProcessAttributeString(nameof(Filter), s => instance.Filter = s, () => instance.Filter);
-                sSerializer.ProcessWithFlags(
+                serializer.ProcessAttributeString(nameof(Filter), s => instance.Filter = s, () => instance.Filter);
+                serializer.ProcessWithFlags(
                     SimpleXmlSerializerFlags.IsOptional,
                     () => {
-                    sSerializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => instance.FilterFlags = s, () => instance.FilterFlags);
+                    serializer.ProcessFlagsEnumAttributes(kDefaultFilterOptions, s => instance.FilterFlags = s, () => instance.FilterFlags);
                 });
             }
-            sSerializer.ProcessEnterChildOnRead();
-            sSerializer.ProcessEndElement();
+            serializer.ProcessEnterChildOnRead();
+            serializer.ProcessEndElement();
 
             return instance;
         }

@@ -26,6 +26,20 @@ namespace TestInjecteeLibrary {
             Console.WriteLine("Injectee: SingleStatement");
         }
 
+        public virtual void VirtualSingleStatement() {
+            Console.WriteLine("Injectee: VirtualSingleStatement");
+        }
+
+        public virtual int VirtualSingleStatementProperty {
+            get {
+                Console.WriteLine("Injectee: VirtualSingleStatementProperty Get");
+                return 0;
+            }
+            set {
+                Console.WriteLine("Injectee: VirtualSingleStatementProperty Set");
+            }
+        }
+
         public void WithParameters(int a, float b) {
             Console.WriteLine("Injectee: Begin");
             Console.WriteLine("Injectee: a + b = " + (a + b));

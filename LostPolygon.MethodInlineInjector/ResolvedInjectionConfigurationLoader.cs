@@ -95,7 +95,7 @@ namespace LostPolygon.MethodInlineInjector {
                 MethodDefinition[] matchingMethodDefinitions =
                     assemblyDefinitionCachedData
                     .AllMethods
-                    .Where(methodDefinition => methodDefinition.GetFullName() == sourceInjectedMethod.MethodFullName)
+                    .Where(methodDefinition => methodDefinition.GetFullSimpleName() == sourceInjectedMethod.MethodFullName)
                     .ToArray();
 
                 if (matchingMethodDefinitions.Length == 0)
@@ -300,26 +300,13 @@ namespace LostPolygon.MethodInlineInjector {
 
             IEnumerable<MethodDefinition> GetTestedMethodsFromType(TypeDefinition type) {
                 HashSet<MethodDefinition> blacklistedMethods = new HashSet<MethodDefinition>();
-                Collection<PropertyDefinition> properties = type.Properties;
-                Collection<MethodDefinition> methods = type.Methods;
 
-                // TODO: ancestor support
                 foreach (MemberReferenceBlacklistFilter blacklistFilter in memberReferenceBlacklistFilters) {
                     if (!blacklistFilter.FilterFlags.HasFlag(MemberReferenceBlacklistFilterFlags.SkipProperties))
                         continue;
 
-                    foreach (PropertyDefinition property in properties) {
-                        if (!TestString(blacklistFilter, property.FullName)) {
-                            Log.DebugFormat("Blacklisted property '{0}.{1}'", property.DeclaringType.FullName, property.FullName);
-                            continue;
-                        }
-
-                        if (property.GetMethod != null) {
-                            blacklistedMethods.Add(property.GetMethod);
-                        }
-                        if (property.SetMethod != null) {
-                            blacklistedMethods.Add(property.SetMethod);
-                        }
+                    foreach (PropertyDefinition property in type.Properties) {
+                        ProcessPropertyBlacklist(property, blacklistFilter, blacklistedMethods);
                     }
                 }
 
@@ -327,18 +314,57 @@ namespace LostPolygon.MethodInlineInjector {
                     if (!blacklistFilter.FilterFlags.HasFlag(MemberReferenceBlacklistFilterFlags.SkipMethods))
                         continue;
 
-                    foreach (MethodDefinition method in methods) {
-                        string methodFullName = method.GetFullName();
-                        if (!TestString(blacklistFilter, methodFullName)) {
-                            Log.DebugFormat("Blacklisted method '{0}'", methodFullName);
-                            continue;
-                        }
-
-                        blacklistedMethods.Add(method);
+                    foreach (MethodDefinition method in type.Methods) {
+                        ProcessMethodBlacklist(method, blacklistFilter, blacklistedMethods);
                     }
                 }
 
-                return methods.Except(blacklistedMethods);
+                return type.Methods.Except(blacklistedMethods).Distinct();
+            }
+
+            void ProcessPropertyBlacklist(PropertyDefinition property, MemberReferenceBlacklistFilter blacklistFilter, HashSet<MethodDefinition> blacklistedMethods) {
+                PropertyDefinition startProperty = property;
+                while (true) {
+                    if (!TestString(blacklistFilter, property.GetFullSimpleName())) {
+                        Log.DebugFormat("Blacklisted property '{0}'", startProperty.GetFullSimpleName());
+                        if (startProperty.GetMethod != null) {
+                            blacklistedMethods.Add(startProperty.GetMethod);
+                        }
+                        if (startProperty.SetMethod != null) {
+                            blacklistedMethods.Add(startProperty.SetMethod);
+                        }
+                        break;
+                    }
+
+                    if (!blacklistFilter.MatchAncestors)
+                        break;
+
+                    PropertyDefinition baseProperty = property.GetBaseProperty();
+                    if (baseProperty == property)
+                        break;
+
+                    property = baseProperty;
+                }
+            }
+
+            void ProcessMethodBlacklist(MethodDefinition method, MemberReferenceBlacklistFilter blacklistFilter, HashSet<MethodDefinition> blacklistedMethods) {
+                MethodDefinition startMethod = method;
+                while (true) {
+                    if (!TestString(blacklistFilter, method.GetFullSimpleName())) {
+                        blacklistedMethods.Add(startMethod);
+                        Log.DebugFormat("Blacklisted method '{0}'", startMethod.GetFullSimpleName());
+                        break;
+                    }
+
+                    if (!blacklistFilter.MatchAncestors)
+                        break;
+
+                    MethodDefinition baseMethod = method.GetBaseMethod();
+                    if (baseMethod == method)
+                        break;
+
+                    method = baseMethod;
+                }
             }
         }
 
@@ -368,7 +394,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected static string CreateInvalidInjectedMethodMessage(MethodDefinition method, string message) {
-            return $"Injected method {method.GetFullName()} is not valid, reason: {message}";
+            return $"Injected method {method.GetFullSimpleName()} is not valid, reason: {message}";
         }
 
         protected class AssemblyDefinitionCachedData {

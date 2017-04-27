@@ -92,8 +92,8 @@ namespace LostPolygon.MethodInlineInjector {
                 foreach (ResolvedInjectedMethod injectedMethod in injectedMethods) {
                     Log.DebugFormat(
                         "Injecting method '{0}' to method {1} at {2}",
-                        injectedMethod.MethodDefinition.GetFullName(),
-                        injecteeMethod.GetFullName(),
+                        injectedMethod.MethodDefinition.GetFullSimpleName(),
+                        injecteeMethod.GetFullSimpleName(),
                         injectedMethod.InjectionPosition
                     );
 

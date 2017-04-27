@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 
 namespace LostPolygon.MethodInlineInjector {
@@ -53,13 +55,42 @@ namespace LostPolygon.MethodInlineInjector {
             return type.Resolve();
         }
 
-        public static string GetFullName(this MethodDefinition methodDefinition) {
+        public static string GetFullSimpleName(this MethodDefinition methodDefinition) {
             return $"{methodDefinition.DeclaringType.FullName}.{methodDefinition.Name}";
         }
 
+        public static string GetFullSimpleName(this PropertyDefinition propertyDefinition) {
+            return $"{propertyDefinition.DeclaringType.FullName}.{propertyDefinition.Name}";
+        }
+
+        public static PropertyDefinition GetBaseProperty(this PropertyDefinition self) {
+            if (self == null)
+                throw new ArgumentNullException(nameof(self));
+
+            MethodDefinition getterOrSetter = self.GetMethod ?? self.SetMethod;
+            bool isVirtual = getterOrSetter.IsVirtual;
+            bool isNewSlot = getterOrSetter.IsNewSlot;
+
+            if (!isVirtual || isNewSlot)
+                return self;
+
+            MethodDefinition baseGetterOrSetter = getterOrSetter.GetBaseMethod();
+            if (baseGetterOrSetter == getterOrSetter)
+                return self;
+
+            TypeDefinition basePropertyType = baseGetterOrSetter.DeclaringType;
+            PropertyDefinition baseProperty =
+                basePropertyType
+                .Properties
+                .First(property => property.GetMethod == baseGetterOrSetter || property.SetMethod == baseGetterOrSetter);
+
+            return baseProperty;
+        }
+
         public static void AddRange<TResult>(this Collection<TResult> collection, IEnumerable<TResult> source) {
-            foreach (TResult result in source)
+            foreach (TResult result in source) {
                 collection.Add(result);
+            }
         }
 
         public static void InsertRangeToStart<TResult>(this Collection<TResult> collection, IEnumerable<TResult> source) {

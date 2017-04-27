@@ -1,4 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using devtm.Cecil.Extensions;
+using Mono.Cecil;
+using Mono.Cecil.Rocks;
 using NUnit.Framework;
 using TestInjectedLibrary;
 using TestInjecteeLibrary;
@@ -133,19 +137,87 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             );
         }
 
-        private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTypeTest(
-            string blacklistedTypeFullName,
+        [Test]
+        public void BlacklistVirtualMethodTest() {
+            string methodName = $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatement)}";
+            string methodNameChild = $"{typeof(ChildTestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatement)}";
+            ResolvedInjectionConfiguration configuration =
+                ExecuteSimpleBlacklistTest(
+                methodName,
+                MemberReferenceBlacklistFilterFlags.SkipMethods
+            );
+
+            Assert.True(IsMethodSkipped(configuration, methodName));
+            Assert.False(IsMethodSkipped(configuration, methodNameChild));
+        }
+
+        [Test]
+        public void BlacklistVirtualMethodOverrideTest() {
+            string methodName = $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatement)}";
+            string methodNameChild = $"{typeof(ChildTestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatement)}";
+            ResolvedInjectionConfiguration configuration =
+                ExecuteSimpleBlacklistTest(
+                    methodName,
+                    MemberReferenceBlacklistFilterFlags.SkipMethods |
+                    MemberReferenceBlacklistFilterFlags.MatchAncestors
+                );
+
+            Assert.True(IsMethodSkipped(configuration, methodName));
+            Assert.True(IsMethodSkipped(configuration, methodNameChild));
+        }
+
+        [Test]
+        public void BlacklistVirtualPropertyTest() {
+            string propertyName = $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatementProperty)}";
+            string propertyNameChild = $"{typeof(ChildTestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatementProperty)}";
+            ResolvedInjectionConfiguration configuration =
+                ExecuteSimpleBlacklistTest(
+                    propertyName,
+                    MemberReferenceBlacklistFilterFlags.SkipProperties
+                );
+
+            Assert.True(IsPropertySkipped(configuration, propertyName));
+            Assert.False(IsPropertySkipped(configuration, propertyNameChild));
+        }
+
+        [Test]
+        public void BlacklistVirtualPropertyOverrideTest() {
+            string propertyName = $"{typeof(TestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatementProperty)}";
+            string propertyNameChild = $"{typeof(ChildTestInjectee).FullName}.{nameof(TestInjectee.VirtualSingleStatementProperty)}";
+            ResolvedInjectionConfiguration configuration =
+                ExecuteSimpleBlacklistTest(
+                    propertyName,
+                    MemberReferenceBlacklistFilterFlags.SkipProperties |
+                    MemberReferenceBlacklistFilterFlags.MatchAncestors
+                );
+
+            Assert.True(IsPropertySkipped(configuration, propertyName));
+            Assert.True(IsPropertySkipped(configuration, propertyNameChild));
+        }
+
+        private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTest(
+            string blacklistedMethodFullName,
             MemberReferenceBlacklistFilterFlags blacklistFilterFlags =
-                MemberReferenceBlacklistFilterFlags.SkipTypes
+                MemberReferenceBlacklistFilterFlags.SkipMethods
         ) {
             IMemberReferenceBlacklistItem[] memberReferenceBlacklist = {
                 new MemberReferenceBlacklistFilter(
-                    blacklistedTypeFullName,
+                    blacklistedMethodFullName,
                     blacklistFilterFlags
                 ),
             };
 
             ResolvedInjectionConfiguration resolvedConfiguration = ExecuteBlacklistTest(memberReferenceBlacklist);
+
+            return resolvedConfiguration;
+        }
+
+        private ResolvedInjectionConfiguration ExecuteSimpleBlacklistTypeTest(
+            string blacklistedTypeFullName,
+            MemberReferenceBlacklistFilterFlags blacklistFilterFlags =
+                MemberReferenceBlacklistFilterFlags.SkipTypes
+        ) {
+            ResolvedInjectionConfiguration resolvedConfiguration = ExecuteSimpleBlacklistTest(blacklistedTypeFullName, blacklistFilterFlags);
             Assert.True(IsTypeSkipped(resolvedConfiguration, blacklistedTypeFullName));
 
             return resolvedConfiguration;
@@ -157,14 +229,14 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjectionConfiguration configuration = GetInjectionConfiguration(memberReferenceBlacklist.ToList());
 
             // Strip includes
-            configuration = 
+            configuration =
                 configuration.WithInjecteeAssemblies(
                     configuration.InjecteeAssemblies.Select(assembly =>
                         assembly.WithAssemblyReferenceWhitelist(
                             assembly.AssemblyReferenceWhitelist.Where(item => !(item is InjectionConfigurationFileInclude)).ToList().AsReadOnly()
                         )
                         .WithMemberReferenceBlacklist(
-                                assembly.MemberReferenceBlacklist.Where(item => !(item is InjectionConfigurationFileInclude)).ToList().AsReadOnly()
+                            assembly.MemberReferenceBlacklist.Where(item => !(item is InjectionConfigurationFileInclude)).ToList().AsReadOnly()
                         )
                     )
                     .ToList().AsReadOnly()
@@ -176,11 +248,37 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return resolvedConfiguration;
         }
 
+        private static bool IsPropertySkipped(ResolvedInjectionConfiguration resolvedConfiguration, string skippedPropertyFullName) {
+            IEnumerable<PropertyDefinition> allProperties =
+                resolvedConfiguration
+                .InjecteeAssemblies
+                .SelectMany(assembly => assembly.AssemblyDefinition.MainModule.GetAllTypes().SelectMany(type => type.Properties));
+
+            PropertyDefinition skippedProperty =
+                allProperties
+                .First(property => property.GetFullSimpleName() == skippedPropertyFullName);
+
+            if (skippedProperty.GetMethod != null && !IsMethodSkipped(resolvedConfiguration, skippedProperty.GetMethod.GetFullSimpleName()))
+                return false;
+
+            if (skippedProperty.SetMethod != null && !IsMethodSkipped(resolvedConfiguration, skippedProperty.SetMethod.GetFullSimpleName()))
+                return false;
+
+            return true;
+        }
+
+        private static bool IsMethodSkipped(ResolvedInjectionConfiguration resolvedConfiguration, string skippedMethodFullName) {
+            return resolvedConfiguration
+                .InjecteeAssemblies
+                .SelectMany(assembly => assembly.InjecteeMethods)
+                .All(method => method.GetFullSimpleName() != skippedMethodFullName);
+        }
+
         private static bool IsTypeSkipped(ResolvedInjectionConfiguration resolvedConfiguration, string skippedTypeFullName) {
             return resolvedConfiguration
-                       .InjecteeAssemblies
-                       .SelectMany(assembly => assembly.InjecteeMethods)
-                       .All(method => method.DeclaringType.FullName != skippedTypeFullName);
+                .InjecteeAssemblies
+                .SelectMany(assembly => assembly.InjecteeMethods)
+                .All(method => method.DeclaringType.FullName != skippedTypeFullName);
         }
 
         #region Setup
