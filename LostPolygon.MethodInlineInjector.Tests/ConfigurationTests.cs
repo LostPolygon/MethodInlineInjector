@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using LostPolygon.Common.SimpleXmlSerialization;
 using NUnit.Framework;
 using TestInjectedLibrary;
@@ -37,15 +38,15 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         <InjectedMethod AssemblyPath=""TestInjectedLibrary.dll"" MethodFullName=""TestInjectedLibrary.TestInjectedMethods.Complex"" InjectionPosition=""InjecteeMethodStart"" />
     </InjectedMethods>
 </Configuration>
-"
-.Replace("\r\n", Environment.NewLine);
+";
             InjectionConfiguration configurationDeserialized =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
-            configurationSerializedAgain = configurationSerializedAgain.Replace("\r\n", Environment.NewLine);
+            configurationSerializedAgain = NormalizeNewlines(configurationSerializedAgain.Trim());
+            configurationSerialized = NormalizeNewlines(configurationSerialized.Trim());
 
             Console.WriteLine(configurationSerializedAgain);
-            Assert.AreEqual(configurationSerialized.Trim(), configurationSerializedAgain.Trim());
+            Assert.AreEqual(configurationSerialized, configurationSerializedAgain);
         }
 
         [Test]
@@ -113,6 +114,10 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             );
 
             return configuration;
+        }
+
+        private static string NormalizeNewlines(string str) {
+            return Regex.Replace(str, @"\r\n|\n\r|\n|\r", "\r\n");
         }
     }
 }
