@@ -64,6 +64,19 @@ namespace TestInjectedLibrary {
             Console.WriteLine("Injected: End");
         }
 
+
+        public static void TryCatchEmptyCatchNoFinally() {
+            Console.WriteLine("Injected: Start");
+
+            try {
+                Console.WriteLine("Injected: Try");
+            } catch (Exception e) {
+                // Ignore
+            }
+
+            Console.WriteLine("Injected: End");
+        }
+
         public static void Switch() {
             Console.WriteLine("Injected: Start");
 

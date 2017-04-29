@@ -9,17 +9,38 @@ using Mono.Collections.Generic;
 namespace LostPolygon.MethodInlineInjector {
     internal static class CecilExtensions {
         public static Instruction ReplaceAndFixReferences(this ILProcessor processor, Instruction oldInstruction, Instruction newInstruction) {
+            newInstruction.Offset = oldInstruction.Offset;
             processor.Replace(oldInstruction, newInstruction);
             foreach (Instruction bodyInstruction in processor.Body.Instructions) {
                 ReplaceOperandInstruction(bodyInstruction, oldInstruction, newInstruction);
             }
 
             foreach (ExceptionHandler exceptionHandler in processor.Body.ExceptionHandlers) {
-                ReplaceOperandInstruction(exceptionHandler.FilterStart, oldInstruction, newInstruction);
-                ReplaceOperandInstruction(exceptionHandler.HandlerStart, oldInstruction, newInstruction);
-                ReplaceOperandInstruction(exceptionHandler.HandlerEnd, oldInstruction, newInstruction);
-                ReplaceOperandInstruction(exceptionHandler.TryStart, oldInstruction, newInstruction);
-                ReplaceOperandInstruction(exceptionHandler.TryEnd, oldInstruction, newInstruction);
+                ReplaceInstruction(
+                    () => exceptionHandler.FilterStart,
+                    instruction => exceptionHandler.FilterStart = instruction,
+                    oldInstruction,
+                    newInstruction);
+                ReplaceInstruction(
+                    () => exceptionHandler.HandlerStart,
+                    instruction => exceptionHandler.HandlerStart = instruction,
+                    oldInstruction,
+                    newInstruction);
+                ReplaceInstruction(
+                    () => exceptionHandler.HandlerEnd,
+                    instruction => exceptionHandler.HandlerEnd = instruction,
+                    oldInstruction,
+                    newInstruction);
+                ReplaceInstruction(
+                    () => exceptionHandler.TryStart,
+                    instruction => exceptionHandler.TryStart = instruction,
+                    oldInstruction,
+                    newInstruction);
+                ReplaceInstruction(
+                    () => exceptionHandler.TryEnd,
+                    instruction => exceptionHandler.TryEnd = instruction,
+                    oldInstruction,
+                    newInstruction);
             }
 
             return newInstruction;
@@ -136,6 +157,16 @@ namespace LostPolygon.MethodInlineInjector {
                 throw new InvalidOperationException("Empty collection");
 
             return source[source.Count - 1];
+        }
+
+        private static void ReplaceInstruction(
+            Func<Instruction> getInstruction,
+            Action<Instruction> setInstruction,
+            Instruction oldInstruction,
+            Instruction newInstruction) {
+            if (getInstruction() == oldInstruction) {
+                setInstruction(newInstruction);
+            }
         }
 
         private static void ReplaceOperandInstruction(Instruction bodyInstruction, Instruction oldInstruction, Instruction newInstruction) {

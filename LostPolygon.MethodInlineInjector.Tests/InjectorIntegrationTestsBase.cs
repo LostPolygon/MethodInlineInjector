@@ -45,6 +45,15 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         [ValidReferenceOutput]
+        public virtual void TryCatchEmptyCatchNoFinallyToSingleStatement() {
+            ExecuteSimpleTest(
+                CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.TryCatchEmptyCatchNoFinally)}"),
+                $"{InjecteeClassName}.{nameof(TestInjectee.SingleStatement)}"
+            );
+        }
+
+        [Test]
+        [ValidReferenceOutput]
         public virtual void SingleStatementToReturnValue() {
             ExecuteSimpleTest(
                 CreateInjectedMethod($"{InjectedClassName}.{nameof(TestInjectedMethods.SingleStatement)}"),

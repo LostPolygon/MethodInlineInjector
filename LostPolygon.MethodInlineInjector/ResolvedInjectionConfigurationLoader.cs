@@ -468,6 +468,7 @@ namespace LostPolygon.MethodInlineInjector {
                 try {
                     return base.Resolve(name);
                 } catch {
+                    Log.InfoFormat("Assembly reference {0} not resolved", name);
                     return null;
                 }
             }

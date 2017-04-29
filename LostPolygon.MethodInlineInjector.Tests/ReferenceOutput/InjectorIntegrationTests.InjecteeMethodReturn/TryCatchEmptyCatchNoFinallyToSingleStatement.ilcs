@@ -1,0 +1,52 @@
+.method public hidebysig newslot virtual
+    instance void SingleStatement () cil managed
+{
+    // Method begins at RVA 0x2155
+    // Code size 13 (0xd)
+    .maxstack 8
+    .locals (
+        [0] class [mscorlib]System.Exception
+    )
+
+    IL_0000: nop
+    IL_0001: ldstr "Injectee: SingleStatement"
+    IL_0006: call void [mscorlib]System.Console::WriteLine(string)
+    IL_000b: nop
+    IL_000c: nop
+    IL_000d: nop
+    IL_000e: ldstr "Injected: Start"
+    IL_0013: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0018: nop
+    IL_0019: nop
+    IL_001a: ldstr "Injected: Try"
+    IL_001f: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0024: nop
+    IL_0025: nop
+    IL_0026: leave.s IL_002d
+    IL_0028: stloc.0
+    IL_0029: nop
+    IL_002a: nop
+    IL_002b: leave.s IL_002d
+    IL_002d: ldstr "Injected: End"
+    IL_0032: call void [mscorlib]System.Console::WriteLine(string)
+    IL_0037: nop
+    IL_0038: ret
+
+    Try IL_0019-IL_0028 Catch class [mscorlib]System.Exception IL_0028-IL_002d
+} // end of method TestInjectee::SingleStatement
+
+// End of IL code
+
+public virtual void SingleStatement()
+{
+    Console.WriteLine("Injectee: SingleStatement");
+    Console.WriteLine("Injected: Start");
+    try
+    {
+        Console.WriteLine("Injected: Try");
+    }
+    catch (Exception var_0_28)
+    {
+    }
+    Console.WriteLine("Injected: End");
+}

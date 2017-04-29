@@ -82,7 +82,7 @@ namespace LostPolygon.MethodInlineInjector {
                         injectedMethod.MethodDefinition.GetFullSimpleName(),
                         injecteeMethod.GetFullSimpleName(),
                         injectedMethod.InjectionPosition
-                    );
+                    ); 
 
                     BeforeMethodInjected?.Invoke((injectedMethod, injecteeMethod));
                     MethodDefinition importedInjectedMethod =
@@ -130,6 +130,7 @@ namespace LostPolygon.MethodInlineInjector {
             injecteeMethod.Body.InitLocals |= injectedMethod.Body.InitLocals;
 
             ILProcessor injecteeIlProcessor = injecteeMethod.Body.GetILProcessor();
+            ILProcessor injectedIlProcessor = injectedMethod.Body.GetILProcessor();
             if (injectionPosition == MethodInjectionPosition.InjecteeMethodStart) {
                 // Inject variables to the beginning of the variable list
                 injecteeMethod.Body.Variables.InsertRangeToStart(injectedMethod.Body.Variables);
@@ -137,6 +138,17 @@ namespace LostPolygon.MethodInlineInjector {
                 // First instruction of the injectee method. Instruction of the injected methods are inserted before it
                 Instruction injecteeFirstInstruction = injecteeMethod.Body.Instructions[0];
                 Instruction injectedLastInstruction = injectedMethod.Body.Instructions.Last();
+
+                // Replace ret instruction with jumps to end of the method
+                Instruction[] injectedRetInstructions =
+                    injectedMethod.Body.Instructions
+                        .Where(instruction => instruction.OpCode == OpCodes.Ret && instruction != injectedLastInstruction)
+                        .ToArray();
+
+                foreach (Instruction retInstruction in injectedRetInstructions) {
+                    Instruction brInstruction = Instruction.Create(OpCodes.Br, injectedLastInstruction);
+                    injectedIlProcessor.ReplaceAndFixReferences(retInstruction, brInstruction);
+                }
 
                 // Insert injected method to the beginning
                 for (int i = 0; i < injectedMethod.Body.Instructions.Count; i++) {
