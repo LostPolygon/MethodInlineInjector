@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
+using log4net;
+using log4net.Config;
+using log4net.Core;
 using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
@@ -36,7 +40,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             InjectedMethod[] injectedMethods,
             string[] injecteeMethodNames,
             bool assertFirstMethodMatch = true) {
-            InjectionConfiguration configuration = 
+            InjectionConfiguration configuration =
                 IntegrationTestsHelper.GetBasicInjectionConfiguration(true, true, injectedMethods);
             ResolvedInjectionConfiguration resolvedConfiguration =
                 IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
@@ -75,6 +79,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [SetUp]
         public void SetUp() {
+            XmlConfigurator.Configure();
+            LogManager.GetAllRepositories().ToList().ForEach(repository => repository.Threshold = Level.Info);
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjectedLibraryName), InjectedLibraryName);

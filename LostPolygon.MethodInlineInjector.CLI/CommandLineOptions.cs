@@ -35,7 +35,7 @@ namespace LostPolygon.MethodInlineInjector.Cli {
             ")",
             Default = LogThresholdLevel.Info
         )]
-        public LogThresholdLevel LogLevel { get; private set; }
+        public LogThresholdLevel LogLevel { get; private set; } = LogThresholdLevel.Info;
 
         public enum LogThresholdLevel {
             All,
