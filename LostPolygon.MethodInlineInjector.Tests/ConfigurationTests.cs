@@ -37,10 +37,12 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         <InjectedMethod AssemblyPath=""TestInjectedLibrary.dll"" MethodFullName=""TestInjectedLibrary.TestInjectedMethods.Complex"" InjectionPosition=""InjecteeMethodStart"" />
     </InjectedMethods>
 </Configuration>
-".Replace("\r\n", Environment.NewLine);
+"
+.Replace("\r\n", Environment.NewLine);
             InjectionConfiguration configurationDeserialized =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
+            configurationSerializedAgain = configurationSerializedAgain.Replace("\r\n", Environment.NewLine);
 
             Console.WriteLine(configurationSerializedAgain);
             Assert.AreEqual(configurationSerialized.Trim(), configurationSerializedAgain.Trim());
