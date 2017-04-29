@@ -37,7 +37,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         <InjectedMethod AssemblyPath=""TestInjectedLibrary.dll"" MethodFullName=""TestInjectedLibrary.TestInjectedMethods.Complex"" InjectionPosition=""InjecteeMethodStart"" />
     </InjectedMethods>
 </Configuration>
-";
+".Replace("\r\n", Environment.NewLine);
             InjectionConfiguration configurationDeserialized =
                 SimpleXmlSerializationUtility.XmlDeserializeFromString<InjectionConfiguration>(configurationSerialized);
             string configurationSerializedAgain = SimpleXmlSerializationUtility.XmlSerializeToString(configurationDeserialized);
