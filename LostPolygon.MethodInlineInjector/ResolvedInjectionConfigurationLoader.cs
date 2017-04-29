@@ -153,7 +153,7 @@ namespace LostPolygon.MethodInlineInjector {
             IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences
             ) {
             ReaderParameters parameters = new ReaderParameters();
-            DefaultAssemblyResolver assemblyResolver = new DefaultAssemblyResolver();
+            DefaultAssemblyResolver assemblyResolver = new IgnoringExceptionsAssemblyResolver();
             parameters.AssemblyResolver = assemblyResolver;
             parameters.ReadSymbols = false;
 
@@ -460,6 +460,16 @@ namespace LostPolygon.MethodInlineInjector {
 
                 AllTypes = assemblyDefinition.MainModule.GetAllTypes().ToList();
                 AllMethods = AllTypes.SelectMany(type => type.Methods).ToList();
+            }
+        }
+
+        protected class IgnoringExceptionsAssemblyResolver : DefaultAssemblyResolver {
+            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
+                try {
+                    return base.Resolve(name);
+                } catch {
+                    return null;
+                }
             }
         }
 
