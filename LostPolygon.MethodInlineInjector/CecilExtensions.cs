@@ -63,6 +63,17 @@ namespace LostPolygon.MethodInlineInjector {
             return $"{propertyDefinition.DeclaringType.FullName}.{propertyDefinition.Name}";
         }
 
+        public static bool IsAssemblyReferencesMatch(
+            this AssemblyNameReference assemblyNameReference1,
+            AssemblyNameReference assemblyNameReference2,
+            bool isStrictCheck) {
+            if (isStrictCheck) {
+                return assemblyNameReference1.FullName == assemblyNameReference2.FullName;
+            } else {
+                return assemblyNameReference1.Name == assemblyNameReference2.Name;
+            }
+        }
+
         public static PropertyDefinition GetBaseProperty(this PropertyDefinition self) {
             if (self == null)
                 throw new ArgumentNullException(nameof(self));

@@ -5,29 +5,29 @@ using LostPolygon.Common.SimpleXmlSerialization;
 namespace LostPolygon.MethodInlineInjector {
     public class InjecteeAssembly {
         public string AssemblyPath { get; private set; }
-        public ReadOnlyCollection<IMemberReferenceBlacklistItem> MemberReferenceBlacklist { get; private set; } =
-            ReadOnlyCollectionUtility<IMemberReferenceBlacklistItem>.Empty;
-        public ReadOnlyCollection<IAssemblyReferenceWhitelistItem> AssemblyReferenceWhitelist { get; private set; } =
-            ReadOnlyCollectionUtility<IAssemblyReferenceWhitelistItem>.Empty;
+        public ReadOnlyCollection<IIgnoredMemberReference> IgnoredMemberReferences { get; private set; } =
+            ReadOnlyCollectionUtility<IIgnoredMemberReference>.Empty;
+        public ReadOnlyCollection<IAllowedAssemblyReference> AllowedAssemblyReferences { get; private set; } =
+            ReadOnlyCollectionUtility<IAllowedAssemblyReference>.Empty;
 
         private InjecteeAssembly() {
         }
 
         public InjecteeAssembly(
             string assemblyPath,
-            ReadOnlyCollection<IMemberReferenceBlacklistItem> memberReferenceBlacklist = null,
-            ReadOnlyCollection<IAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist = null
+            ReadOnlyCollection<IIgnoredMemberReference> ignoredMemberReferences = null,
+            ReadOnlyCollection<IAllowedAssemblyReference> allowedAssemblyReferences = null
         ) {
             AssemblyPath = assemblyPath ?? throw new ArgumentNullException(nameof(assemblyPath));
-            MemberReferenceBlacklist = memberReferenceBlacklist ?? MemberReferenceBlacklist;
-            AssemblyReferenceWhitelist = assemblyReferenceWhitelist ?? AssemblyReferenceWhitelist;
+            IgnoredMemberReferences = ignoredMemberReferences ?? IgnoredMemberReferences;
+            AllowedAssemblyReferences = allowedAssemblyReferences ?? AllowedAssemblyReferences;
         }
 
         #region With.Fody
 
         public InjecteeAssembly WithAssemblyPath(string value) => null;
-        public InjecteeAssembly WithMemberReferenceBlacklist(ReadOnlyCollection<IMemberReferenceBlacklistItem> value) => null;
-        public InjecteeAssembly WithAssemblyReferenceWhitelist(ReadOnlyCollection<IAssemblyReferenceWhitelistItem> value) => null;
+        public InjecteeAssembly WithIgnoredMemberReferences(ReadOnlyCollection<IIgnoredMemberReference> value) => null;
+        public InjecteeAssembly WithAllowedAssemblyReferences(ReadOnlyCollection<IAllowedAssemblyReference> value) => null;
 
         #endregion
 
@@ -44,13 +44,13 @@ namespace LostPolygon.MethodInlineInjector {
 
                 serializer.ProcessWithFlags(SimpleXmlSerializerFlags.IsOptional | SimpleXmlSerializerFlags.CollectionUnorderedRequired, () => {
                     serializer.ProcessUnorderedSequence(() => {
-                        if (serializer.ProcessStartElement(nameof(MemberReferenceBlacklist))) {
+                        if (serializer.ProcessStartElement(nameof(IgnoredMemberReferences))) {
                             serializer.ProcessEnterChildOnRead();
                             serializer.ProcessCollectionAsReadOnly(
-                                v => instance.MemberReferenceBlacklist = v,
-                                () => instance.MemberReferenceBlacklist,
+                                v => instance.IgnoredMemberReferences = v,
+                                () => instance.IgnoredMemberReferences,
                                 itemSerializer =>
-                                    serializer.CreateByKnownInheritors<IMemberReferenceBlacklistItem>(
+                                    serializer.CreateByKnownInheritors<IIgnoredMemberReference>(
                                         serializer.CurrentXmlElement.Name,
                                         itemSerializer
                                     )
@@ -58,13 +58,13 @@ namespace LostPolygon.MethodInlineInjector {
                         }
                         serializer.ProcessEndElement();
 
-                        if (serializer.ProcessStartElement(nameof(AssemblyReferenceWhitelist))) {
+                        if (serializer.ProcessStartElement(nameof(AllowedAssemblyReferences))) {
                             serializer.ProcessEnterChildOnRead();
                             serializer.ProcessCollectionAsReadOnly(
-                                v => instance.AssemblyReferenceWhitelist = v,
-                                () => instance.AssemblyReferenceWhitelist,
+                                v => instance.AllowedAssemblyReferences = v,
+                                () => instance.AllowedAssemblyReferences,
                                 itemSerializer =>
-                                    serializer.CreateByKnownInheritors<IAssemblyReferenceWhitelistItem>(
+                                    serializer.CreateByKnownInheritors<IAllowedAssemblyReference>(
                                         serializer.CurrentXmlElement.Name,
                                         itemSerializer
                                     )

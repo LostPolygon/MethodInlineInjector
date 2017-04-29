@@ -76,5 +76,9 @@ namespace TestInjectedLibrary {
 
             Console.WriteLine("Injected: End");
         }
+
+        public static void UsesThirdPartyLibrary() {
+            Console.WriteLine("Injected: 3 + 5 = " + ThirdPartyLibrary.MathUtility.Add(3, 5));
+        }
     }
 }

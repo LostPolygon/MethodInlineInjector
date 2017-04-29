@@ -1,26 +1,26 @@
 <Configuration>
     <InjecteeAssemblies>
         <InjecteeAssembly AssemblyPath="Mono.Cecil_Injectee.dll">
-            <MemberReferenceBlacklist>
+            <IgnoredMemberReferences>
                 <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
                 <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
-            </MemberReferenceBlacklist>
-            <AssemblyReferenceWhitelist>
+            </IgnoredMemberReferences>
+            <AllowedAssemblyReferences>
                 <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
                 <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
                 <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
-            </AssemblyReferenceWhitelist>
+            </AllowedAssemblyReferences>
         </InjecteeAssembly>
         <InjecteeAssembly AssemblyPath="Mono.Cecil_Injectee.dll">
-          <MemberReferenceBlacklist>
+          <IgnoredMemberReferences>
             <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
             <Filter Filter="Mono.Cecil.PE" SkipTypes="False" SkipProperties="True" IsRegex="False" MatchAncestors="False" />
-          </MemberReferenceBlacklist>
-          <AssemblyReferenceWhitelist>
+          </IgnoredMemberReferences>
+          <AllowedAssemblyReferences>
             <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
             <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
             <Include Path="TestData/Common/RuntimeAssembliesWhitelist.xml" />
-          </AssemblyReferenceWhitelist>
+          </AllowedAssemblyReferences>
         </InjecteeAssembly>
     </InjecteeAssemblies>
     <InjectedMethods>

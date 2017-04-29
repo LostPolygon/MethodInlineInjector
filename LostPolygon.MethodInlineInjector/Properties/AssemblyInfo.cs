@@ -5,6 +5,6 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyProduct("LostPolygon.MethodInlineInjector")]
 
-#if DEBUG
+//#if DEBUG
 [assembly: InternalsVisibleTo("LostPolygon.MethodInlineInjector.Tests")]
-#endif
+//#endif

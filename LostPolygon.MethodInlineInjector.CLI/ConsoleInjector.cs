@@ -81,7 +81,9 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         }
 
         private void ExecuteInjection() {
+#if !DEBUG
             try {
+#endif
                 string serializedInjectorConfiguration;
                 if (_commandLineOptions.ReadConfigurationFromStandardInput) {
                     serializedInjectorConfiguration = Console.In.ReadToEnd();
@@ -95,6 +97,8 @@ namespace LostPolygon.MethodInlineInjector.Cli {
 
                     serializedInjectorConfiguration = File.ReadAllText(_commandLineOptions.ConfigurationFilePath);
                 }
+
+                Log.Debug($"Input configuration:{Environment.NewLine}{serializedInjectorConfiguration}");
 
                 if (String.IsNullOrWhiteSpace(serializedInjectorConfiguration))
                     throw new MethodInlineInjectorException("Injector configuration is empty");
@@ -121,16 +125,18 @@ namespace LostPolygon.MethodInlineInjector.Cli {
                 foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
                     injecteeAssembly.AssemblyDefinition.Write(injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName);
                 }
+#if !DEBUG
             } catch (MethodInlineInjectorException e) {
-                string message = "Fatal error: " + e.Message;
+                string message = "Fatal error: " + e;
                 if (e.InnerException != null) {
                     message += Environment.NewLine;
                     message += "Error details: ";
-                    message += e.InnerException.Message;
+                    message += e.InnerException;
                 }
                 Log.Fatal(message);
                 Environment.ExitCode = 1;
             }
+#endif
         }
 
         private bool ValidateCommandLineOptions(CommandLineOptions options) {
@@ -204,9 +210,7 @@ namespace LostPolygon.MethodInlineInjector.Cli {
 
             settings.Schemas.Add(schema);
 
-            // Create the XmlReader object.
             XmlReader reader = XmlReader.Create(new StringReader(injectorConfigurationXml), settings);
-
             document.Load(reader);
         }
     }

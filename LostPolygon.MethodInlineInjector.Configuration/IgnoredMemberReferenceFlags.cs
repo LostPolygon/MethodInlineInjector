@@ -2,7 +2,7 @@ using System;
 
 namespace LostPolygon.MethodInlineInjector {
     [Flags]
-    public enum MemberReferenceBlacklistFilterFlags {
+    public enum IgnoredMemberReferenceFlags {
         SkipTypes = 1 << 0,
         SkipMethods = 1 << 1,
         SkipProperties = 1 << 2,

@@ -51,37 +51,24 @@ namespace LostPolygon.MethodInlineInjector {
                     GetMatchingAssemblyNameReference(injectedAssemblyNameReference, injecteeAssemblyNameReferences, false);
 
                 if (matchingAssemblyNameReference == null) {
-                    bool IsAssemblyReferenceWhitelisted(
-                        AssemblyNameReference assemblyNameReference,
-                        AssemblyNameReference whitelistedAssemblyNameReference,
-                        bool isStrictCheck) {
-                        if (isStrictCheck) {
-                            return assemblyNameReference.FullName == whitelistedAssemblyNameReference.FullName;
-                        } else {
-                            return assemblyNameReference.Name == whitelistedAssemblyNameReference.Name;
-                        }
-                    }
 
-                    bool isWhitelisted =
+
+                    bool isAllowed =
                         resolvedInjecteeAssembly
-                            .AssemblyReferenceWhiteList
+                            .AllowedAssemblyReferences
                             .Any(tuple =>
-                                IsAssemblyReferenceWhitelisted(
-                                    injectedAssemblyNameReference,
-                                    tuple.AssemblyNameReference,
-                                    tuple.StrictNameCheck
-                                ));
+                            injectedAssemblyNameReference.IsAssemblyReferencesMatch(tuple.AssemblyNameReference, tuple.StrictNameCheck));
 
-                    if (!isWhitelisted)
+                    if (!isAllowed)
                         throw new MethodInlineInjectorException(
-                            $"Assembly '{injectedAssemblyNameReference}' is not whitelisted " +
+                            $"Assembly '{injectedAssemblyNameReference}' is not allowed " +
                             $"and cannot be added as a reference"
                         );
 
-                    Log.Info(
+                    Log.Debug(
                         $"Injectee assembly '{resolvedInjecteeAssembly.AssemblyDefinition} ' " +
                         $"has no match for assembly reference '{injectedTypeReference.Scope}', " +
-                        $"the reference will be added"
+                        $"the reference will be added if needed"
                     );
                 } else {
                     injectedTypeReference.Scope = matchingAssemblyNameReference;

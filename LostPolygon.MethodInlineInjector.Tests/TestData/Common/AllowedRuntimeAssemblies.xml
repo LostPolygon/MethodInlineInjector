@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AllowedRuntimeAssemblies>
+  <Assembly Name="mscorlib" IsStrictNameCheck="false" />
+  <Assembly Name="System" IsStrictNameCheck="false" />
+  <Assembly Name="System.Core" IsStrictNameCheck="false" />
+  <Assembly Name="System.Data" IsStrictNameCheck="false" />
+  <Assembly Name="System.Data.Linq" IsStrictNameCheck="false" />
+  <Assembly Name="System.Net" IsStrictNameCheck="false" />
+  <Assembly Name="System.Net.Http" IsStrictNameCheck="false" />
+  <Assembly Name="System.Net.Http.WebRequest" IsStrictNameCheck="false" />
+  <Assembly Name="System.Xml" IsStrictNameCheck="false" />
+  <Assembly Name="System.Xml.Linq" IsStrictNameCheck="false" />
+  <Assembly Name="System.Xml.Linq.Serialization" IsStrictNameCheck="false" />
+</AllowedRuntimeAssemblies>

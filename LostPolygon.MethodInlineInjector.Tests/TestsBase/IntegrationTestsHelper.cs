@@ -111,13 +111,19 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return (ilCode, cSharpCode, sb.ToString());
         }
 
-        public static InjectionConfiguration GetBasicInjectionConfiguration(params InjectedMethod[] injectedMethods) {
+        public static InjectionConfiguration GetBasicInjectionConfiguration(
+            bool insertThirdPartyLibraryAssemblyReferences = true,
+            bool insertStandardIgnoredMemberReferences = true,
+            params InjectedMethod[] injectedMethods) {
+            List<IAllowedAssemblyReference> allowedAssemblyReferences =
+                GetStandardAllowedAssemblyReferences(insertThirdPartyLibraryAssemblyReferences);
+
             InjectionConfiguration configuration = new InjectionConfiguration(
                 new List<InjecteeAssembly> {
                     new InjecteeAssembly(
                         GetTestProperty<string>(nameof(IntegrationTestsBase.InjecteeLibraryName)),
-                        null,
-                        GetStandardAssemblyReferenceWhitelist().AsReadOnly()),
+                        insertStandardIgnoredMemberReferences ? GetStandardIgnoredMemberReferences().AsReadOnly() : null,
+                        allowedAssemblyReferences.AsReadOnly()),
                 }.AsReadOnly(),
                 new ReadOnlyCollection<InjectedMethod>(injectedMethods)
             );
@@ -125,10 +131,22 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return configuration;
         }
 
-        public static List<IAssemblyReferenceWhitelistItem> GetStandardAssemblyReferenceWhitelist() {
-            return new List<IAssemblyReferenceWhitelistItem> {
-                new AssemblyReferenceWhitelistFilterInclude(@"TestData\Common\RuntimeAssembliesWhitelist.xml")
+        public static List<IIgnoredMemberReference> GetStandardIgnoredMemberReferences() {
+            return new List<IIgnoredMemberReference> {
+                new IgnoredMemberReference("ClassInheritedFromThirdPartyLibraryClass")
             };
+        }
+
+        public static List<IAllowedAssemblyReference> GetStandardAllowedAssemblyReferences(bool insertThirdPartyLibraryAssemblyReferences = true) {
+            List<IAllowedAssemblyReference> list = new List<IAllowedAssemblyReference> {
+                new AllowedAssemblyReferenceInclude(@"TestData\Common\AllowedRuntimeAssemblies.xml"),
+            };
+
+            if (insertThirdPartyLibraryAssemblyReferences) {
+                list.Add(new AllowedAssemblyReference(@"Tests.ThirdPartyLibrary"));
+            }
+
+            return list;
         }
 
         public static void ExecuteInjection(ResolvedInjectionConfiguration resolvedInjectionConfiguration) {
@@ -178,10 +196,10 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
             protected override List<MethodDefinition> GetFilteredInjecteeMethods(
                 AssemblyDefinitionCachedData assemblyDefinitionCachedData,
-                List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters
+                List<IgnoredMemberReference> ignoredMemberReferences
             ) {
                 List<MethodDefinition> filteredInjecteeMethods =
-                    base.GetFilteredInjecteeMethods(assemblyDefinitionCachedData, memberReferenceBlacklistFilters);
+                    base.GetFilteredInjecteeMethods(assemblyDefinitionCachedData, ignoredMemberReferences);
 
                 filteredInjecteeMethods =
                     filteredInjecteeMethods

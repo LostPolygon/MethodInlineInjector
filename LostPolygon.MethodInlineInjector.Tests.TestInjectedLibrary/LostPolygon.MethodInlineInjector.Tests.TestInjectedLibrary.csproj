@@ -46,6 +46,12 @@
     <Compile Include="TestInjectedMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LostPolygon.MethodInlineInjector.Tests.ThirdPartyLibrary\LostPolygon.MethodInlineInjector.Tests.ThirdPartyLibrary.csproj">
+      <Project>{3e9737af-30e5-40d1-a089-0923d9ad9381}</Project>
+      <Name>LostPolygon.MethodInlineInjector.Tests.ThirdPartyLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

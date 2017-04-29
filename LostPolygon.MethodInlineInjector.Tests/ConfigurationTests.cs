@@ -24,7 +24,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
-        public void InjectionConfigurationSerializationTest2() {
+        public void NonGeneratedInjectionConfigurationSerializationTest() {
             string configurationSerialized =
 @"<Configuration>
     <InjecteeAssemblies>
@@ -46,7 +46,6 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             Assert.AreEqual(configurationSerialized.Trim(), configurationSerializedAgain.Trim());
         }
 
-
         [Test]
         public void GenerateSchema() {
             InjectionConfiguration configuration = GetInjectionConfiguration();
@@ -56,31 +55,42 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         protected InjectionConfiguration GetInjectionConfiguration(
-            List<IMemberReferenceBlacklistItem> memberReferenceBlacklist = null,
-            List<IAssemblyReferenceWhitelistItem> assemblyReferenceWhitelist = null
+            List<IIgnoredMemberReference> ignoredMemberReference = null,
+            List<IAllowedAssemblyReference> allowedAssemblyReferences = null
             ) {
-            if (memberReferenceBlacklist == null) {
-                memberReferenceBlacklist = new List<IMemberReferenceBlacklistItem> {
-                    new MemberReferenceBlacklistFilter(
+            IgnoredMemberReference skippedMember =
+                new IgnoredMemberReference(
+                "ClassInheritedFromThirdPartyLibraryClass",
+                IgnoredMemberReferenceFlags.SkipTypes |
+                IgnoredMemberReferenceFlags.MatchAncestors
+            );
+
+            if (ignoredMemberReference == null) {
+                ignoredMemberReference = new List<IIgnoredMemberReference> {
+                    skippedMember,
+                    new IgnoredMemberReference(
                         "SomeFilterString",
-                        MemberReferenceBlacklistFilterFlags.SkipProperties |
-                        MemberReferenceBlacklistFilterFlags.SkipMethods |
-                        MemberReferenceBlacklistFilterFlags.IsRegex
+                        IgnoredMemberReferenceFlags.SkipProperties |
+                        IgnoredMemberReferenceFlags.SkipMethods |
+                        IgnoredMemberReferenceFlags.IsRegex
                     ),
-                    new MemberReferenceBlacklistFilter(
+                    new IgnoredMemberReference(
                         "SomeOtherFilterString",
-                        MemberReferenceBlacklistFilterFlags.SkipTypes |
-                        MemberReferenceBlacklistFilterFlags.MatchAncestors
+                        IgnoredMemberReferenceFlags.SkipTypes |
+                        IgnoredMemberReferenceFlags.MatchAncestors
                     ),
-                    new MemberReferenceBlacklistFilterInclude("SomeMemberReferenceBlacklistFilterInclude.xml")
+                    new IgnoredMemberReferenceInclude("SomeIgnoredMemberReferencesFilterInclude.xml")
                 };
+            } else {
+                ignoredMemberReference.Insert(0, skippedMember);
             }
 
-            if (assemblyReferenceWhitelist == null) {
-                assemblyReferenceWhitelist = new List<IAssemblyReferenceWhitelistItem> {
-                    new AssemblyReferenceWhitelistFilter("mscorlib", true),
-                    new AssemblyReferenceWhitelistFilter("System", false),
-                    new AssemblyReferenceWhitelistFilterInclude("SomeInclude.xml")
+            if (allowedAssemblyReferences == null) {
+                allowedAssemblyReferences = new List<IAllowedAssemblyReference> {
+                    new AllowedAssemblyReference("mscorlib", true),
+                    new AllowedAssemblyReference("System", false),
+                    new AllowedAssemblyReference("Tests.ThirdPartyLibrary", false),
+                    new AllowedAssemblyReferenceInclude("SomeInclude.xml")
                 };
             }
 
@@ -88,8 +98,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                 new List<InjecteeAssembly> {
                     new InjecteeAssembly(
                         InjecteeLibraryName,
-                        new ReadOnlyCollection<IMemberReferenceBlacklistItem>(memberReferenceBlacklist),
-                        new ReadOnlyCollection<IAssemblyReferenceWhitelistItem>(assemblyReferenceWhitelist))
+                        new ReadOnlyCollection<IIgnoredMemberReference>(ignoredMemberReference),
+                        new ReadOnlyCollection<IAllowedAssemblyReference>(allowedAssemblyReferences))
                 }.AsReadOnly(),
                 new ReadOnlyCollection<InjectedMethod>(new List<InjectedMethod> {
                     new InjectedMethod(

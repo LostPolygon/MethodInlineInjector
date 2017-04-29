@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Threading;
@@ -22,10 +23,9 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         private static void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e) {
             Log.Fatal(
                 "Fatal error:" + Environment.NewLine +
-                (Exception) e.ExceptionObject + Environment.NewLine +
+                ((Exception) e.ExceptionObject) + Environment.NewLine +
                 ((Exception) e.ExceptionObject).InnerException
             );
-            Console.ReadLine();
             Environment.Exit(1);
         }
 

@@ -91,7 +91,7 @@ namespace LostPolygon.MethodInlineInjector {
         private Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> GetInjectedMethods() {
             var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>>();
             foreach (InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
-                AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionData(sourceInjectedMethod.AssemblyPath);
+                AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionCachedData(sourceInjectedMethod.AssemblyPath);
                 MethodDefinition[] matchingMethodDefinitions =
                     assemblyDefinitionCachedData
                     .AllMethods
@@ -121,16 +121,20 @@ namespace LostPolygon.MethodInlineInjector {
                         sourceInjectedMethod.InjectionPosition
                     )
                 );
+
             }
 
             return injectedAssemblyToMethodsMap;
         }
 
-        private AssemblyDefinitionCachedData GetAssemblyDefinitionData(string assemblyPath) {
+        private AssemblyDefinitionCachedData GetAssemblyDefinitionCachedData(
+            string assemblyPath,
+            IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences = null) {
             assemblyPath = Path.GetFullPath(assemblyPath);
             if (!_assemblyPathToAssemblyMap.TryGetValue(assemblyPath, out AssemblyDefinitionCachedData assemblyDefinitionData)) {
                 Log.DebugFormat("Loading assembly at path '{0}'", assemblyPath);
-                AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath);
+
+                AssemblyDefinition assemblyDefinition = LoadAssemblyDefinition(assemblyPath, resolvedAllowedAssemblyReferences);
                 assemblyDefinitionData = new AssemblyDefinitionCachedData(assemblyDefinition);
                 Log.DebugFormat(
                     "Loaded assembly at path '{0}': {1} types, {2} methods",
@@ -144,6 +148,42 @@ namespace LostPolygon.MethodInlineInjector {
             return assemblyDefinitionData;
         }
 
+        private static AssemblyDefinition LoadAssemblyDefinition(
+            string assemblyPath,
+            IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences
+            ) {
+            ReaderParameters parameters = new ReaderParameters();
+            DefaultAssemblyResolver assemblyResolver = new DefaultAssemblyResolver();
+            parameters.AssemblyResolver = assemblyResolver;
+            parameters.ReadSymbols = false;
+
+            if (resolvedAllowedAssemblyReferences != null) {
+                assemblyResolver.ResolveFailure += (sender, reference) => {
+                    foreach (ResolvedAllowedAssemblyReference resolvedAllowedAssemblyReference in resolvedAllowedAssemblyReferences) {
+                        if (String.IsNullOrWhiteSpace(resolvedAllowedAssemblyReference.Path))
+                            continue;
+
+                        if (!reference.IsAssemblyReferencesMatch(
+                            resolvedAllowedAssemblyReference.AssemblyNameReference,
+                            resolvedAllowedAssemblyReference.StrictNameCheck))
+                            continue;
+
+                        Log.DebugFormat(
+                            "Resolving referenced assembly {0} at path '{1}'",
+                            resolvedAllowedAssemblyReference.AssemblyNameReference,
+                            resolvedAllowedAssemblyReference.Path
+                        );
+
+                        AssemblyDefinition resolvedAssembly = AssemblyDefinition.ReadAssembly(resolvedAllowedAssemblyReference.Path);
+                        return resolvedAssembly;
+                    }
+                    return null;
+                };
+            }
+            AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+            return assemblyDefinition;
+        }
+
         private List<ResolvedInjecteeAssembly> GetInjecteeAssemblies() {
             List<ResolvedInjecteeAssembly> injecteeAssemblies = new List<ResolvedInjecteeAssembly>();
             foreach (InjecteeAssembly sourceInjecteeAssembly in _injectionConfiguration.InjecteeAssemblies) {
@@ -155,27 +195,27 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private ResolvedInjecteeAssembly GetInjecteeAssembly(InjecteeAssembly sourceInjecteeAssembly) {
-            List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters = new List<MemberReferenceBlacklistFilter>();
-            List<AssemblyReferenceWhitelistFilter> assemblyReferenceWhitelistFilters = new List<AssemblyReferenceWhitelistFilter>();
+            List<IgnoredMemberReference> ignoredMemberReferences = new List<IgnoredMemberReference>();
+            List<AllowedAssemblyReference> allowedAssemblyReferences = new List<AllowedAssemblyReference>();
 
-            void LoadMemberReferenceBlacklistFilters(IEnumerable<IMemberReferenceBlacklistItem> items) {
-                foreach (IMemberReferenceBlacklistItem memberReferenceBlacklistItem in items) {
-                    if (memberReferenceBlacklistItem is MemberReferenceBlacklistFilter memberReferenceBlacklistFilter) {
-                        memberReferenceBlacklistFilters.Add(memberReferenceBlacklistFilter);
+            void LoadIgnoredMemberReferences(IEnumerable<IIgnoredMemberReference> items) {
+                foreach (IIgnoredMemberReference item in items) {
+                    if (item is IgnoredMemberReference ignoredMemberReference) {
+                        ignoredMemberReferences.Add(ignoredMemberReference);
                         continue;
                     }
 
-                    if (memberReferenceBlacklistItem is MemberReferenceBlacklistFilterInclude memberReferenceBlacklistFilterInclude) {
+                    if (item is IgnoredMemberReferenceInclude ignoredMemberReferenceInclude) {
                         try {
-                            Log.DebugFormat("Loading member reference blacklist filter include at '{0}'", memberReferenceBlacklistFilterInclude.Path);
-                            string whiteListIncludeXml = File.ReadAllText(memberReferenceBlacklistFilterInclude.Path);
-                            MemberReferenceBlacklistFilterIncludeLoader memberReferenceBlacklistFilterIncludedList =
-                                SimpleXmlSerializationUtility.XmlDeserializeFromString<MemberReferenceBlacklistFilterIncludeLoader>(whiteListIncludeXml);
-                            LoadMemberReferenceBlacklistFilters(memberReferenceBlacklistFilterIncludedList.Items);
+                            Log.DebugFormat("Loading ignored member references list include at '{0}'", ignoredMemberReferenceInclude.Path);
+                            string includeXml = File.ReadAllText(ignoredMemberReferenceInclude.Path);
+                            IgnoredMemberReferencesIncludeLoader ignoredMemberReferencesIncludeLoader =
+                                SimpleXmlSerializationUtility.XmlDeserializeFromString<IgnoredMemberReferencesIncludeLoader>(includeXml);
+                            LoadIgnoredMemberReferences(ignoredMemberReferencesIncludeLoader.Items);
                         } catch (Exception e) {
                             Console.WriteLine(e);
                             throw new MethodInlineInjectorException(
-                                $"Unable to load member reference blacklist filter include at '{memberReferenceBlacklistFilterInclude.Path}'",
+                                $"Unable to load ignored member references list include at '{ignoredMemberReferenceInclude.Path}'",
                                 e
                             );
                         }
@@ -183,23 +223,23 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            void LoadAssemblyReferenceWhitelistFilters(IEnumerable<IAssemblyReferenceWhitelistItem> items) {
-                foreach (IAssemblyReferenceWhitelistItem assemblyReferenceWhitelistItem in items) {
-                    if (assemblyReferenceWhitelistItem is AssemblyReferenceWhitelistFilter assemblyReferenceWhitelistFilter) {
-                        assemblyReferenceWhitelistFilters.Add(assemblyReferenceWhitelistFilter);
+            void LoadAllowedAssemblyReferences(IEnumerable<IAllowedAssemblyReference> items) {
+                foreach (IAllowedAssemblyReference item in items) {
+                    if (item is AllowedAssemblyReference allowedAssemblyReference) {
+                        allowedAssemblyReferences.Add(allowedAssemblyReference);
                         continue;
                     }
 
-                    if (assemblyReferenceWhitelistItem is AssemblyReferenceWhitelistFilterInclude assemblyReferenceWhitelistFilterInclude) {
-                        Log.DebugFormat("Loading assembly reference whitelists filter include at '{0}'", assemblyReferenceWhitelistFilterInclude.Path);
+                    if (item is AllowedAssemblyReferenceInclude allowedAssemblyReferenceInclude) {
+                        Log.DebugFormat("Loading allowed assembly references list include at '{0}'", allowedAssemblyReferenceInclude.Path);
                         try {
-                            string whiteListIncludeXml = File.ReadAllText(assemblyReferenceWhitelistFilterInclude.Path);
-                            AssemblyReferenceWhitelistFilterIncludeLoader assemblyReferenceWhitelistFilterIncludedList =
-                                SimpleXmlSerializationUtility.XmlDeserializeFromString<AssemblyReferenceWhitelistFilterIncludeLoader>(whiteListIncludeXml);
-                            LoadAssemblyReferenceWhitelistFilters(assemblyReferenceWhitelistFilterIncludedList.Items);
+                            string includeXml = File.ReadAllText(allowedAssemblyReferenceInclude.Path);
+                            AllowedAssemblyReferenceIncludeLoader allowedAssemblyReferencesLoader =
+                                SimpleXmlSerializationUtility.XmlDeserializeFromString<AllowedAssemblyReferenceIncludeLoader>(includeXml);
+                            LoadAllowedAssemblyReferences(allowedAssemblyReferencesLoader.Items);
                         } catch (Exception e) {
                             throw new MethodInlineInjectorException(
-                                $"Unable to load assembly reference whitelist filter include at '{assemblyReferenceWhitelistFilterInclude.Path}'",
+                                $"Unable to load allowed assembly references list include at '{allowedAssemblyReferenceInclude.Path}'",
                                 e
                             );
                         }
@@ -207,28 +247,29 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            LoadMemberReferenceBlacklistFilters(sourceInjecteeAssembly.MemberReferenceBlacklist);
-            LoadAssemblyReferenceWhitelistFilters(sourceInjecteeAssembly.AssemblyReferenceWhitelist);
+            LoadIgnoredMemberReferences(sourceInjecteeAssembly.IgnoredMemberReferences);
+            LoadAllowedAssemblyReferences(sourceInjecteeAssembly.AllowedAssemblyReferences);
 
-            AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionData(sourceInjecteeAssembly.AssemblyPath);
+            List<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences =
+                allowedAssemblyReferences
+                    .Select(item => new ResolvedAllowedAssemblyReference(AssemblyNameReference.Parse(item.Name), item.Path, item.StrictNameCheck))
+                    .ToList();
+
+            AssemblyDefinitionCachedData assemblyDefinitionCachedData =
+                GetAssemblyDefinitionCachedData(sourceInjecteeAssembly.AssemblyPath, resolvedAllowedAssemblyReferences);
 
             Log.DebugFormat(
                 "Calculating injectee methods in assembly '{0}'",
                 assemblyDefinitionCachedData.AssemblyDefinition.MainModule.FullyQualifiedName);
 
             List<MethodDefinition> filteredInjecteeMethods =
-                GetFilteredInjecteeMethods(assemblyDefinitionCachedData, memberReferenceBlacklistFilters);
-
-            List<ResolvedAssemblyReferenceWhitelistFilter> assemblyReferenceWhitelist =
-                assemblyReferenceWhitelistFilters
-                .Select(item => new ResolvedAssemblyReferenceWhitelistFilter(AssemblyNameReference.Parse(item.Name), item.StrictNameCheck))
-                .ToList();
+                GetFilteredInjecteeMethods(assemblyDefinitionCachedData, ignoredMemberReferences);
 
             ResolvedInjecteeAssembly resolvedInjecteeAssembly =
                 new ResolvedInjecteeAssembly(
                     assemblyDefinitionCachedData.AssemblyDefinition,
                     filteredInjecteeMethods,
-                    assemblyReferenceWhitelist
+                    resolvedAllowedAssemblyReferences
                 );
 
             return resolvedInjecteeAssembly;
@@ -236,7 +277,7 @@ namespace LostPolygon.MethodInlineInjector {
 
         protected virtual List<MethodDefinition> GetFilteredInjecteeMethods(
             AssemblyDefinitionCachedData assemblyDefinitionCachedData,
-            List<MemberReferenceBlacklistFilter> memberReferenceBlacklistFilters) {
+            List<IgnoredMemberReference> ignoredMemberReferences) {
             Dictionary<string, Regex> regexCache = new Dictionary<string, Regex>();
 
             Log.DebugFormat("Number of types before filtering: {0}", assemblyDefinitionCachedData.AllTypes.Count);
@@ -256,21 +297,21 @@ namespace LostPolygon.MethodInlineInjector {
 
             return injecteeMethods;
 
-            Regex GetFilterRegex(MemberReferenceBlacklistFilter blacklistFilter) {
-                if (!regexCache.TryGetValue(blacklistFilter.Filter, out Regex filterRegex)) {
-                    filterRegex = new Regex(blacklistFilter.Filter, RegexOptions.Compiled);
-                    regexCache[blacklistFilter.Filter] = filterRegex;
+            Regex GetFilterRegex(IgnoredMemberReference ignoredMemberReference) {
+                if (!regexCache.TryGetValue(ignoredMemberReference.Filter, out Regex filterRegex)) {
+                    filterRegex = new Regex(ignoredMemberReference.Filter, RegexOptions.Compiled);
+                    regexCache[ignoredMemberReference.Filter] = filterRegex;
                 }
 
                 return filterRegex;
             }
 
-            bool TestString(MemberReferenceBlacklistFilter blacklistFilter, string fullName) {
-                if (blacklistFilter.IsRegex) {
-                    if (GetFilterRegex(blacklistFilter).IsMatch(fullName))
+            bool TestString(IgnoredMemberReference ignoredMemberReference, string fullName) {
+                if (ignoredMemberReference.IsRegex) {
+                    if (GetFilterRegex(ignoredMemberReference).IsMatch(fullName))
                         return false;
                 } else {
-                    if (fullName.Contains(blacklistFilter.Filter))
+                    if (fullName.Contains(ignoredMemberReference.Filter))
                         return false;
                 }
 
@@ -278,65 +319,73 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             bool TestType(TypeDefinition type) {
-                foreach (MemberReferenceBlacklistFilter blacklistFilter in memberReferenceBlacklistFilters) {
-                    if (!blacklistFilter.FilterFlags.HasFlag(MemberReferenceBlacklistFilterFlags.SkipTypes))
+                foreach (IgnoredMemberReference ignoredMemberReference in ignoredMemberReferences) {
+                    if (!ignoredMemberReference.FilterFlags.HasFlag(IgnoredMemberReferenceFlags.SkipTypes))
                         continue;
 
-                    while (true) {
-                        if (!TestString(blacklistFilter, type.FullName)) {
-                            Log.DebugFormat("Blacklisted type '{0}'", type.FullName);
-                            return false;
-                        }
-
-                        if (!blacklistFilter.MatchAncestors || type.BaseType == null)
-                            break;
-
-                        type = type.BaseType.GetDefinition();
-                    }
+                    if (!TestTypeIgnored(type, ignoredMemberReference))
+                        return false;
                 }
 
                 return true;
             }
 
-            IEnumerable<MethodDefinition> GetTestedMethodsFromType(TypeDefinition type) {
-                HashSet<MethodDefinition> blacklistedMethods = new HashSet<MethodDefinition>();
-
-                foreach (MemberReferenceBlacklistFilter blacklistFilter in memberReferenceBlacklistFilters) {
-                    if (!blacklistFilter.FilterFlags.HasFlag(MemberReferenceBlacklistFilterFlags.SkipProperties))
-                        continue;
-
-                    foreach (PropertyDefinition property in type.Properties) {
-                        ProcessPropertyBlacklist(property, blacklistFilter, blacklistedMethods);
+            bool TestTypeIgnored(TypeDefinition type, IgnoredMemberReference ignoredMemberReference) {
+                while (true) {
+                    if (!TestString(ignoredMemberReference, type.FullName)) {
+                        Log.DebugFormat("Ignored type '{0}'", type.FullName);
+                        return false;
                     }
+
+                    if (!ignoredMemberReference.MatchAncestors || type.BaseType == null)
+                        break;
+
+                    type = type.BaseType.GetDefinition();
                 }
-
-                foreach (MemberReferenceBlacklistFilter blacklistFilter in memberReferenceBlacklistFilters) {
-                    if (!blacklistFilter.FilterFlags.HasFlag(MemberReferenceBlacklistFilterFlags.SkipMethods))
-                        continue;
-
-                    foreach (MethodDefinition method in type.Methods) {
-                        ProcessMethodBlacklist(method, blacklistFilter, blacklistedMethods);
-                    }
-                }
-
-                return type.Methods.Except(blacklistedMethods).Distinct();
+                return true;
             }
 
-            void ProcessPropertyBlacklist(PropertyDefinition property, MemberReferenceBlacklistFilter blacklistFilter, HashSet<MethodDefinition> blacklistedMethods) {
+            IEnumerable<MethodDefinition> GetTestedMethodsFromType(TypeDefinition type) {
+                HashSet<MethodDefinition> ignoredMethods = new HashSet<MethodDefinition>();
+
+                foreach (PropertyDefinition property in type.Properties) {
+                    foreach (IgnoredMemberReference ignoredMemberReference in ignoredMemberReferences) {
+                        if (!ignoredMemberReference.FilterFlags.HasFlag(IgnoredMemberReferenceFlags.SkipProperties))
+                            continue;
+
+                        if (ProcessPropertyIgnored(property, ignoredMemberReference, ignoredMethods))
+                            break;
+                    }
+                }
+
+                foreach (MethodDefinition method in type.Methods) {
+                    foreach (IgnoredMemberReference ignoredMemberReference in ignoredMemberReferences) {
+                        if (!ignoredMemberReference.FilterFlags.HasFlag(IgnoredMemberReferenceFlags.SkipMethods))
+                            continue;
+
+                        if (ProcessMethodIgnored(method, ignoredMemberReference, ignoredMethods))
+                            break;
+                    }
+                }
+
+                return type.Methods.Except(ignoredMethods).Distinct();
+            }
+
+            bool ProcessPropertyIgnored(PropertyDefinition property, IgnoredMemberReference ignoredMemberReference, HashSet<MethodDefinition> ignoredMethods) {
                 PropertyDefinition startProperty = property;
                 while (true) {
-                    if (!TestString(blacklistFilter, property.GetFullSimpleName())) {
-                        Log.DebugFormat("Blacklisted property '{0}'", startProperty.GetFullSimpleName());
+                    if (!TestString(ignoredMemberReference, property.GetFullSimpleName())) {
+                        Log.DebugFormat("Ignored property '{0}'", startProperty.GetFullSimpleName());
                         if (startProperty.GetMethod != null) {
-                            blacklistedMethods.Add(startProperty.GetMethod);
+                            ignoredMethods.Add(startProperty.GetMethod);
                         }
                         if (startProperty.SetMethod != null) {
-                            blacklistedMethods.Add(startProperty.SetMethod);
+                            ignoredMethods.Add(startProperty.SetMethod);
                         }
-                        break;
+                        return false;
                     }
 
-                    if (!blacklistFilter.MatchAncestors)
+                    if (!ignoredMemberReference.MatchAncestors)
                         break;
 
                     PropertyDefinition baseProperty = property.GetBaseProperty();
@@ -345,18 +394,20 @@ namespace LostPolygon.MethodInlineInjector {
 
                     property = baseProperty;
                 }
+
+                return true;
             }
 
-            void ProcessMethodBlacklist(MethodDefinition method, MemberReferenceBlacklistFilter blacklistFilter, HashSet<MethodDefinition> blacklistedMethods) {
+            bool ProcessMethodIgnored(MethodDefinition method, IgnoredMemberReference ignoredMemberReference, HashSet<MethodDefinition> ignoredMethods) {
                 MethodDefinition startMethod = method;
                 while (true) {
-                    if (!TestString(blacklistFilter, method.GetFullSimpleName())) {
-                        blacklistedMethods.Add(startMethod);
-                        Log.DebugFormat("Blacklisted method '{0}'", startMethod.GetFullSimpleName());
-                        break;
+                    if (!TestString(ignoredMemberReference, method.GetFullSimpleName())) {
+                        ignoredMethods.Add(startMethod);
+                        Log.DebugFormat("Ignored method '{0}'", startMethod.GetFullSimpleName());
+                        return false;
                     }
 
-                    if (!blacklistFilter.MatchAncestors)
+                    if (!ignoredMemberReference.MatchAncestors)
                         break;
 
                     MethodDefinition baseMethod = method.GetBaseMethod();
@@ -365,6 +416,8 @@ namespace LostPolygon.MethodInlineInjector {
 
                     method = baseMethod;
                 }
+
+                return true;
             }
         }
 
@@ -431,26 +484,26 @@ namespace LostPolygon.MethodInlineInjector {
             }
         }
 
-        [XmlRoot("MemberReferenceBlacklist")]
-        private class MemberReferenceBlacklistFilterIncludeLoader : FileIncludeLoader<IMemberReferenceBlacklistItem> {
+        [XmlRoot("IgnoredMemberReferences")]
+        private class IgnoredMemberReferencesIncludeLoader : FileIncludeLoader<IIgnoredMemberReference> {
             [SerializationMethod]
-            public static MemberReferenceBlacklistFilterIncludeLoader Serialize(
-                MemberReferenceBlacklistFilterIncludeLoader instance, SimpleXmlSerializerBase serializer
+            public static IgnoredMemberReferencesIncludeLoader Serialize(
+                IgnoredMemberReferencesIncludeLoader instance, SimpleXmlSerializerBase serializer
                 ) {
-                instance = instance ?? new MemberReferenceBlacklistFilterIncludeLoader();
-                FileIncludeLoader<IMemberReferenceBlacklistItem>.Serialize(instance, serializer);
+                instance = instance ?? new IgnoredMemberReferencesIncludeLoader();
+                FileIncludeLoader<IIgnoredMemberReference>.Serialize(instance, serializer);
                 return instance;
             }
         }
 
-        [XmlRoot("AssemblyReferenceWhitelist")]
-        private class AssemblyReferenceWhitelistFilterIncludeLoader : FileIncludeLoader<IAssemblyReferenceWhitelistItem> {
+        [XmlRoot("AllowedAssemblyReferences")]
+        private class AllowedAssemblyReferenceIncludeLoader : FileIncludeLoader<IAllowedAssemblyReference> {
             [SerializationMethod]
-            public static AssemblyReferenceWhitelistFilterIncludeLoader Serialize(
-                AssemblyReferenceWhitelistFilterIncludeLoader instance, SimpleXmlSerializerBase serializer
+            public static AllowedAssemblyReferenceIncludeLoader Serialize(
+                AllowedAssemblyReferenceIncludeLoader instance, SimpleXmlSerializerBase serializer
                 ) {
-                instance = instance ?? new AssemblyReferenceWhitelistFilterIncludeLoader();
-                FileIncludeLoader<IAssemblyReferenceWhitelistItem>.Serialize(instance, serializer);
+                instance = instance ?? new AllowedAssemblyReferenceIncludeLoader();
+                FileIncludeLoader<IAllowedAssemblyReference>.Serialize(instance, serializer);
                 return instance;
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -41,20 +42,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 <Configuration>
     <InjecteeAssemblies>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-            <MemberReferenceBlacklist>
+            <IgnoredMemberReferences>
                 <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-            </MemberReferenceBlacklist>
-            <AssemblyReferenceWhitelist>
+            </IgnoredMemberReferences>
+            <AllowedAssemblyReferences>
                 <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-            </AssemblyReferenceWhitelist>
+            </AllowedAssemblyReferences>
         </InjecteeAssembly>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-          <MemberReferenceBlacklist>
+          <IgnoredMemberReferences>
             <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-          </MemberReferenceBlacklist>
-          <AssemblyReferenceWhitelist>
+          </IgnoredMemberReferences>
+          <AllowedAssemblyReferences>
             <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-          </AssemblyReferenceWhitelist>
+          </AllowedAssemblyReferences>
         </InjecteeAssembly>
     </InjecteeAssemblies>
     <InjectedMethods>
@@ -67,20 +68,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 <Configuration>
     <InjecteeAssemblies>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-            <MemberReferenceBlacklist>
+            <IgnoredMemberReferences>
                 <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-            </MemberReferenceBlacklist>
-            <AssemblyReferenceWhitelist>
+            </IgnoredMemberReferences>
+            <AllowedAssemblyReferences>
                 <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-            </AssemblyReferenceWhitelist>
+            </AllowedAssemblyReferences>
         </InjecteeAssembly>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-          <MemberReferenceBlacklist>
+          <IgnoredMemberReferences>
             <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-          </MemberReferenceBlacklist>
-          <AssemblyReferenceWhitelist>
+          </IgnoredMemberReferences>
+          <AllowedAssemblyReferences>
             <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-          </AssemblyReferenceWhitelist>
+          </AllowedAssemblyReferences>
         </InjecteeAssembly>
     </InjecteeAssemblies>
     <InjectedMethods>
@@ -93,20 +94,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 <Configuration>
     <InjecteeAssemblies>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-            <MemberReferenceBlacklist>
+            <IgnoredMemberReferences>
                 <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-            </MemberReferenceBlacklist>
-            <AssemblyReferenceWhitelist>
+            </IgnoredMemberReferences>
+            <AllowedAssemblyReferences>
                 <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-            </AssemblyReferenceWhitelist>
+            </AllowedAssemblyReferences>
         </InjecteeAssembly>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-          <MemberReferenceBlacklist>
+          <IgnoredMemberReferences>
             <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-          </MemberReferenceBlacklist>
-          <AssemblyReferenceWhitelist>
+          </IgnoredMemberReferences>
+          <AllowedAssemblyReferences>
             <Include Path1=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-          </AssemblyReferenceWhitelist>
+          </AllowedAssemblyReferences>
         </InjecteeAssembly>
     </InjecteeAssemblies>
     <InjectedMethods>
@@ -119,20 +120,20 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 <Configuration>
     <InjecteeAssemblies>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-            <MemberReferenceBlacklist>
+            <IgnoredMemberReferences>
                 <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-            </MemberReferenceBlacklist>
-            <AssemblyReferenceWhitelist>
+            </IgnoredMemberReferences>
+            <AllowedAssemblyReferences>
                 <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-            </AssemblyReferenceWhitelist>
+            </AllowedAssemblyReferences>
         </InjecteeAssembly>
         <InjecteeAssembly AssemblyPath=""Mono.Cecil_Injectee.dll"">
-          <MemberReferenceBlacklist>
+          <IgnoredMemberReferences>
             <Filter Filter=""Mono.Cecil.PE"" SkipTypes=""False"" SkipProperties=""True"" IsRegex=""False"" MatchAncestors=""False"" />
-          </MemberReferenceBlacklist>
-          <AssemblyReferenceWhitelist>
+          </IgnoredMemberReferences>
+          <AllowedAssemblyReferences>
             <Include Path=""TestData/Common/RuntimeAssembliesWhitelist.xml"" />
-          </AssemblyReferenceWhitelist>
+          </AllowedAssemblyReferences>
         </InjecteeAssembly>
     </InjecteeAssemblies>
 </Configuration>";
@@ -158,7 +159,12 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             return ExecuteCommand(typeof(ConsoleInjector).Namespace + ".exe", arguments, standardInput);
         }
 
-        private static (string output, int exitCode) ExecuteCommand(string fileName, string arguments, string standardInput = null, int timeout = 5000) {
+        private static (string output, int exitCode) ExecuteCommand(
+            string fileName,
+            string arguments,
+            string standardInput = null,
+            Encoding standardInputEncoding = null,
+            int timeout = 5000) {
             Process program = new Process {
                 StartInfo = {
                     FileName = fileName,
@@ -172,17 +178,24 @@ namespace LostPolygon.MethodInlineInjector.Tests {
             };
             program.Start();
             if (standardInput != null) {
-                program.StandardInput.WriteLine(standardInput);
-                program.StandardInput.Close();
+                StreamWriter streamWriter = new StreamWriter(program.StandardInput.BaseStream, standardInputEncoding ?? new UTF8Encoding(false));
+                streamWriter.Write(standardInput);
+                streamWriter.Close();
             }
 
-            string result = program.StandardOutput.ReadToEnd();
-
+            string result = program.StandardOutput.ReadToEnd().Trim();
             bool exited = program.WaitForExit(timeout);
-            if (!exited)
-                throw new TimeoutException($"'{fileName} {arguments}' did not finish in time");
+            if (!exited) {
+                try {
+                    program.Kill();
+                } catch {
+                    // Ignore
+                }
 
-            return (result.Trim(), program.ExitCode);
+                throw new TimeoutException($"'{fileName} {arguments}' did not finish in time, output: \r\n{result}");
+            }
+
+            return (result, program.ExitCode);
         }
     }
 }

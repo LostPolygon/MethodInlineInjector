@@ -4,22 +4,22 @@ using LostPolygon.Common.SimpleXmlSerialization;
 
 namespace LostPolygon.MethodInlineInjector {
     [XmlRoot("Filter")]
-    public class MemberReferenceBlacklistFilter : IMemberReferenceBlacklistItem {
-        private const MemberReferenceBlacklistFilterFlags kDefaultFilterOptions =
-            MemberReferenceBlacklistFilterFlags.SkipTypes |
-            MemberReferenceBlacklistFilterFlags.SkipMethods |
-            MemberReferenceBlacklistFilterFlags.SkipProperties |
-            MemberReferenceBlacklistFilterFlags.MatchAncestors;
+    public class IgnoredMemberReference : IIgnoredMemberReference {
+        private const IgnoredMemberReferenceFlags kDefaultFilterOptions =
+            IgnoredMemberReferenceFlags.SkipTypes |
+            IgnoredMemberReferenceFlags.SkipMethods |
+            IgnoredMemberReferenceFlags.SkipProperties |
+            IgnoredMemberReferenceFlags.MatchAncestors;
 
         public string Filter { get; private set; }
-        public MemberReferenceBlacklistFilterFlags FilterFlags { get; private set; } = kDefaultFilterOptions;
-        public bool IsRegex => (FilterFlags & MemberReferenceBlacklistFilterFlags.IsRegex) != 0;
-        public bool MatchAncestors => (FilterFlags & MemberReferenceBlacklistFilterFlags.MatchAncestors) != 0;
+        public IgnoredMemberReferenceFlags FilterFlags { get; private set; } = kDefaultFilterOptions;
+        public bool IsRegex => (FilterFlags & IgnoredMemberReferenceFlags.IsRegex) != 0;
+        public bool MatchAncestors => (FilterFlags & IgnoredMemberReferenceFlags.MatchAncestors) != 0;
 
-        private MemberReferenceBlacklistFilter() {
+        private IgnoredMemberReference() {
         }
 
-        public MemberReferenceBlacklistFilter(string filter, MemberReferenceBlacklistFilterFlags filterFlags = kDefaultFilterOptions) {
+        public IgnoredMemberReference(string filter, IgnoredMemberReferenceFlags filterFlags = kDefaultFilterOptions) {
             Filter = !String.IsNullOrEmpty(filter) ? filter : throw new ArgumentNullException(nameof(filter));
             FilterFlags = filterFlags;
         }
@@ -30,16 +30,16 @@ namespace LostPolygon.MethodInlineInjector {
 
         #region With.Fody
 
-        public MemberReferenceBlacklistFilter WithFilter(string value) => null;
-        public MemberReferenceBlacklistFilter WithFilterFlags(MemberReferenceBlacklistFilterFlags value) => null;
+        public IgnoredMemberReference WithFilter(string value) => null;
+        public IgnoredMemberReference WithFilterFlags(IgnoredMemberReferenceFlags value) => null;
 
         #endregion
 
         #region Serialization
 
         [SerializationMethod]
-        public static MemberReferenceBlacklistFilter Serialize(MemberReferenceBlacklistFilter instance, SimpleXmlSerializerBase serializer) {
-            instance = instance ?? new MemberReferenceBlacklistFilter();
+        public static IgnoredMemberReference Serialize(IgnoredMemberReference instance, SimpleXmlSerializerBase serializer) {
+            instance = instance ?? new IgnoredMemberReference();
 
             serializer.ProcessStartElement(serializer.GetXmlRootName(instance.GetType()));
             {

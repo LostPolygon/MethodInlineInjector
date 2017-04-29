@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
+using System.Threading;
 using NUnit.Framework;
 
 namespace LostPolygon.MethodInlineInjector.Tests {
@@ -19,10 +21,23 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
+            InjectionConfiguration configuration,
+            string[] injecteeMethodNames,
+            bool assertFirstMethodMatch = true) {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
+
+            ExecuteSimpleTest(resolvedConfiguration, assertFirstMethodMatch);
+
+            return resolvedConfiguration;
+        }
+
+        protected static ResolvedInjectionConfiguration ExecuteSimpleTest(
             InjectedMethod[] injectedMethods,
             string[] injecteeMethodNames,
             bool assertFirstMethodMatch = true) {
-            InjectionConfiguration configuration = IntegrationTestsHelper.GetBasicInjectionConfiguration(injectedMethods);
+            InjectionConfiguration configuration = 
+                IntegrationTestsHelper.GetBasicInjectionConfiguration(true, true, injectedMethods);
             ResolvedInjectionConfiguration resolvedConfiguration =
                 IntegrationTestsHelper.GetBasicResolvedInjectionConfiguration(configuration, injecteeMethodNames);
 
@@ -60,6 +75,8 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [SetUp]
         public void SetUp() {
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjectedLibraryName), InjectedLibraryName);
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjecteeLibraryName), InjecteeLibraryName);
             TestContext.CurrentContext.Test.Properties.Set(nameof(InjectedClassName), InjectedClassName);

@@ -19,7 +19,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     new InjecteeAssembly(
                         targetAssemblyName,
                         null,
-                        IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
+                        IntegrationTestsHelper.GetStandardAllowedAssemblyReferences().AsReadOnly()
                     )
                 }.AsReadOnly(),
                 new List<InjectedMethod> {
@@ -46,7 +46,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                     new InjecteeAssembly(
                         targetAssemblyName,
                         null,
-                        IntegrationTestsHelper.GetStandardAssemblyReferenceWhitelist().AsReadOnly()
+                        IntegrationTestsHelper.GetStandardAllowedAssemblyReferences().AsReadOnly()
                     )
                 }.AsReadOnly(),
                 new List<InjectedMethod> {

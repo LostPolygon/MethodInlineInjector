@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MemberReferenceBlacklist>
+<IgnoredMemberReferences>
   <Filter Filter="test filter" IsRegex="True" SkipTypes="False" SkipProperties="False" />
-</MemberReferenceBlacklist>
+</IgnoredMemberReferences>

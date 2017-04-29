@@ -19,7 +19,7 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
-  <xs:complexType name="MemberReferenceBlacklistFilter">
+  <xs:complexType name="IgnoredMemberReference">
     <xs:attribute name="Filter" type="xs:string" use="required" />
     <xs:attribute name="SkipTypes" type="xs:string" />
     <xs:attribute name="SkipMethods" type="xs:string" />
@@ -27,31 +27,32 @@
     <xs:attribute name="IsRegex" type="xs:string" />
     <xs:attribute name="MatchAncestors" type="xs:string" />
   </xs:complexType>
-  <xs:complexType name="MemberReferenceBlacklistFilterInclude">
+  <xs:complexType name="IgnoredMemberReferenceInclude">
     <xs:attribute name="Path" type="xs:string" use="required" />
   </xs:complexType>
-  <xs:complexType name="AssemblyReferenceWhitelistFilter">
+  <xs:complexType name="AllowedAssemblyReference">
     <xs:attribute name="Name" type="xs:string" use="required" />
+    <xs:attribute name="Path" type="xs:string" />
     <xs:attribute name="StrictNameCheck" type="xs:string" />
   </xs:complexType>
-  <xs:complexType name="AssemblyReferenceWhitelistFilterInclude">
+  <xs:complexType name="AllowedAssemblyReferenceInclude">
     <xs:attribute name="Path" type="xs:string" use="required" />
   </xs:complexType>
   <xs:complexType name="InjecteeAssembly">
     <xs:all>
-      <xs:element name="MemberReferenceBlacklist" minOccurs="0">
+      <xs:element name="IgnoredMemberReferences" minOccurs="0">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="Filter" type="MemberReferenceBlacklistFilter" />
-            <xs:element name="Include" type="MemberReferenceBlacklistFilterInclude" />
+            <xs:element name="Filter" type="IgnoredMemberReference" />
+            <xs:element name="Include" type="IgnoredMemberReferenceInclude" />
           </xs:choice>
         </xs:complexType>
       </xs:element>
-      <xs:element name="AssemblyReferenceWhitelist" minOccurs="0">
+      <xs:element name="AllowedAssemblyReferences" minOccurs="0">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">
-            <xs:element name="Assembly" type="AssemblyReferenceWhitelistFilter" />
-            <xs:element name="Include" type="AssemblyReferenceWhitelistFilterInclude" />
+            <xs:element name="Assembly" type="AllowedAssemblyReference" />
+            <xs:element name="Include" type="AllowedAssemblyReferenceInclude" />
           </xs:choice>
         </xs:complexType>
       </xs:element>
