@@ -78,11 +78,11 @@ namespace LostPolygon.MethodInlineInjector {
             foreach (MethodDefinition injecteeMethod in resolvedInjecteeAssembly.InjecteeMethods) {
                 foreach (ResolvedInjectedMethod injectedMethod in injectedMethods) {
                     Log.DebugFormat(
-                        "Injecting method '{0}' to method {1} at {2}",
+                        "Injecting method '{0}' to method '{1}' at {2}",
                         injectedMethod.MethodDefinition.GetFullSimpleName(),
                         injecteeMethod.GetFullSimpleName(),
                         injectedMethod.InjectionPosition
-                    ); 
+                    );
 
                     BeforeMethodInjected?.Invoke((injectedMethod, injecteeMethod));
                     MethodDefinition importedInjectedMethod =
@@ -190,6 +190,7 @@ namespace LostPolygon.MethodInlineInjector {
         private static MethodDefinition CloneAndImportMethod(MethodDefinition sourceMethod, AssemblyDefinition targetAssembly) {
             TypeReference importedReturnTypeReference = targetAssembly.MainModule.Import(sourceMethod.ReturnType);
             MethodDefinition clonedMethod = new MethodDefinition(sourceMethod.Name, sourceMethod.Attributes, importedReturnTypeReference) {
+                // Pick any type as declaring. It doesn't matters which method is not used as a whole, only the body
                 DeclaringType = targetAssembly.MainModule.Types[0]
             };
             MethodDefinitionCloner methodDefinitionCloner = new MethodDefinitionClonerValidated(sourceMethod, clonedMethod, targetAssembly.MainModule);

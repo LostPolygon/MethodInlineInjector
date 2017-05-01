@@ -123,7 +123,9 @@ namespace LostPolygon.MethodInlineInjector.Cli {
 
                 Log.Info("Writing modified assemblies");
                 foreach (ResolvedInjecteeAssembly injecteeAssembly in resolvedInjectionConfiguration.InjecteeAssemblies) {
-                    injecteeAssembly.AssemblyDefinition.Write(injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName);
+                    string path = injecteeAssembly.AssemblyDefinition.MainModule.FullyQualifiedName;
+                    Log.DebugFormat("Writing assembly {0} to '{1}'", injecteeAssembly.AssemblyDefinition.FullName, path);
+                    injecteeAssembly.AssemblyDefinition.Write(path);
                 }
 #if !DEBUG
             } catch (MethodInlineInjectorException e) {

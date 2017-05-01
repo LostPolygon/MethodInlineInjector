@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,6 +18,7 @@ namespace LostPolygon.MethodInlineInjector {
         private readonly Dictionary<string, AssemblyDefinitionCachedData> _assemblyPathToAssemblyMap =
             new Dictionary<string, AssemblyDefinitionCachedData>();
         private readonly InjectionConfiguration _injectionConfiguration;
+        private IgnoringExceptionsAssemblyResolver _compoundAssemblyResolver;
 
         public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(InjectionConfiguration injectionConfiguration) {
             return new ResolvedInjectionConfigurationLoader(injectionConfiguration).Load();
@@ -26,8 +28,21 @@ namespace LostPolygon.MethodInlineInjector {
             _injectionConfiguration = injectionConfiguration;
         }
 
+        [DebuggerNonUserCode]
         public ResolvedInjectionConfiguration Load() {
             try {
+                Log.Debug("Calculating list of injectee assemblies");
+                List<ResolvedInjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
+
+                // Construct compound assembly resolver that uses compound list of allowed assembly references,
+                // which will be used when resolving assemblies used in injected methods
+                IEnumerable<ResolvedAllowedAssemblyReference> compoundResolvedAllowedAssemblyReferences =
+                    injecteeAssemblies
+                    .SelectMany(injecteeAssembly => injecteeAssembly.AllowedAssemblyReferences)
+                    .ToArray();
+
+                _compoundAssemblyResolver = CreateAssemblyResolver(compoundResolvedAllowedAssemblyReferences);
+
                 Log.Debug("Calculating filtered list of injected methods");
                 Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> injectedAssemblyToMethodsMap = GetInjectedMethods();
 
@@ -36,8 +51,7 @@ namespace LostPolygon.MethodInlineInjector {
                     injectedMethods.AddRange(pair.Value);
                 }
 
-                Log.Debug("Calculating list of injectee assemblies");
-                List<ResolvedInjecteeAssembly> injecteeAssemblies = GetInjecteeAssemblies();
+                // Validation
                 Validate(injectedMethods, injecteeAssemblies);
 
                 ResolvedInjectionConfiguration resolvedInjectionConfiguration =
@@ -91,7 +105,8 @@ namespace LostPolygon.MethodInlineInjector {
         private Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>> GetInjectedMethods() {
             var injectedAssemblyToMethodsMap = new Dictionary<AssemblyDefinition, List<ResolvedInjectedMethod>>();
             foreach (InjectedMethod sourceInjectedMethod in _injectionConfiguration.InjectedMethods) {
-                AssemblyDefinitionCachedData assemblyDefinitionCachedData = GetAssemblyDefinitionCachedData(sourceInjectedMethod.AssemblyPath);
+                AssemblyDefinitionCachedData assemblyDefinitionCachedData =
+                    GetAssemblyDefinitionCachedData(sourceInjectedMethod.AssemblyPath, _compoundAssemblyResolver);
                 MethodDefinition[] matchingMethodDefinitions =
                     assemblyDefinitionCachedData
                     .AllMethods
@@ -129,12 +144,12 @@ namespace LostPolygon.MethodInlineInjector {
 
         private AssemblyDefinitionCachedData GetAssemblyDefinitionCachedData(
             string assemblyPath,
-            IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences = null) {
+            BaseAssemblyResolver assemblyResolver) {
             assemblyPath = Path.GetFullPath(assemblyPath);
             if (!_assemblyPathToAssemblyMap.TryGetValue(assemblyPath, out AssemblyDefinitionCachedData assemblyDefinitionData)) {
                 Log.DebugFormat("Loading assembly at path '{0}'", assemblyPath);
 
-                AssemblyDefinition assemblyDefinition = LoadAssemblyDefinition(assemblyPath, resolvedAllowedAssemblyReferences);
+                AssemblyDefinition assemblyDefinition = LoadAssemblyDefinition(assemblyPath, assemblyResolver);
                 assemblyDefinitionData = new AssemblyDefinitionCachedData(assemblyDefinition);
                 Log.DebugFormat(
                     "Loaded assembly at path '{0}': {1} types, {2} methods",
@@ -148,38 +163,14 @@ namespace LostPolygon.MethodInlineInjector {
             return assemblyDefinitionData;
         }
 
-        private static AssemblyDefinition LoadAssemblyDefinition(
+        private AssemblyDefinition LoadAssemblyDefinition(
             string assemblyPath,
-            IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences
+            BaseAssemblyResolver assemblyResolver
             ) {
             ReaderParameters parameters = new ReaderParameters();
-            DefaultAssemblyResolver assemblyResolver = new IgnoringExceptionsAssemblyResolver();
             parameters.AssemblyResolver = assemblyResolver;
             parameters.ReadSymbols = false;
 
-            if (resolvedAllowedAssemblyReferences != null) {
-                assemblyResolver.ResolveFailure += (sender, reference) => {
-                    foreach (ResolvedAllowedAssemblyReference resolvedAllowedAssemblyReference in resolvedAllowedAssemblyReferences) {
-                        if (String.IsNullOrWhiteSpace(resolvedAllowedAssemblyReference.Path))
-                            continue;
-
-                        if (!reference.IsAssemblyReferencesMatch(
-                            resolvedAllowedAssemblyReference.AssemblyNameReference,
-                            resolvedAllowedAssemblyReference.StrictNameCheck))
-                            continue;
-
-                        Log.DebugFormat(
-                            "Resolving referenced assembly {0} at path '{1}'",
-                            resolvedAllowedAssemblyReference.AssemblyNameReference,
-                            resolvedAllowedAssemblyReference.Path
-                        );
-
-                        AssemblyDefinition resolvedAssembly = AssemblyDefinition.ReadAssembly(resolvedAllowedAssemblyReference.Path);
-                        return resolvedAssembly;
-                    }
-                    return null;
-                };
-            }
             AssemblyDefinition assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
             return assemblyDefinition;
         }
@@ -255,8 +246,10 @@ namespace LostPolygon.MethodInlineInjector {
                     .Select(item => new ResolvedAllowedAssemblyReference(AssemblyNameReference.Parse(item.Name), item.Path, item.StrictNameCheck))
                     .ToList();
 
+            // Configure assembly resolver for this assembly
+            IgnoringExceptionsAssemblyResolver assemblyResolver = CreateAssemblyResolver(resolvedAllowedAssemblyReferences);
             AssemblyDefinitionCachedData assemblyDefinitionCachedData =
-                GetAssemblyDefinitionCachedData(sourceInjecteeAssembly.AssemblyPath, resolvedAllowedAssemblyReferences);
+                GetAssemblyDefinitionCachedData(sourceInjecteeAssembly.AssemblyPath, assemblyResolver);
 
             Log.DebugFormat(
                 "Calculating injectee methods in assembly '{0}'",
@@ -269,10 +262,38 @@ namespace LostPolygon.MethodInlineInjector {
                 new ResolvedInjecteeAssembly(
                     assemblyDefinitionCachedData.AssemblyDefinition,
                     filteredInjecteeMethods,
-                    resolvedAllowedAssemblyReferences
+                    resolvedAllowedAssemblyReferences,
+                    assemblyResolver
                 );
 
             return resolvedInjecteeAssembly;
+        }
+
+        private IgnoringExceptionsAssemblyResolver CreateAssemblyResolver(IEnumerable<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences) {
+            IgnoringExceptionsAssemblyResolver assemblyResolver = new IgnoringExceptionsAssemblyResolver();
+            assemblyResolver.ResolveFailure += (sender, reference) => {
+                foreach (ResolvedAllowedAssemblyReference resolvedAllowedAssemblyReference in resolvedAllowedAssemblyReferences) {
+                    if (String.IsNullOrWhiteSpace(resolvedAllowedAssemblyReference.Path))
+                        continue;
+
+                    if (!reference.IsAssemblyReferencesMatch(
+                        resolvedAllowedAssemblyReference.AssemblyNameReference,
+                        resolvedAllowedAssemblyReference.StrictNameCheck))
+                        continue;
+
+                    Log.DebugFormat(
+                        "Resolving referenced assembly {0} at path '{1}'",
+                        resolvedAllowedAssemblyReference.AssemblyNameReference,
+                        resolvedAllowedAssemblyReference.Path
+                    );
+
+                    AssemblyDefinition resolvedAssembly =
+                        GetAssemblyDefinitionCachedData(resolvedAllowedAssemblyReference.Path, assemblyResolver).AssemblyDefinition;
+                    return resolvedAssembly;
+                }
+                return null;
+            };
+            return assemblyResolver;
         }
 
         protected virtual List<MethodDefinition> GetFilteredInjecteeMethods(
@@ -460,17 +481,6 @@ namespace LostPolygon.MethodInlineInjector {
 
                 AllTypes = assemblyDefinition.MainModule.GetAllTypes().ToList();
                 AllMethods = AllTypes.SelectMany(type => type.Methods).ToList();
-            }
-        }
-
-        protected class IgnoringExceptionsAssemblyResolver : DefaultAssemblyResolver {
-            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
-                try {
-                    return base.Resolve(name);
-                } catch {
-                    Log.InfoFormat("Assembly reference {0} not resolved", name);
-                    return null;
-                }
             }
         }
 

@@ -22,7 +22,7 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 
         [Test]
         public void SchemaValidateTest() {
-            void Validate(string configurationXml) {
+            void Validate(string configurationXml, string assertExceptionNeedle = null) {
                 try {
                     typeof(ConsoleInjector)
                         .GetMethod(
@@ -30,8 +30,13 @@ namespace LostPolygon.MethodInlineInjector.Tests {
                             BindingFlags.NonPublic | BindingFlags.Static)
                         .Invoke(null, new object[] { configurationXml });
                 } catch (TargetInvocationException e) {
+                    string exceptionText = e.ToString();
                     Console.WriteLine(e.InnerException?.InnerException?.Message + "\r\n\r\n");
-                    throw e.InnerException;
+                    if (assertExceptionNeedle != null) {
+                        Assert.True(exceptionText.Contains(assertExceptionNeedle));
+                    }
+
+                    Assert.IsAssignableFrom(typeof(MethodInlineInjectorException), e.InnerException);
                 }
             }
 
@@ -139,9 +144,9 @@ namespace LostPolygon.MethodInlineInjector.Tests {
 </Configuration>";
 
             Validate(test1);
-            Assert.Catch<MethodInlineInjectorException>(() => Validate(test2));
-            Assert.Catch<MethodInlineInjectorException>(() => Validate(test3));
-            Assert.Catch<MethodInlineInjectorException>(() => Validate(test4));
+            Validate(test2, @"The 'Assembly1Path' attribute is not declared.");
+            Validate(test3, @"The 'Path1' attribute is not declared.");
+            Validate(test4, @"The element 'Configuration' has incomplete content. List of possible elements expected: 'InjectedMethods'");
         }
 
         [OneTimeSetUp]
