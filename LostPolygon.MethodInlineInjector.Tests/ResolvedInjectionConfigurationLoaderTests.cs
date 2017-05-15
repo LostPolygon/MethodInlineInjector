@@ -165,6 +165,35 @@ namespace LostPolygon.MethodInlineInjector.Tests {
         }
 
         [Test]
+        public void IgnoreConstructor() {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ExecuteIgnoreTest(
+                    new IgnoredMemberReference(
+                        ".ctor",
+                        IgnoredMemberReferenceFlags.SkipMethods |
+                        IgnoredMemberReferenceFlags.MatchAncestors
+                    )
+                );
+
+            Assert.True(IsMethodSkipped(resolvedConfiguration, $"{typeof(TestInjectee).FullName}..ctor"));
+            Assert.True(IsMethodSkipped(resolvedConfiguration, $"{typeof(ChildTestInjectee).FullName}..ctor"));
+        }
+
+        [Test]
+        public void IgnoreStaticConstructor() {
+            ResolvedInjectionConfiguration resolvedConfiguration =
+                ExecuteIgnoreTest(
+                    new IgnoredMemberReference(
+                        ".cctor",
+                        IgnoredMemberReferenceFlags.SkipMethods |
+                        IgnoredMemberReferenceFlags.MatchAncestors
+                    )
+                );
+
+            Assert.True(IsMethodSkipped(resolvedConfiguration, $"{typeof(TestInjectee).FullName}..cctor"));
+        }
+
+        [Test]
         public void IgnoreTypeAndChildTypesTest() {
             ResolvedInjectionConfiguration resolvedConfiguration =
                 ExecuteSimpleIgnoreTypeTest(

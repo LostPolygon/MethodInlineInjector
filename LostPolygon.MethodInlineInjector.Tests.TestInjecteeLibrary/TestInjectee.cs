@@ -2,6 +2,17 @@
 
 namespace TestInjecteeLibrary {
     public class TestInjectee {
+        private int _intField = 3;
+        private static int _staticIntField;
+
+        static TestInjectee() {
+            _staticIntField = Math.Sign(5);
+        }
+
+        public TestInjectee(int someArgument) {
+            _intField = 5;
+        }
+
         public void Complex() {
             Console.WriteLine("Injectee: Begin");
 

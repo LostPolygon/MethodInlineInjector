@@ -2,6 +2,9 @@
 
 namespace TestInjecteeLibrary {
     public class ChildTestInjectee : TestInjectee {
+        public ChildTestInjectee(int someArgument) : base(someArgument) {
+        }
+
         public override void VirtualSingleStatement() {
             Console.WriteLine("ChildInjectee: VirtualSingleStatement");
         }

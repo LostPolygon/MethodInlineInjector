@@ -204,7 +204,6 @@ namespace LostPolygon.MethodInlineInjector {
                                 SimpleXmlSerializationUtility.XmlDeserializeFromString<IgnoredMemberReferencesIncludeLoader>(includeXml);
                             LoadIgnoredMemberReferences(ignoredMemberReferencesIncludeLoader.Items);
                         } catch (Exception e) {
-                            Console.WriteLine(e);
                             throw new MethodInlineInjectorException(
                                 $"Unable to load ignored member references list include at '{ignoredMemberReferenceInclude.Path}'",
                                 e
@@ -374,7 +373,7 @@ namespace LostPolygon.MethodInlineInjector {
                         if (!ignoredMemberReference.FilterFlags.HasFlag(IgnoredMemberReferenceFlags.SkipProperties))
                             continue;
 
-                        if (ProcessPropertyIgnored(property, ignoredMemberReference, ignoredMethods))
+                        if (!ProcessPropertyIgnored(property, ignoredMemberReference, ignoredMethods))
                             break;
                     }
                 }
@@ -384,7 +383,7 @@ namespace LostPolygon.MethodInlineInjector {
                         if (!ignoredMemberReference.FilterFlags.HasFlag(IgnoredMemberReferenceFlags.SkipMethods))
                             continue;
 
-                        if (ProcessMethodIgnored(method, ignoredMemberReference, ignoredMethods))
+                        if (!ProcessMethodIgnored(method, ignoredMemberReference, ignoredMethods))
                             break;
                     }
                 }
@@ -443,20 +442,24 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual void ValidateInjectedMethod(MethodDefinition injectedMethod) {
+            string CreateInvalidInjectedMethodMessage(string message) {
+                return $"Injected method {injectedMethod.GetFullSimpleName()} is not valid, reason: {message}";
+            }
+
             if (!injectedMethod.HasBody)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "method has no body"));
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage("method has no body"));
 
             if (injectedMethod.MethodReturnType.ReturnType != injectedMethod.Module.TypeSystem.Void)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't return any values"));
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage("injected method can't return any values"));
 
             if (injectedMethod.HasParameters)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't have parameters"));
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage("injected method can't have parameters"));
 
             if (injectedMethod.HasGenericParameters)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method can't have generic parameters"));
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage("injected method can't have generic parameters"));
 
             if (!injectedMethod.IsStatic)
-                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage(injectedMethod, "injected method has to be static"));
+                throw new MethodInlineInjectorException(CreateInvalidInjectedMethodMessage("injected method has to be static"));
         }
 
         protected virtual bool ValidateInjecteeMethod(MethodDefinition injecteeMethod) {
@@ -465,10 +468,6 @@ namespace LostPolygon.MethodInlineInjector {
                 injecteeMethod.HasGenericParameters;
 
             return !isNonInjectable;
-        }
-
-        protected static string CreateInvalidInjectedMethodMessage(MethodDefinition method, string message) {
-            return $"Injected method {method.GetFullSimpleName()} is not valid, reason: {message}";
         }
 
         protected class AssemblyDefinitionCachedData {
