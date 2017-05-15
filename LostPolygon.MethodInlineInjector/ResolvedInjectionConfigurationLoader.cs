@@ -18,14 +18,20 @@ namespace LostPolygon.MethodInlineInjector {
         private readonly Dictionary<string, AssemblyDefinitionCachedData> _assemblyPathToAssemblyMap =
             new Dictionary<string, AssemblyDefinitionCachedData>();
         private readonly InjectionConfiguration _injectionConfiguration;
+        private readonly string _injectionConfigurationPath;
         private IgnoringExceptionsAssemblyResolver _compoundAssemblyResolver;
 
-        public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(InjectionConfiguration injectionConfiguration) {
-            return new ResolvedInjectionConfigurationLoader(injectionConfiguration).Load();
+        public static ResolvedInjectionConfiguration LoadFromInjectionConfiguration(
+            InjectionConfiguration injectionConfiguration,
+            string injectionConfigurationPath = null) {
+            return new ResolvedInjectionConfigurationLoader(injectionConfiguration, injectionConfigurationPath).Load();
         }
 
-        protected ResolvedInjectionConfigurationLoader(InjectionConfiguration injectionConfiguration) {
+        protected ResolvedInjectionConfigurationLoader(
+            InjectionConfiguration injectionConfiguration,
+            string injectionConfigurationPath = null) {
             _injectionConfiguration = injectionConfiguration;
+            _injectionConfigurationPath = injectionConfigurationPath;
         }
 
         [DebuggerNonUserCode]
@@ -189,7 +195,21 @@ namespace LostPolygon.MethodInlineInjector {
             List<IgnoredMemberReference> ignoredMemberReferences = new List<IgnoredMemberReference>();
             List<AllowedAssemblyReference> allowedAssemblyReferences = new List<AllowedAssemblyReference>();
 
-            void LoadIgnoredMemberReferences(IEnumerable<IIgnoredMemberReference> items) {
+            string GetIncludePath(string originalPath, string referencePath) {
+                if (File.Exists(originalPath))
+                    return originalPath;
+
+                if (!String.IsNullOrWhiteSpace(referencePath)) {
+                    string basePath = Path.GetDirectoryName(referencePath);
+                    string path = Path.Combine(basePath, originalPath);
+                    if (File.Exists(path))
+                        return path;
+                }
+
+                throw new FileNotFoundException("Include file not found", originalPath);
+            }
+
+            void LoadIgnoredMemberReferences(IEnumerable<IIgnoredMemberReference> items, string referencePath) {
                 foreach (IIgnoredMemberReference item in items) {
                     if (item is IgnoredMemberReference ignoredMemberReference) {
                         ignoredMemberReferences.Add(ignoredMemberReference);
@@ -199,10 +219,11 @@ namespace LostPolygon.MethodInlineInjector {
                     if (item is IgnoredMemberReferenceInclude ignoredMemberReferenceInclude) {
                         try {
                             Log.DebugFormat("Loading ignored member references list include at '{0}'", ignoredMemberReferenceInclude.Path);
-                            string includeXml = File.ReadAllText(ignoredMemberReferenceInclude.Path);
+                            string includeXmlPath = GetIncludePath(ignoredMemberReferenceInclude.Path, referencePath);
+                            string includeXml = File.ReadAllText(includeXmlPath);
                             IgnoredMemberReferencesIncludeLoader ignoredMemberReferencesIncludeLoader =
                                 SimpleXmlSerializationUtility.XmlDeserializeFromString<IgnoredMemberReferencesIncludeLoader>(includeXml);
-                            LoadIgnoredMemberReferences(ignoredMemberReferencesIncludeLoader.Items);
+                            LoadIgnoredMemberReferences(ignoredMemberReferencesIncludeLoader.Items, includeXmlPath);
                         } catch (Exception e) {
                             throw new MethodInlineInjectorException(
                                 $"Unable to load ignored member references list include at '{ignoredMemberReferenceInclude.Path}'",
@@ -213,7 +234,7 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            void LoadAllowedAssemblyReferences(IEnumerable<IAllowedAssemblyReference> items) {
+            void LoadAllowedAssemblyReferences(IEnumerable<IAllowedAssemblyReference> items, string referencePath) {
                 foreach (IAllowedAssemblyReference item in items) {
                     if (item is AllowedAssemblyReference allowedAssemblyReference) {
                         allowedAssemblyReferences.Add(allowedAssemblyReference);
@@ -223,10 +244,11 @@ namespace LostPolygon.MethodInlineInjector {
                     if (item is AllowedAssemblyReferenceInclude allowedAssemblyReferenceInclude) {
                         Log.DebugFormat("Loading allowed assembly references list include at '{0}'", allowedAssemblyReferenceInclude.Path);
                         try {
-                            string includeXml = File.ReadAllText(allowedAssemblyReferenceInclude.Path);
+                            string includeXmlPath = GetIncludePath(allowedAssemblyReferenceInclude.Path, referencePath);
+                            string includeXml = File.ReadAllText(includeXmlPath);
                             AllowedAssemblyReferenceIncludeLoader allowedAssemblyReferencesLoader =
                                 SimpleXmlSerializationUtility.XmlDeserializeFromString<AllowedAssemblyReferenceIncludeLoader>(includeXml);
-                            LoadAllowedAssemblyReferences(allowedAssemblyReferencesLoader.Items);
+                            LoadAllowedAssemblyReferences(allowedAssemblyReferencesLoader.Items, referencePath);
                         } catch (Exception e) {
                             throw new MethodInlineInjectorException(
                                 $"Unable to load allowed assembly references list include at '{allowedAssemblyReferenceInclude.Path}'",
@@ -237,8 +259,8 @@ namespace LostPolygon.MethodInlineInjector {
                 }
             }
 
-            LoadIgnoredMemberReferences(sourceInjecteeAssembly.IgnoredMemberReferences);
-            LoadAllowedAssemblyReferences(sourceInjecteeAssembly.AllowedAssemblyReferences);
+            LoadIgnoredMemberReferences(sourceInjecteeAssembly.IgnoredMemberReferences, _injectionConfigurationPath);
+            LoadAllowedAssemblyReferences(sourceInjecteeAssembly.AllowedAssemblyReferences, _injectionConfigurationPath);
 
             List<ResolvedAllowedAssemblyReference> resolvedAllowedAssemblyReferences =
                 allowedAssemblyReferences

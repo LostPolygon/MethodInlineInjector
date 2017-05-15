@@ -110,7 +110,10 @@ namespace LostPolygon.MethodInlineInjector.Cli {
 
                 Log.Info("Resolving configuration file");
                 ResolvedInjectionConfiguration resolvedInjectionConfiguration =
-                    ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(injectionConfiguration);
+                    ResolvedInjectionConfigurationLoader.LoadFromInjectionConfiguration(
+                        injectionConfiguration,
+                        !_commandLineOptions.ReadConfigurationFromStandardInput ? _commandLineOptions.ConfigurationFilePath : null
+                        );
 
                 Log.Info("Starting injection");
                 MethodInlineInjector assemblyMethodInjector = new MethodInlineInjector(resolvedInjectionConfiguration);
