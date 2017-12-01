@@ -8,7 +8,6 @@ using System.Xml.Serialization;
 using Mono.Cecil;
 using LostPolygon.Common.SimpleXmlSerialization;
 using Mono.Cecil.Rocks;
-using Mono.Collections.Generic;
 using log4net;
 
 namespace LostPolygon.MethodInlineInjector {

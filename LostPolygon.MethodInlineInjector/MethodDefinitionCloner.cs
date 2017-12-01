@@ -6,8 +6,7 @@ using Mono.Cecil.Cil;
 
 namespace LostPolygon.MethodInlineInjector {
     public class MethodDefinitionCloner {
-        private readonly int[] _instructionOperandMap;
-        private readonly int[][] _instructionArrayOperandMap;
+        private readonly Instruction[] _instructions;
 
         public MethodDefinition SourceMethod { get; }
         public MethodDefinition TargetMethod { get; }
@@ -18,12 +17,7 @@ namespace LostPolygon.MethodInlineInjector {
             TargetMethod = targetMethod;
             TargetModule = targetModule;
 
-            _instructionOperandMap = new int[SourceMethod.Body.Instructions.Count];
-            for (int i = 0; i < _instructionOperandMap.Length; i++) {
-                _instructionOperandMap[i] = -2;
-            }
-
-            _instructionArrayOperandMap = new int[SourceMethod.Body.Instructions.Count][];
+            _instructions = new Instruction[SourceMethod.Body.Instructions.Count];
         }
 
         public void Clone() {
@@ -34,30 +28,17 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             // Clone body instructions
+            for (int i = 0; i < SourceMethod.Body.Instructions.Count; i++)
+            {
+                if (_instructions[i] != null)
+                    continue;
+
+                _instructions[i] = CloneInstruction(SourceMethod.Body.Instructions[i]);
+            }
+
+            // Insert instructions into target method
             for (int i = 0; i < SourceMethod.Body.Instructions.Count; i++) {
-                Instruction instruction = SourceMethod.Body.Instructions[i];
-                Instruction clonedInstruction = CloneInstruction(instruction, i);
-
-                instruction.SequencePoint?.CopyTo(clonedInstruction);
-                TargetMethod.Body.Instructions.Add(clonedInstruction);
-            }
-
-            // Map instructions that are operands of other instructions to newly created clones
-            for (int i = 0; i < _instructionOperandMap.Length; i++) {
-                if (_instructionOperandMap[i] < 0)
-                    continue;
-
-                TargetMethod.Body.Instructions[i].Operand = TargetMethod.Body.Instructions[_instructionOperandMap[i]];
-            }
-
-            for (int i = 0; i < _instructionArrayOperandMap.Length; i++) {
-                if (_instructionArrayOperandMap[i] == null)
-                    continue;
-
-                TargetMethod.Body.Instructions[i].Operand =
-                    _instructionArrayOperandMap[i]
-                    .Select(instructionIndex => TargetMethod.Body.Instructions[instructionIndex])
-                    .ToArray();
+                TargetMethod.Body.Instructions.Add(_instructions[i]);
             }
 
             // Clone exception handlers
@@ -87,7 +68,7 @@ namespace LostPolygon.MethodInlineInjector {
             return TargetModule.Import(operand);
         }
 
-        protected virtual Instruction CloneInstruction(Instruction instruction, int instructionIndex) {
+        protected virtual Instruction CloneInstruction(Instruction instruction) {
             Instruction cloneInstruction;
             object operand = instruction.Operand;
 
@@ -129,10 +110,10 @@ namespace LostPolygon.MethodInlineInjector {
                     cloneInstruction = CloneVariableDefinitionOperandInstruction(instruction, variableDefinitionOperand);
                     break;
                 case Instruction instructionOperand:
-                    cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand, instructionIndex);
+                    cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand);
                     break;
                 case Instruction[] instructionArrayOperand:
-                    cloneInstruction = CloneInstructionOperandInstructionArray(instruction, instructionArrayOperand, instructionIndex);
+                    cloneInstruction = CloneInstructionOperandInstructionArray(instruction, instructionArrayOperand);
                     break;
                 case null:
                     cloneInstruction = CloneNoOperandInstruction(instruction);
@@ -201,18 +182,17 @@ namespace LostPolygon.MethodInlineInjector {
             return Instruction.Create(sourceInstruction.OpCode, TargetMethod.Body.Variables[operand.Index]);
         }
 
-        protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand, int instructionIndex) {
-            _instructionOperandMap[instructionIndex] = SourceMethod.Body.Instructions.IndexOf(operand);
-            return Instruction.Create(sourceInstruction.OpCode, Instruction.Create(OpCodes.Nop));
+        protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand) {
+            return Instruction.Create(sourceInstruction.OpCode, GetCopiedInstruction(operand));
         }
 
-        private Instruction CloneInstructionOperandInstructionArray(Instruction sourceInstruction, Instruction[] operand, int instructionIndex) {
-            _instructionArrayOperandMap[instructionIndex] =
-                operand
-                .Select(operandInstruction => SourceMethod.Body.Instructions.IndexOf(operandInstruction))
-                .ToArray();
+        private Instruction CloneInstructionOperandInstructionArray(Instruction sourceInstruction, Instruction[] operand) {
+            Instruction[] cloneOperand = new Instruction[operand.Length];
+            for (int i = 0; i < operand.Length; i++) {
+                cloneOperand[i] = GetCopiedInstruction(operand[i]);
+            }
 
-            return Instruction.Create(sourceInstruction.OpCode, Array.Empty<Instruction>());
+            return Instruction.Create(sourceInstruction.OpCode, cloneOperand);
         }
 
         private Instruction GetMatchingInstructionByIndex(Instruction sourceInstruction) {
@@ -224,6 +204,21 @@ namespace LostPolygon.MethodInlineInjector {
                 throw new MethodInlineInjectorException("Matching instruction not found in source method");
 
             return TargetMethod.Body.Instructions[sourceIndex];
+        }
+
+        private Instruction GetCopiedInstruction(Instruction sourceInstruction) {
+            if (sourceInstruction == null)
+                return null;
+
+            int instructionIndex = SourceMethod.Body.Instructions.IndexOf(sourceInstruction);
+            if (instructionIndex == -1)
+                throw new MethodInlineInjectorException($"Source instruction not found");
+
+            if (_instructions[instructionIndex] == null) {
+                _instructions[instructionIndex] = CloneInstruction(sourceInstruction);
+            }
+
+            return _instructions[instructionIndex];
         }
     }
 }
