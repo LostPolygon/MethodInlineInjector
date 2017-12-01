@@ -45,11 +45,11 @@ namespace LostPolygon.MethodInlineInjector {
             foreach (ExceptionHandler sourceExceptionHandler in SourceMethod.Body.ExceptionHandlers) {
                 ExceptionHandler cloneExceptionHandler = new ExceptionHandler(sourceExceptionHandler.HandlerType) {
                     CatchType = sourceExceptionHandler.CatchType != null ? ImportTypeReference(sourceExceptionHandler.CatchType) : null,
-                    FilterStart = GetMatchingInstructionByIndex(sourceExceptionHandler.FilterStart),
-                    HandlerStart = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerStart),
-                    HandlerEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.HandlerEnd),
-                    TryStart = GetMatchingInstructionByIndex(sourceExceptionHandler.TryStart),
-                    TryEnd = GetMatchingInstructionByIndex(sourceExceptionHandler.TryEnd)
+                    FilterStart = GetCopiedInstruction(sourceExceptionHandler.FilterStart),
+                    HandlerStart = GetCopiedInstruction(sourceExceptionHandler.HandlerStart),
+                    HandlerEnd = GetCopiedInstruction(sourceExceptionHandler.HandlerEnd),
+                    TryStart = GetCopiedInstruction(sourceExceptionHandler.TryStart),
+                    TryEnd = GetCopiedInstruction(sourceExceptionHandler.TryEnd)
                 };
 
                 TargetMethod.Body.ExceptionHandlers.Add(cloneExceptionHandler);
@@ -193,17 +193,6 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             return Instruction.Create(sourceInstruction.OpCode, cloneOperand);
-        }
-
-        private Instruction GetMatchingInstructionByIndex(Instruction sourceInstruction) {
-            if (sourceInstruction == null)
-                return null;
-
-            int sourceIndex = SourceMethod.Body.Instructions.IndexOf(sourceInstruction);
-            if (sourceIndex == -1)
-                throw new MethodInlineInjectorException("Matching instruction not found in source method");
-
-            return TargetMethod.Body.Instructions[sourceIndex];
         }
 
         private Instruction GetCopiedInstruction(Instruction sourceInstruction) {
