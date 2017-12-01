@@ -170,25 +170,6 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         private static void ReplaceOperandInstruction(Instruction bodyInstruction, Instruction oldInstruction, Instruction newInstruction) {
-            if (bodyInstruction == null)
-                return;
-
-            Instruction instructionOperand = bodyInstruction.Operand as Instruction;
-            if (instructionOperand != null && instructionOperand == oldInstruction) {
-                bodyInstruction.Operand = newInstruction;
-                return;
-            }
-
-            Instruction[] instructionArrayOperand = bodyInstruction.Operand as Instruction[];
-            if (instructionArrayOperand != null) {
-                for (int i = 0; i < instructionArrayOperand.Length; i++) {
-                    if (instructionArrayOperand[i] == oldInstruction) {
-                        instructionArrayOperand[i] = newInstruction;
-                    }
-                }
-
-                bodyInstruction.Operand = instructionArrayOperand;
-            }
-        }
+            if (bodyInstruction == null)                return;            switch (bodyInstruction.Operand) {                case Instruction instructionOperand when instructionOperand == oldInstruction:                    bodyInstruction.Operand = newInstruction;                    return;                case Instruction[] instructionArrayOperand:                    for (int i = 0; i < instructionArrayOperand.Length; i++) {                        if (instructionArrayOperand[i] == oldInstruction) {                            instructionArrayOperand[i] = newInstruction;                        }                    }                    bodyInstruction.Operand = instructionArrayOperand;                    break;            }        }
     }
 }
