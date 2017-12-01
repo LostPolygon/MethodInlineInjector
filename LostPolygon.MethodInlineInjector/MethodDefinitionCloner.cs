@@ -6,7 +6,6 @@ using Mono.Cecil.Cil;
 
 namespace LostPolygon.MethodInlineInjector {
     public class MethodDefinitionCloner {
-        private readonly Dictionary<VariableDefinition, VariableDefinition> _variableMap = new Dictionary<VariableDefinition, VariableDefinition>();
         private readonly int[] _instructionOperandMap;
         private readonly int[][] _instructionArrayOperandMap;
 
@@ -30,9 +29,8 @@ namespace LostPolygon.MethodInlineInjector {
         public void Clone() {
             // Clone local variables
             foreach (VariableDefinition variable in SourceMethod.Body.Variables) {
-                VariableDefinition variableDefinition = new VariableDefinition(variable.Name, ImportTypeReference(variable.VariableType));
-                TargetMethod.Body.Variables.Add(variableDefinition);
-                _variableMap.Add(variable, variableDefinition);
+                VariableDefinition targetVariable = new VariableDefinition(variable.Name, ImportTypeReference(variable.VariableType));
+                TargetMethod.Body.Variables.Add(targetVariable);
             }
 
             // Clone body instructions
@@ -92,38 +90,55 @@ namespace LostPolygon.MethodInlineInjector {
         protected virtual Instruction CloneInstruction(Instruction instruction, int instructionIndex) {
             Instruction cloneInstruction;
             object operand = instruction.Operand;
-            if (operand == null) {
-                cloneInstruction = CloneNoOperandInstruction(instruction);
-            } else if (operand is byte byteOperand) {
-                cloneInstruction = CloneByteOperandInstruction(instruction, byteOperand);
-            } else if (operand is sbyte sbyteOperand) {
-                cloneInstruction = CloneSByteOperandInstruction(instruction, sbyteOperand);
-            } else if (operand is int intOperand) {
-                cloneInstruction = CloneIntOperandInstruction(instruction, intOperand);
-            } else if (operand is long longOperand) {
-                cloneInstruction = CloneLongOperandInstruction(instruction, longOperand);
-            } else if (operand is float floatOperand) {
-                cloneInstruction = CloneFloatOperandInstruction(instruction, floatOperand);
-            } else if (operand is double doubleOperand) {
-                cloneInstruction = CloneDoubleOperandInstruction(instruction, doubleOperand);
-            } else if (operand is string stringOperand) {
-                cloneInstruction = CloneStringOperandInstruction(instruction, stringOperand);
-            } else if (operand is TypeReference typeReferenceOperand) {
-                cloneInstruction = CloneTypeReferenceOperandInstruction(instruction, typeReferenceOperand);
-            } else if (operand is FieldReference fieldReferenceOperand) {
-                cloneInstruction = CloneFieldReferenceOperandInstruction(instruction, fieldReferenceOperand);
-            } else if (operand is MethodReference methodReferenceOperand) {
-                cloneInstruction = CloneMethodReferenceOperandInstruction(instruction, methodReferenceOperand);
-            } else if (operand is ParameterDefinition parameterDefinitionOperand) {
-                cloneInstruction = CloneParameterDefinitionOperandInstruction(instruction, parameterDefinitionOperand);
-            } else if (operand is VariableDefinition variableDefinitionOperand) {
-                cloneInstruction = CloneVariableDefinitionOperandInstruction(instruction, variableDefinitionOperand);
-            } else if (operand is Instruction instructionOperand) {
-                cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand, instructionIndex);
-            } else if (operand is Instruction[] instructionArrayOperand) {
-                cloneInstruction = CloneInstructionOperandInstructionArray(instruction, instructionArrayOperand, instructionIndex);
-            } else {
-                throw new MethodInlineInjectorException($"Unknown operand type {operand.GetType()}");
+
+            switch (operand) {
+                case byte byteOperand:
+                    cloneInstruction = CloneByteOperandInstruction(instruction, byteOperand);
+                    break;
+                case sbyte sbyteOperand:
+                    cloneInstruction = CloneSByteOperandInstruction(instruction, sbyteOperand);
+                    break;
+                case int intOperand:
+                    cloneInstruction = CloneIntOperandInstruction(instruction, intOperand);
+                    break;
+                case long longOperand:
+                    cloneInstruction = CloneLongOperandInstruction(instruction, longOperand);
+                    break;
+                case float floatOperand:
+                    cloneInstruction = CloneFloatOperandInstruction(instruction, floatOperand);
+                    break;
+                case double doubleOperand:
+                    cloneInstruction = CloneDoubleOperandInstruction(instruction, doubleOperand);
+                    break;
+                case string stringOperand:
+                    cloneInstruction = CloneStringOperandInstruction(instruction, stringOperand);
+                    break;
+                case TypeReference typeReferenceOperand:
+                    cloneInstruction = CloneTypeReferenceOperandInstruction(instruction, typeReferenceOperand);
+                    break;
+                case FieldReference fieldReferenceOperand:
+                    cloneInstruction = CloneFieldReferenceOperandInstruction(instruction, fieldReferenceOperand);
+                    break;
+                case MethodReference methodReferenceOperand:
+                    cloneInstruction = CloneMethodReferenceOperandInstruction(instruction, methodReferenceOperand);
+                    break;
+                case ParameterDefinition parameterDefinitionOperand:
+                    cloneInstruction = CloneParameterDefinitionOperandInstruction(instruction, parameterDefinitionOperand);
+                    break;
+                case VariableDefinition variableDefinitionOperand:
+                    cloneInstruction = CloneVariableDefinitionOperandInstruction(instruction, variableDefinitionOperand);
+                    break;
+                case Instruction instructionOperand:
+                    cloneInstruction = CloneInstructionOperandInstruction(instruction, instructionOperand, instructionIndex);
+                    break;
+                case Instruction[] instructionArrayOperand:
+                    cloneInstruction = CloneInstructionOperandInstructionArray(instruction, instructionArrayOperand, instructionIndex);
+                    break;
+                case null:
+                    cloneInstruction = CloneNoOperandInstruction(instruction);
+                    break;
+                default:
+                    throw new MethodInlineInjectorException($"Unknown operand type {operand.GetType()}");
             }
 
             cloneInstruction.Offset = instruction.Offset;
@@ -183,7 +198,7 @@ namespace LostPolygon.MethodInlineInjector {
         }
 
         protected virtual Instruction CloneVariableDefinitionOperandInstruction(Instruction sourceInstruction, VariableDefinition operand) {
-            return Instruction.Create(sourceInstruction.OpCode, _variableMap[operand]);
+            return Instruction.Create(sourceInstruction.OpCode, TargetMethod.Body.Variables[operand.Index]);
         }
 
         protected virtual Instruction CloneInstructionOperandInstruction(Instruction sourceInstruction, Instruction operand, int instructionIndex) {
