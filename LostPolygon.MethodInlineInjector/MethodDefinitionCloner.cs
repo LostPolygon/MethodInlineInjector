@@ -28,8 +28,7 @@ namespace LostPolygon.MethodInlineInjector {
             }
 
             // Clone body instructions
-            for (int i = 0; i < SourceMethod.Body.Instructions.Count; i++)
-            {
+            for (int i = 0; i < SourceMethod.Body.Instructions.Count; i++) {
                 if (_instructions[i] != null)
                     continue;
 

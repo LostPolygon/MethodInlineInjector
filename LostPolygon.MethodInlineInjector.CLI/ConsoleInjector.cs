@@ -31,9 +31,9 @@ namespace LostPolygon.MethodInlineInjector.Cli {
             Parser commandLineParser =
                 new Parser(settings => {
                     settings.IgnoreUnknownArguments = false;
-                    settings.CaseInsensitiveEnumValues = true;
+                    //settings.CaseInsensitiveEnumValues = true;
                     settings.CaseSensitive = false;
-                    settings.MaximumDisplayWidth = 100;
+                    //settings.MaximumDisplayWidth = 100;
                     settings.HelpWriter = null;
                 });
 

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using devtm.Cecil.Extensions;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 using NUnit.Framework;
