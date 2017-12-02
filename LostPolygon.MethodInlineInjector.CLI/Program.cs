@@ -14,9 +14,11 @@ namespace LostPolygon.MethodInlineInjector.Cli {
         public static void Main(params string[] args) {
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
             Console.OutputEncoding = Encoding.Unicode;
-            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
-            SetupLog4Net();
+            if (!Debugger.IsAttached) {
+                AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            }
 
+            SetupLog4Net();
             ConsoleInjector.Run(args);
         }
 

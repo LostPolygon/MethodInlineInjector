@@ -8,7 +8,7 @@ namespace LostPolygon.MethodInlineInjector.Cli {
             'f',
             "file",
             HelpText = "Read injector configuration from a file.",
-            Default = null,
+            //Default = "",
             SetName = "Source"
             )]
         public string ConfigurationFilePath { get; private set; }
